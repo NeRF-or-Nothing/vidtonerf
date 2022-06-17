@@ -9,6 +9,7 @@ infile = open(sys.argv[1], 'r')
 lines = infile.readlines()
 images = []
 
+
 for line in lines:
     words = line.split(' ')
     if words[-1].endswith(".JPG\n"):
