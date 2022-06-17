@@ -1,0 +1,7 @@
+https://colmap.github.io/install.html
+
+https://demuc.de/colmap/
+
+https://github.com/colmap/pycolmap
+
+https://github.com/colmap/colmap
