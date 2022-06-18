@@ -7,7 +7,7 @@
 * ### Be mindful of your surroundings and of your fellow participants. Alert community leaders if you notice a dangerous situation, someone in distress, or violations of this Code of Conduct, even if they seem inconsequential.
 </br>
 
-# This page is mainly to do with git, such as how to use git, good practices and what not to do.
+# Git Guide: how to use git, good practices, and what not to do  
 
 ## **Cloning**
 ### For starters, if you're completely new to git then cloning is likely the first thing you should learn (or already know)
@@ -106,4 +106,4 @@
 </br>
 
 ## **You now have a brief overview of Git, congrats!**
-## **This is something not to make a mistake with as it can easily wipe all our files and weeks of progress with a single command, so if you're unsure about anything and/or have questions please consult either Amaan or Eric before doing anything.**
+## **If you're unsure about anything and/or have questions please consult either Amaan or Eric.**
