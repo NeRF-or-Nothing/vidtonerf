@@ -3,7 +3,15 @@
 r^t = inverse/transpose of the 3x3 rotation matrix composed from the quaternion
 T = translation vector
 python3 matrix.py output.csv >out.txt
-(Annie)
+combined filed parsing and matrix formation
+command: python3 matrix.py images.txt camera.txt
+parse_data.py will first parse images.txt and redirect to parsed_data.csv
+matrix.py will then take the parsed_data.csv and redirect intrinsic and extrinsic
+matrix to out_matrix.txt with the following info:
+1. camera model
+2. resolution
+3. 1 intrinsic matrix
+4. extrinsic matrix for each image w/ image name
 """
 
 import sys
@@ -11,9 +19,7 @@ import os
 import csv
 import math
 import numpy as np
-from pathlib import Path
-import PIL
-from PIL import Image
+import parse_data
 
 # https://en.wikipedia.org/wiki/Conversion_between_quaternions_and_Euler_angles
 def euler_from_quaternion(x, y, z, w):
@@ -47,13 +53,11 @@ def quaternion_rotation_matrix(qw, qx, qy, qz):
     """
     Covert a quaternion into a full three-dimensional rotation matrix.
 
-    Input
-    :param Q: A 4 element array representing the quaternion (q0,q1,q2,q3)
+    Input: A 4 element array representing the quaternion (qw,qx,qy,qz)
 
-    Output
-    :return: A 3x3 element matrix representing the full 3D rotation matrix.
-             This rotation matrix converts a point in the local reference
-             frame to a point in the global reference frame.
+    Output A 3x3 element matrix representing the full 3D rotation matrix.
+           This rotation matrix converts a point in the local reference
+           frame to a point in the global reference frame.
     """
 
     # First row of the rotation matrix
@@ -79,16 +83,12 @@ def quaternion_rotation_matrix(qw, qx, qy, qz):
     return rotation_matrix
 
 
-def main():
-    # check for input argument
-    if len(sys.argv) != 2:
-        print("Invalid usage. Correct usage: python3 matrix.py \"output.csv\"")
-        sys.exit()
-
+def get_extrinsic():
     # opening input file
-    with open(sys.argv[1]) as csv_file:
+    with open("parsed_data.csv") as csv_file:
         csv_reader = csv.reader(csv_file, delimiter=',')
         row = next(csv_reader) # start with second line
+        print("EXTRINSIC:")
         for row in csv_reader:
             image_name = str(row[0])
 
@@ -103,21 +103,51 @@ def main():
 
             # find extrinsic matrix
             T = np.array([tx, ty, tz])
-            rotation_matrix = quaternion_rotation_matrix(qw, qx, qy, qz)
-            projection_center = -rotation_matrix * T
+            r = quaternion_rotation_matrix(qw, qx, qy, qz)     # rotational matrix
+            r_t = r.transpose()
+            extrinsic = -r_t * T   # projection_centers
+            print(image_name)
+            print(extrinsic, end="")
+            print('\n')
 
-            # image resolution
-            dir1 = "//mnt//c//Users//xuj18//Dropbox//NeRF//pytesting//images//"
-            path = dir1 + image_name
+def get_intrinsic():
+    infile = open("cameras.txt", 'r')
+    lines = infile.readlines()
+    for line in lines:
+        data = line.split(' ')
+        if not data[0].startswith("#"):
+            camera = data[1]
+            width = data[2]
+            height = data[3]
 
-            img = PIL.Image.open(path)
-            wid, hgt = img.size
+            fx = data[4]
+            fy = data[5]
+            x0 = data[6]
+            y0 = data[7]
 
-            #transposed = np.linalg.inv(rotation_matrix) * T
-            print(image_name + " ("+str(wid) + "x" + str(hgt)+")")
-            print(projection_center)
-            print("\n")
+    intrinsic = np.array([[fx,  0, x0],
+                          [ 0, fy, y0],
+                          [ 0,  0,  1]])
+
+    print(camera+" => RESOLUTION: ("+width+","+height+")\n")
+    print("INTRINSIC:")
+    print(intrinsic,end="")
+    print("\n")
+
+
+def main():
+    # check for input argument
+    if len(sys.argv) != 3:
+        print("insufficient arguments: use")
+        print("python3 matrix.py images.txt camera.txt")
+        sys.exit()
+
+    sys.stdout = open('out_matrix.txt', 'w')
+    get_intrinsic()
+    get_extrinsic()
+    sys.stdout.close()
+
 
 if __name__ == "__main__":
+    parse_data.main()
     main()
-
