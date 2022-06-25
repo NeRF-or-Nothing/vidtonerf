@@ -1,19 +1,19 @@
+#!/usr/bin/env python3
 """
 run this first to generate parsed_data
 python3_parse data
 """
 
-import sys
 import csv
 
-def main():
 
-    infile = open("images.txt", 'r')
+def main():
+    infile = open("images.txt", "r")
     lines = infile.readlines()
     images = []
 
     for line in lines:
-        words = line.split(' ')
+        words = line.split(" ")
         if words[-1].endswith(".JPG\n"):
             image_data = {}
             qw = words[1]
@@ -24,7 +24,7 @@ def main():
             ty = words[6]
             tz = words[7]
             imageName = words[-1][:-1]
-            #print(imageName + "- QW:" + qw + ", QX:" + qx + ", QY:" + qy + ", QZ:" + qz + ", TX:" + tx +", TY:" + ty +", TZ:" + tz)
+            # print(imageName + "- QW:" + qw + ", QX:" + qx + ", QY:" + qy + ", QZ:" + qz + ", TX:" + tx +", TY:" + ty +", TZ:" + tz)
 
             image_data["Image_Name"] = imageName
             image_data["QW"] = qw
@@ -36,15 +36,15 @@ def main():
             image_data["TZ"] = tz
             images.append(image_data)
 
-    with open("parsed_data.csv", mode='w', newline='') as csv_file:
+    with open("parsed_data.csv", mode="w", newline="") as csv_file:
         csv_file.truncate(0)
-        fieldnames = ['Image_Name', 'QW', 'QX', 'QY', 'QZ', 'TX', 'TY', 'TZ']
+        fieldnames = ["Image_Name", "QW", "QX", "QY", "QZ", "TX", "TY", "TZ"]
         writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
-
         writer.writeheader()
+
         for image in images:
             writer.writerow(image)
 
-if __name__ == '__main__':
-    main()
 
+if __name__ == "__main__":
+    main()
