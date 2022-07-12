@@ -44,5 +44,7 @@ https://www.euclideanspace.com/maths/geometry/rotations/conversions/quaternionTo
 https://en.wikipedia.org/wiki/Conversion_between_quaternions_and_Euler_angles
 - Extrinsic Matrix\
 https://ksimek.github.io/2012/08/22/extrinsic/
+- GAN-based Neural Radiance Field
+https://www.researchgate.net/publication/350484366_GNeRF_GAN-based_Neural_Radiance_Field_without_Posed_Camera
 
 
