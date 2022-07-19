@@ -1,0 +1,47 @@
+example run:
+docker build -t name_ .
+docker container create -i -t --name test1 name_
+docker run -d -P --name containerid name_
+docker ps (find port number, ex. 0.0.0.0:49154)
+ssh root@localhost -p 49154
+The password is `root`
+
+
+
+
+commands run within the docker container
+
+apt-get update
+apt-get install curl
+curl -O https://repo.anaconda.com/archive/Anaconda3-2020.11-Linux-x86_64.sh
+bash Anaconda3-2020.11-Linux-x86_64.sh
+source ~/.bashrc
+eval "$(/root/anaconda3/bin/conda shell.bash hook)"
+conda create -n TensoRF python=3.8
+pip install torch torchvision
+pip install tqdm scikit-image opencv-python configargparse lpips imageio-ffmpeg kornia lpips tensorboard
+apt-get install git
+git clone https://github.com/apchenstu/TensoRF
+apt install lspci
+apt install pciutils
+apt-get install -y gnupg
+apt-key del 7fa2af80
+wget https://developer.download.nvidia.com/compute/cuda/repos/wsl-ubuntu/x86_64/cuda-wsl-ubuntu.pin
+apt-key adv --fetch-keys https://developer.download.nvidia.com/compute/cuda/repos/wsl-ubuntu/x86_64/3bf863cc.pub
+apt-get update && apt-get install -y gnupg
+apt-get install software-properties-common
+add-apt-repository ppa:libreoffice/ppa
+apt update
+apt install libreoffice
+mv cuda-wsl-ubuntu.pin /etc/apt/preferences.d/cuda-repository-pin-600
+wget https://developer.download.nvidia.com/compute/cuda/11.7.0/local_installers/cuda-repo-wsl-ubuntu-11-7-local_11.7.0-1_amd64.deb
+dpkg -i cuda-repo-wsl-ubuntu-11-7-local_11.7.0-1_amd64.deb
+wget https://developer.download.nvidia.com/compute/cuda/repos/wsl-ubuntu/x86_64/cuda-keyring_1.0-1_all.deb
+dpkg -i cuda-keyring_1.0-1_all.deb
+dpkg -i cuda-repo-wsl-ubuntu-11-7-local_11.7.0-1_amd64.deb
+apt-get update
+apt-get -y install cuda
+
+
+
+

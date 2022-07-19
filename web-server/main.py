@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """
 This file loads the environment variables from the .env file.
 Afterwards, the Web Server is started.
