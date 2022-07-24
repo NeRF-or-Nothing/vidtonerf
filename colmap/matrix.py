@@ -19,7 +19,7 @@ import sys
 import csv
 import math
 import numpy as np
-import parse_data
+import image_position_extractor
 
 # https://en.wikipedia.org/wiki/Conversion_between_quaternions_and_Euler_angles
 def euler_from_quaternion(x, y, z, w):
@@ -169,5 +169,5 @@ def main():
 
 
 if __name__ == "__main__":
-    parse_data.main()
+    image_position_extractor.extract_position_data("images.txt", "parsed_data.csv")
     main()
