@@ -1,0 +1,3 @@
+[submodule "NeRF/TensoRF"]
+	path = NeRF/TensoRF
+	url = git@github.com:NeRF-or-Nothing/TensoRF.git
