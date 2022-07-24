@@ -1,8 +1,8 @@
 import argparse
 import os
 import magic
-from flask import Flask, request, redirect
-from werkzeug.utils import secure_filename
+from flask import Flask, request
+from werkzeug import secure_filename
 
 
 class WebServer:
@@ -19,39 +19,15 @@ class WebServer:
 
         self.app.run(port=self.args.port)
 
-
-    #def fib(self, n: int) -> int:
-        #if n<=1: 
-            #return n
-        #return self.fib(n-1) + self.fib(n-2)
-
     def add_routes(self) -> None:
         @self.app.route("/")
         def hello_world():
             return "You shouldn't be here"
 
-        #@self.app.route("/<name>")
+        @self.app.route("/<name>")
         # remove later
-        #def hello_name(name: str):
-            #if name.isdecimal():
-             #   fib_number = str(self.fib(int(name)))
-             #   return f"The {name}th fibonacci number is {fib_number}"
-            #else:
-            #    return f"Hello {name}"
-            
-        @self.app.route("/f/u/n")
-        def balls():
-            return redirect("https://matias.ma/nsfw")
-
-        @self.app.route("/b/a/l/l/s")
-        def balls_():
-            return redirect("https://www.linkedin.com/in/amaanq/")
-        
-        @self.app.route("/b/a/l/l/z")
-        def ballz():
-            return redirect("https://www.instagram.com/eric_nelson_0x45/")
-
-
+        def hello_name(name: str):
+            return f"Hello {name}"
 
         @self.app.route("/video", methods=["POST"])
         def recv_video():
