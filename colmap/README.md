@@ -1,10 +1,17 @@
 ### COLMAP
 COLMAP is a general-purpose Structure-from-Motion (SfM) and Multi-View Stereo (MVS) pipeline
 that is used for estimating three-dimensional structures from two-dimensional image
-sequences. This project will be using the image camera data output from COLMAP and
-implementing it to the NeRF.
+sequences. The process of the reconstruction process includes the following:
+- Data Collection → Images collected by user
+- Extraction of Image Features → Extract eigenvalues from the image
+- Feature Point Matching → Matches corresponding points between images
+- Sparse Reconstruction (SfM) → Restore the three-dimensional structure of the scene and camera attitude
+- Depth Map Estimation → Restore the depth information of the reference image
+- Dense Reconstruction (MVS) → Obtain camera pose and calculate 3D points corresponding to each pixel in the image
 
-Currently, this project will run COLMAP from command line using python script. Using the generate output of each images, process the data using colmap2data.py to extract the quaternion and transpose vector. Finally, feed the data to data2matrix.py that converts the data to an extrinsic matrix to be used by NeRF.
+This project will be using the image and camera data output from COLMAP and
+implementing it to the NeRF. To achieve this, COLMAP will be run from command line using colmap_runner.py. Then using the generate output of each images, process the data using image_position_extractor.py to extract the quaternion and transpose vector. Finally, feed the data to matrix.py that converts the data to intrinsic and extrinsic matrices to be used by NeRF.
+
 
 ### Data Processing
 
@@ -26,12 +33,29 @@ Quaternion can also be used to calculate the Euler angles which contains the rol
 - Pitch is rotation around y in radians (counterclockwise)
 - Yaw is rotation around z in radians (counterclockwise)
 
+**Projection Matrix**
+- Each 2D image coordinates have intrinsic and extrinsic properties that can describe the 3D world coordinates. The intrinsic matrix is mainly used to scale and calibrate the optical center while the extrinsic properties contains the rotation and translation to project an image to the 3D world view.
+
+![My Image](projection_matrix.jpg)
+<sup>Source:https://www.cc.gatech.edu/classes/AY2016/cs4476_fall/results/proj3/html/agartia3/index.html
+
+
+**Projection Diagram**
+- The image below a pinhole camera model that is used in this project. The real-word coordinates X, Y and Z of point P is used to calculate the image coordinates X' and Y' of the point P′ projected onto the image plane using the focal length.
+
+![My Image](projection_diagram.jpg)
+<sup>Source: https://www.sciencedirect.com/topics/engineering/intrinsic-parameter
+
 ### Good Data Collection Tips
 - Try to take pictures/videos in a clean background that is not messy
 - Take structure in an environment that has opposing color to the structure itself
 - Take a decent amount of pictures that covers a wide range of position
 - Try to take images with the same angles among an axis
 
+### Script Usage
+- colmap_runner.py → run colmap from command line
+- image_position_extractor.py → used in matrix.py to extract colmap output
+- matrix.py → outputs json object of intrinsic and extrinsic matrix
 
 ### Reference for Additional Research
 - COLMAP Installation\
