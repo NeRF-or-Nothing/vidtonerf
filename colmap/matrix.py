@@ -22,6 +22,7 @@ import numpy as np
 import image_position_extractor
 import json
 
+
 # https://en.wikipedia.org/wiki/Conversion_between_quaternions_and_Euler_angles
 def euler_from_quaternion(x, y, z, w):
     """

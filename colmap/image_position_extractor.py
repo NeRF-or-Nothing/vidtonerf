@@ -13,7 +13,7 @@ import csv
 #reads the data from infile (assumed to be an output file from COLMAP) and
 #    puts the data into outfile.
 #
-#returns a status code -
+#returns a status code - 
 #    0 = Success
 #    1 = Unspecified error
 #    2 = FileNotFoundError; happens when infile cannot be found
