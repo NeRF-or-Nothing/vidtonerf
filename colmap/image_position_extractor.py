@@ -26,7 +26,7 @@ def extract_position_data(infile, outfile, debug=False):
         return 2
     except:
         return 1
-    
+
     lines = file.readlines()
     images = []
 
@@ -61,7 +61,7 @@ def extract_position_data(infile, outfile, debug=False):
         writer.writeheader()
         for image in images:
             writer.writerow(image)
-    
+
     return 0
 
 if __name__ == '__main__':

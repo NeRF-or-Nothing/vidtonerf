@@ -20,6 +20,8 @@ import csv
 import math
 import numpy as np
 import image_position_extractor
+import json
+
 
 # https://en.wikipedia.org/wiki/Conversion_between_quaternions_and_Euler_angles
 def euler_from_quaternion(x, y, z, w):
@@ -95,22 +97,25 @@ def quaternion_rotation_matrix(qw, qx, qy, qz) -> np.ndarray:
     r22 = 1 - 2 * qx**2 - 2 * qy**2
 
     # 3x3 rotation matrix
-    rotation_matrix = np.array([[r00, r01, r02], 
-                                [r10, r11, r12], 
+    rotation_matrix = np.array([[r00, r01, r02],
+                                [r10, r11, r12],
                                 [r20, r21, r22]])
     # np.set_printoptions(threshold=sys.maxsize)
     return rotation_matrix
 
 
 def get_extrinsic(fp: str = "parsed_data.csv"):
-    # opening input ile
+
+    frames = []
+
+    # contrains filepath and extrinsic matrix
     with open(fp) as csv_file:
         csv_reader = csv.reader(csv_file, delimiter=",")
         row = next(csv_reader)  # start with second line
-        print("EXTRINSIC:")
 
         for row in csv_reader:
             image_name = str(row[0])
+            filepath = "./static/" + "image_name"
 
             qw = float(row[1])
             qx = float(row[2])
@@ -126,10 +131,14 @@ def get_extrinsic(fp: str = "parsed_data.csv"):
             r = quaternion_rotation_matrix(qw, qx, qy, qz)  # rotational matrix
             r_t = r.transpose()
             extrinsic = -r_t * T  # projection_centers
-            print(image_name)
-            print(extrinsic, end="")
-            print("\n")
+            extrinsic_list = extrinsic.tolist()        # convert to list for json
 
+            img_frame = { "filepath": filepath,
+                          "extrinsic_matrix": extrinsic_list}
+
+            frames.append(img_frame)
+
+    return frames;
 
 def get_intrinsic(fp: str = "cameras.txt"):
     infile = open(fp, "r")
@@ -139,34 +148,40 @@ def get_intrinsic(fp: str = "cameras.txt"):
         data = line.split(" ")
         if not data[0].startswith("#"):
             camera = data[1]
-            width = data[2]
-            height = data[3]
+            width = int(data[2])
+            height = int(data[3])
 
-            fx = data[4]
-            fy = data[5]
-            x0 = data[6]
-            y0 = data[7]
+            fx = float(data[4])
+            fy = float(data[5])
+            x0 = float(data[6])
+            y0 = float(data[7])
 
     intrinsic = np.array([[fx, 0, x0], [0, fy, y0], [0, 0, 1]])
+    intrinsic_list = intrinsic.tolist()      # convert to list for json
 
-    print(camera + " => RESOLUTION: (" + width + "," + height + ")\n")
-    print("INTRINSIC:")
-    print(intrinsic, end="")
-    print("\n")
+    intrinsic = { "vid_width": width,
+                  "vid_height": height,
+                  "intrinsic_matrix": intrinsic_list
+                }
+
+    return intrinsic
 
 
 def main():
     # check for input argument
     if len(sys.argv) != 3:
         print("bad arguments: ")
+        # python3 matrix.py images.txt camera.txt
         print("Usage: python3 %s images.txt camera.txt" % sys.argv[0])
         sys.exit(1)
 
-    sys.stdout = open("out_matrix.txt", "w")
-    get_intrinsic()
-    get_extrinsic()
-    sys.stdout.close()
+    intrinsic = get_intrinsic()
+    extrinsic = get_extrinsic()
+    intrinsic["frames"] = extrinsic
+    json_object= json.dumps(intrinsic, indent=4)
 
+    with open('data.json', 'w') as outfile:
+        outfile.write(json_object)
 
 if __name__ == "__main__":
     image_position_extractor.extract_position_data("images.txt", "parsed_data.csv")
