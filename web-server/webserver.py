@@ -1,7 +1,6 @@
 import argparse
 import os
 import magic
-import json
 from flask import Flask, request, make_response, send_file
 from werkzeug.utils import secure_filename
 
@@ -23,12 +22,7 @@ class WebServer:
     def add_routes(self) -> None:
         @self.app.route("/")
         def hello_world():
-            return "You shouldn't be here"
-
-        @self.app.route("/<name>")
-        # remove later
-        def hello_name(name: str):
-            return f"Hello {name}"
+            return "Do not access"
 
         @self.app.route("/video", methods=["POST"])
         def recv_video():
