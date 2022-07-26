@@ -1,8 +1,9 @@
 import argparse
 import os
 import magic
-from flask import Flask, request
-from werkzeug import secure_filename
+import json
+from flask import Flask, request, make_response, send_file
+from werkzeug.utils import secure_filename
 
 
 class WebServer:
@@ -37,32 +38,39 @@ class WebServer:
             given a cookie to see if the video is done periodically
             """
             video = request.files.get("file")
-            video_name = "videos/" + secure_filename(video.filename)
-            video.save(os.path.join(os.getcwd(), video_name))
+            video_name = secure_filename(video.filename)
+            path = "videos/" + video_name
+            video.save(os.path.join(os.getcwd(), path))
 
             try:
-                vid_type = magic.from_file(video_name, mime=True)
+                vid_type = magic.from_file(path, mime=True)
                 self.app.logger.info("video type: %s", vid_type)
             except Exception as e:
-                return "Error: couldn't figure out file type " + repr(e)
-
-            # now pass to nerf/tensorf/colmap/sfm, and decide if synchronous or asynchronous
+                response = make_response("Error: couldn't figure out file type " + repr(e))
+                response.headers['Access-Control-Allow-Origin'] = '*'
+                return response
+                
+            
+            # TODO: now pass to nerf/tensorf/colmap/sfm, and decide if synchronous or asynchronous
             # will we use a db for cookies/ids?
+                
+            response = make_response(video_name)
+            response.headers['Access-Control-Allow-Origin'] = '*'
 
-            return "Video Received"
+            return response
 
-        @self.app.route("/video", methods=["GET"])
-        def send_video():
-            """
-            Placeholder for if/when the frontend queries this periodically to see if it's done
-            """
-
-            # pseudocode
-            # video = db.get_video(user_id/session_id)
-            # if video.done:
-            #     return video.get_video_data()
-            # else:
-            #     return "Video not done"
+        @self.app.route("/video/<vidid>", methods=["GET"])
+        def send_video(vidid: str):
+            print(vidid)
+            try:
+                path = os.path.join(os.getcwd(), "videos/" + vidid)
+                response = make_response(send_file(path))
+                response.headers['Access-Control-Allow-Origin'] = '*'
+            except Exception as e:
+                response = make_response("Error: video does not exist")
+                response.headers['Access-Control-Allow-Origin'] = '*'
+            
+            return response
 
     # Eric moment
     def write_to_colmap(self, video_fp: str):
