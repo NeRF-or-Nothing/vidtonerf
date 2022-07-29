@@ -22,6 +22,7 @@ import numpy as np
 import image_position_extractor
 import json
 
+
 # https://en.wikipedia.org/wiki/Conversion_between_quaternions_and_Euler_angles
 def euler_from_quaternion(x, y, z, w):
     """
@@ -129,6 +130,7 @@ def get_extrinsic(fp: str = "parsed_data.csv"):
             T = np.array([tx, ty, tz])
             r = quaternion_rotation_matrix(qw, qx, qy, qz)  # rotational matrix
 
+
             extrinsic = np.zeros((4,4))
             extrinsic[0:3,0:3] = r;
             extrinsic[0:3,3] = T;
@@ -193,3 +195,4 @@ def main():
 if __name__ == "__main__":
     image_position_extractor.extract_position_data("images.txt", "parsed_data.csv")
     main()
+
