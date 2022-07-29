@@ -130,6 +130,13 @@ def get_extrinsic(fp: str = "parsed_data.csv"):
             r = quaternion_rotation_matrix(qw, qx, qy, qz)  # rotational matrix
             r_t = r.transpose()
             extrinsic = -r_t * T  # projection_centers
+
+            extrinsic = np.pad(extrinsic, ((0,1),(0,1))) # Lengthen each dimension by 1.
+            extrinsic[0][3] = tx;
+            extrinsic[1][3] = ty;
+            extrinsic[2][3] = tz;
+            extrinsic[3][3] = 1;
+
             extrinsic_list = extrinsic.tolist()        # convert to list for json
 
             img_frame = { "filepath": filepath,
