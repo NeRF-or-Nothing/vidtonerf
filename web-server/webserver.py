@@ -1,14 +1,25 @@
 import argparse
 import os
 import magic
+import uuid
+
 from flask import Flask, request, make_response, send_file
 from werkzeug.utils import secure_filename
 
+from services.queue_service import RabbitMQService
+
+def is_valid_uuid(value):
+    try:
+        uuid.UUID(str(value))
+        return True
+    except ValueError:
+        return False
 
 class WebServer:
-    def __init__(self, args: argparse.Namespace) -> None:
+    def __init__(self, args: argparse.Namespace, rmqserv: RabbitMQService) -> None:
         self.app = Flask(__name__)
         self.args = args
+        self.rmqserv = rmqserv
 
     def run(self) -> None:
         self.app.logger.setLevel(
@@ -32,7 +43,10 @@ class WebServer:
             given a cookie to see if the video is done periodically
             """
             video = request.files.get("file")
-            video_name = secure_filename(video.filename)
+            # TODO: UUID4 is cryptographically secure on CPython, but this is not guaranteed in the specifications.
+            # Might want to change this.
+            # TODO: Don't assume videos are in mp4 format
+            video_name = str(uuid.uuid4()) + ".mp4"
             path = "videos/" + video_name
             video.save(os.path.join(os.getcwd(), path))
 
@@ -55,14 +69,14 @@ class WebServer:
 
         @self.app.route("/video/<vidid>", methods=["GET"])
         def send_video(vidid: str):
-            print(vidid)
             try:
-                path = os.path.join(os.getcwd(), "videos/" + vidid)
-                response = make_response(send_file(path))
-                response.headers['Access-Control-Allow-Origin'] = '*'
+                if(is_valid_uuid(vidid)):
+                    path = os.path.join(os.getcwd(), "videos/" + vidid + ".mp4")
+                    response = make_response(send_file(path))
+                else:
+                    response = make_response("Error: invalid UUID")
             except Exception as e:
-                response = make_response("Error: video does not exist")
-                response.headers['Access-Control-Allow-Origin'] = '*'
+                response = make_response("Error: does not exist")
             
             return response
 

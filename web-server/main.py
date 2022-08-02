@@ -6,9 +6,15 @@ Afterwards, the Web Server is started.
 from argparser import create_arguments
 from webserver import WebServer
 
-if __name__ == "__main__":
+from services.queue_service import RabbitMQService
+
+def main():
     parser = create_arguments()
     args = parser.parse_args()
+    rmqservice = RabbitMQService()
 
-    server = WebServer(args)
+    server = WebServer(args, rmqservice)
     server.run()
+    
+
+if __name__ == "__main__":
