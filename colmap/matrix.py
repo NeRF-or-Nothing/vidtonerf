@@ -115,7 +115,7 @@ def get_extrinsic(fp: str = "parsed_data.csv"):
 
         for row in csv_reader:
             image_name = str(row[0])
-            filepath = "./static/" + "image_name"
+            filepath = "./static/" + image_name
 
             qw = float(row[1])
             qx = float(row[2])
@@ -140,6 +140,10 @@ def get_extrinsic(fp: str = "parsed_data.csv"):
             #camera = -r_t @T
             extrinsic[3][3] = 1
             extrinsic = np.linalg.inv(extrinsic)
+            extrinsic[0:3,2] *= -1  #flip the y and z axis
+            extrinsic[0:3,1] *= -1
+            extrinsic = extrinsic[[1,0,2,3],:]
+            extrinsic[2,:] *= -1  # flip world upsidedown
 
             extrinsic_list = extrinsic.tolist()        # convert to list for json
 
@@ -149,7 +153,7 @@ def get_extrinsic(fp: str = "parsed_data.csv"):
             frames.append(img_frame)
 
     return frames;
-
+# add the video name thing
 def get_intrinsic(fp: str = "cameras.txt"):
     infile = open(fp, "r")
     lines = infile.readlines()
