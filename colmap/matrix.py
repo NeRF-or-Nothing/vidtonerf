@@ -129,8 +129,17 @@ def get_extrinsic(fp: str = "parsed_data.csv"):
             # find extrinsic matrix
             T = np.array([tx, ty, tz])
             r = quaternion_rotation_matrix(qw, qx, qy, qz)  # rotational matrix
-            r_t = r.transpose()
-            extrinsic = -r_t * T  # projection_centers
+
+
+            extrinsic = np.zeros((4,4))
+            extrinsic[0:3,0:3] = r;
+            extrinsic[0:3,3] = T;
+
+            #T is not the position of the camera
+            #r_t = r.transpose()
+            #camera = -r_t @T
+            extrinsic[3][3] = 1;
+
             extrinsic_list = extrinsic.tolist()        # convert to list for json
 
             img_frame = { "filepath": filepath,
@@ -186,3 +195,4 @@ def main():
 if __name__ == "__main__":
     image_position_extractor.extract_position_data("images.txt", "parsed_data.csv")
     main()
+
