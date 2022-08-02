@@ -3,20 +3,20 @@ import os
 import sys
 
 #Usage: python colmap_runner.py --flags
-#Flags: --output_folder "path"   ==> Directory to where colmap will put its output.
-#                                  > Defaults to the folder where this script is
+#Flags: --colmap_exe_path "path" ==> Path to the colmap executeable.
+#                                  > Defaults to looking for COLMAP.bat in a folder called COLMAP in the 
+#                                  > folder this script is in
+#
+#       --image_path "path"      ==> Path to the folder containing the images for COLMAP's input
+#                                  > Defailts to looking for a folder called "Images" in the folder 
+#                                  > this script is in
 #
 #       --name "name"            ==> Name of the folder to be created to store the data for this instance
 #                                  > of colmap.
 #                                  > Defaults to "colmap_output"
 #
-#       --colmap_exe_path "path" ==> Path to the colmap executeable.
-#                                  > Defaults to looking for COLMAP.bat in a folder called COLMAP in the
-#                                  > folder this script is in
-#
-#       --image_path "path"      ==> Path to the folder containing the images for COLMAP's input
-#                                  > Defailts to looking for a folder called "Images" in the folder
-#                                  > this script is in
+#       --output_folder "path"   ==> Directory to where colmap will put its output.
+#                                  > Defaults to the folder where this script is
 
 
 
