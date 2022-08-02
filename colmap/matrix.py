@@ -132,13 +132,14 @@ def get_extrinsic(fp: str = "parsed_data.csv"):
 
 
             extrinsic = np.zeros((4,4))
-            extrinsic[0:3,0:3] = r;
-            extrinsic[0:3,3] = T;
+            extrinsic[0:3,0:3] = r
+            extrinsic[0:3,3] = T
 
             #T is not the position of the camera
             #r_t = r.transpose()
             #camera = -r_t @T
-            extrinsic[3][3] = 1;
+            extrinsic[3][3] = 1
+            extrinsic = np.linalg.inv(extrinsic)
 
             extrinsic_list = extrinsic.tolist()        # convert to list for json
 
