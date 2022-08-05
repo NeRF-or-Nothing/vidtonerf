@@ -27,7 +27,7 @@ class WebServer:
 
         self.add_routes()
         
-        # TODO: Change this to work based on where Flask server starts
+        # TODO: Change this to work based on where Flask server starts. Also, use the actual ip address
         self.sserv.base_url = "http://localhost:5000"
 
         self.app.run(port=self.args.port)

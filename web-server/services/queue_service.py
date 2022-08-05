@@ -1,6 +1,5 @@
 
 import pika, os, logging
-import asyncio
 
 def rabbit_read_out(callback, queue):
     connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))

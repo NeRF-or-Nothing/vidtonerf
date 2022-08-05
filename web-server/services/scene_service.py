@@ -18,8 +18,6 @@ def read_sfm(client, jsonstr):
         with open(path, 'w') as f:
             f.write(data)
         
-        
-    
 def read_nerf(client, json):
     try:
         obj = json.loads(jsonstr)

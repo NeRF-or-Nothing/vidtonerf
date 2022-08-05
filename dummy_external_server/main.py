@@ -4,19 +4,63 @@ Afterwards, the Web Server is started.
 """
 
 from argparser import create_arguments
-from webserver import WebServer
+from sfm_server import SfmServer
+import threading
+import pika
+import json
+    
 
-from services.queue_service import RabbitMQService
-from services.scene_service import SceneService
+def process_sfm(jsonstr):
+    print('got string %s', jsonstr)
+    try:
+        obj = json.loads(jsonstr)
+    except ValueError:
+        return
+    # download files from webserver
+    for link, filename in zip(obj["filelinks"], obj["filenames"]):
+        data = requests.get(link)
+        # TODO: This is literally just saving files that are being arbitrarily served up.
+        # Needs to be more secure.
+        path = os.path.join(os.getcwd(), "data/" + filename)
+        with open(path, 'w') as f:
+            f.write(data)
+    # 'process'
+    print('processing')
+    sleep(60)
+    
+    # make new json
+    sfmjson = {}
+    sfmjson["filelinks"] = []
+    sfmjson["filelinks"].append("http://localhost:5555/" + filename)
+    # Currently, filenames are associated with filelinks only by order.
+    # We may want to change this.
+    sfmjson["filenames"] = []
+    # TODO: Should depend on actual file name
+    sfmjson["filenames"].append(filename)
+    
+    # send to rabbit
+    connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
+    channel = connection.channel()
+    channel.queue_declare(queue='sfm-out')
+    self.channel.basic_publish(exchange='', routing_key='sfm-in', body=json.dumps(sjmjson))
+            
+def rabbit_read_out(callback, queue):
+    connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
+    channel = connection.channel()
+    channel.queue_declare(queue=queue)
+
+    channel.basic_consume(queue=queue, auto_ack=True, on_message_callback=callback)
+    print('starting to consume')
+    channel.start_consuming()
 
 def main():
     parser = create_arguments()
     args = parser.parse_args()
-    rmqservice = RabbitMQService()
-    
-    sservice = SceneService(rmqservice)
+    data_thread = threading.Thread(target=rabbit_read_out,\
+        args=(lambda ch, method, properties, body : process_sfm(body), 'sfm-in'))
+    data_thread.start()
 
-    server = WebServer(args, sservice)
+    server = SfmServer(args)
     server.run()
 
 if __name__ == "__main__":
