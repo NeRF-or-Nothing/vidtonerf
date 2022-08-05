@@ -6,17 +6,15 @@ class SceneService:
     def __init__(self, queue: RabbitMQService):
         self.manager = SceneManager()
         self.queue = queue
-        
-    def generate_sfm_json(self, uuid):
-        http_path = self.base_url + "/videos/" + uuid
-        self.scenes = ToSfmData(http_path)
-        send_str = json.dumps(http_path)
      
-    def generate_nerf_json(self, uuid):
+    def send_nerf_json(self, uuid):
         pass
         
     def add_video(self, uuid):
-        pass
+        http_path = self.base_url + "/videos/" + uuid
+        send_str = json.dumps(http_path)
+        self.queue.post_video(send_str)
+        # TODO: set up new scene in Mongo and add the uuid and the filename
     
     def add_sfm(self, uuid):
         pass

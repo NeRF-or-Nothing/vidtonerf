@@ -16,10 +16,10 @@ def is_valid_uuid(value):
         return False
 
 class WebServer:
-    def __init__(self, args: argparse.Namespace, rmqserv: RabbitMQService) -> None:
+    def __init__(self, args: argparse.Namespace, sserv: SceneService) -> None:
         self.app = Flask(__name__)
         self.args = args
-        self.rmqserv = rmqserv
+        self.sserv = sserv
 
     def run(self) -> None:
         self.app.logger.setLevel(
@@ -48,7 +48,7 @@ class WebServer:
             # Might want to change this.
             # TODO: Don't assume videos are in mp4 format
             video_name = str(uuid.uuid4()) + ".mp4"
-            path = "videos/" + video_name
+            path = "data/raw/videos/" + video_name
             video.save(os.path.join(os.getcwd(), path))
 
             try:
@@ -57,8 +57,9 @@ class WebServer:
             except Exception as e:
                 response = make_response("Error: couldn't figure out file type " + repr(e))
                 response.headers['Access-Control-Allow-Origin'] = '*'
-                return response
-                
+                return response    
+            
+            self.sserv.add_video(uuid)
             
             # TODO: now pass to nerf/tensorf/colmap/sfm, and decide if synchronous or asynchronous
             # will we use a db for cookies/ids?
@@ -72,7 +73,7 @@ class WebServer:
         def send_video(vidid: str):
             try:
                 if(is_valid_uuid(vidid)):
-                    path = os.path.join(os.getcwd(), "videos/" + vidid + ".mp4")
+                    path = os.path.join(os.getcwd(), "data/raw/videos/" + vidid + ".mp4")
                     response = make_response(send_file(path))
                 else:
                     response = make_response("Error: invalid UUID")
