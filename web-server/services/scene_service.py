@@ -1,4 +1,4 @@
-
+import os
 import requests
 import json
 from models.scene import SceneManager
@@ -10,8 +10,15 @@ def read_sfm(client, jsonstr):
     except ValueError:
         return
     # load into mongodb and download files from server
-    for link in obj["filelinks"]:
+    for link, filename in zip(obj["filelinks"], obj["filenames"]):
         data = requests.get(link)
+        # TODO: This is literally just saving files that are being arbitrarily served up.
+        # Needs to be more secure.
+        path = os.path.join(os.getcwd(), "data/sfm/" + filename)
+        with open(path, 'w') as f:
+            f.write(data)
+        
+        
     
 def read_nerf(client, json):
     try:
@@ -36,6 +43,12 @@ class SceneService:
         vidjson = {}
         vidjson["filelinks"] = []
         vidjson["filelinks"].append(self.base_url + "/videos/" + uuid)
+        # Currently, filenames are associated with filelinks only by order.
+        # We may want to change this.
+        vidjson["filenames"] = []
+        # TODO: Should depend on actual file name
+        vidjson["filenames"].append(uuid + ".mp4")
+        
         send_str = json.dumps(vidjson)
         self.queue.post_video(send_str)
         # TODO: set up new scene in Mongo and add the uuid and the filename

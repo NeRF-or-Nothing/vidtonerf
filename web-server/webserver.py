@@ -4,7 +4,6 @@ import magic
 from uuid import uuid4
 
 from flask import Flask, request, make_response, send_file
-from werkzeug.utils import secure_filename
 
 from services.scene_service import SceneService
 
