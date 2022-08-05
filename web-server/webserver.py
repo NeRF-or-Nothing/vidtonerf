@@ -29,6 +29,7 @@ class WebServer:
         self.add_routes()
 
         self.app.run(port=self.args.port)
+        self.rmqserv.base_url = request.base_url
 
     def add_routes(self) -> None:
         @self.app.route("/")

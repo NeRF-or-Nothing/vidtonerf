@@ -7,14 +7,18 @@ from argparser import create_arguments
 from webserver import WebServer
 
 from services.queue_service import RabbitMQService
+from services.scene_service import SceneService
 
 def main():
     parser = create_arguments()
     args = parser.parse_args()
     rmqservice = RabbitMQService()
+    
+    sservice = SceneService(rmqservice)
 
     server = WebServer(args, rmqservice)
     server.run()
-    
 
 if __name__ == "__main__":
+    main()
+    
