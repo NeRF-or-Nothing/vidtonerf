@@ -1,5 +1,4 @@
 import pika, os, logging
-import json
 
 class RabbitMQService:
     # TODO: Communicate with rabbitmq server on port defined in web-server arguments
@@ -11,9 +10,6 @@ class RabbitMQService:
         self.channel.queue_declare(queue='sfm-out')
         self.channel.queue_declare(queue='nerf-in')
         self.channel.queue_declare(queue='nerf-out')
-        
-        # Needs to be set as soon as webserver is started
-        self.base_url = None
         
         
     def post_video(self, send_str):

@@ -1,12 +1,12 @@
 import argparse
 import os
 import magic
-import uuid
+from uuid import uuid4
 
 from flask import Flask, request, make_response, send_file
 from werkzeug.utils import secure_filename
 
-from services.queue_service import RabbitMQService
+from services.scene_service import SceneService
 
 def is_valid_uuid(value):
     try:
@@ -27,9 +27,11 @@ class WebServer:
         ) if self.args.log.isdecimal() else self.app.logger.setLevel(self.args.log)
 
         self.add_routes()
+        
+        # TODO: Change this to work based on where Flask server starts
+        self.sserv.base_url = "http://localhost:5000"
 
         self.app.run(port=self.args.port)
-        self.rmqserv.base_url = request.base_url
 
     def add_routes(self) -> None:
         @self.app.route("/")
@@ -47,7 +49,8 @@ class WebServer:
             # TODO: UUID4 is cryptographically secure on CPython, but this is not guaranteed in the specifications.
             # Might want to change this.
             # TODO: Don't assume videos are in mp4 format
-            video_name = str(uuid.uuid4()) + ".mp4"
+            uuid = str(uuid4())
+            video_name = uuid + ".mp4"
             path = "data/raw/videos/" + video_name
             video.save(os.path.join(os.getcwd(), path))
 
@@ -64,7 +67,7 @@ class WebServer:
             # TODO: now pass to nerf/tensorf/colmap/sfm, and decide if synchronous or asynchronous
             # will we use a db for cookies/ids?
                 
-            response = make_response(video_name)
+            response = make_response(uuid)
             response.headers['Access-Control-Allow-Origin'] = '*'
 
             return response

@@ -16,11 +16,9 @@ def main():
     
     sservice = SceneService(rmqservice)
 
-    server = WebServer(args, rmqservice)
+    server = WebServer(args, sservice)
     server.run()
 
 if __name__ == "__main__":
-    try:
-        main()
-    except 
+    main()
     

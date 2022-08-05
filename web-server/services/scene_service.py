@@ -1,4 +1,5 @@
 
+import json
 from models.scene import SceneManager
 from services.queue_service import RabbitMQService
 
@@ -6,6 +7,9 @@ class SceneService:
     def __init__(self, queue: RabbitMQService):
         self.manager = SceneManager()
         self.queue = queue
+        
+        # Needs to be set as soon as webserver is started
+        self.base_url = None
      
     def send_nerf_json(self, uuid):
         pass
