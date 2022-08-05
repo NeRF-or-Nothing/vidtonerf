@@ -2,7 +2,7 @@
 import pika, os, logging
 import asyncio
 
-def rabbit_read_out(intake_func, queue):
+def rabbit_read_out(callback, queue):
     connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
     channel = connection.channel()
     channel.queue_declare(queue=queue)

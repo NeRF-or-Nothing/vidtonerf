@@ -12,11 +12,14 @@ from services.scene_service import SceneService, read_sfm, read_nerf
 
 
 def main():
+    # MongoDB client, I don't know how to set this up
     client = None
     parser = create_arguments()
     args = parser.parse_args()
     rmqservice = RabbitMQService()
     # Starting async operations
+    # This starts consuming messages from the queue, a blocking call, and when one comes in it
+    # provides the body to read_sfm through the callback argument
     sfm_thread = threading.Thread(target=rabbit_read_out,\
         args=(lambda ch, method, properties, body : read_sfm(client, body), 'sfm-out'))
     nerf_thread = threading.Thread(target=rabbit_read_out,\
