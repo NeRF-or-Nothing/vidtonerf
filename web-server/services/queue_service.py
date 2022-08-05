@@ -7,7 +7,7 @@ def rabbit_read_out(callback, queue):
     channel = connection.channel()
     channel.queue_declare(queue=queue)
 
-    channel.basic_consume(queue=queue, auto_ack=True, on_message_callback=intake_func)
+    channel.basic_consume(queue=queue, auto_ack=True, on_message_callback=callback)
     channel.start_consuming()
     
 
