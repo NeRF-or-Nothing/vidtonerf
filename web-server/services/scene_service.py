@@ -1,7 +1,23 @@
 
+import requests
 import json
 from models.scene import SceneManager
-from services.queue_service import RabbitMQService
+from services.queue_service import RabbitMQService, rabbit_read_out
+
+def read_sfm(client, jsonstr):
+    try:
+        obj = json.loads(jsonstr)
+    except ValueError:
+        return
+    # load into mongodb and download files from server
+    
+def read_nerf(client, json):
+    try:
+        obj = json.loads(jsonstr)
+    except ValueError:
+        return
+    # load into mongodb and download files from server
+    
 
 class SceneService:
     def __init__(self, queue: RabbitMQService):
@@ -16,7 +32,8 @@ class SceneService:
         
     def add_video(self, uuid):
         vidjson = {}
-        vidjson["http_path"] = self.base_url + "/videos/" + uuid
+        vidjson["filelinks"] = []
+        vidjson["filelinks"].append(self.base_url + "/videos/" + uuid)
         send_str = json.dumps(vidjson)
         self.queue.post_video(send_str)
         # TODO: set up new scene in Mongo and add the uuid and the filename
