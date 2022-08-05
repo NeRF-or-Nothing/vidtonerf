@@ -15,8 +15,9 @@ class SceneService:
         pass
         
     def add_video(self, uuid):
-        http_path = self.base_url + "/videos/" + uuid
-        send_str = json.dumps(http_path)
+        vidjson = {}
+        vidjson["http_path"] = self.base_url + "/videos/" + uuid
+        send_str = json.dumps(vidjson)
         self.queue.post_video(send_str)
         # TODO: set up new scene in Mongo and add the uuid and the filename
     
