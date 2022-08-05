@@ -30,9 +30,3 @@ class RabbitMQService:
     def post_sfm(self, send_str):
         self.channel.basic_publish(exchange='', routing_key='sfm-in', body=uuid)
         
-    def get_sfm(self):
-        pass
-        
-    def get_nerf(self):
-        pass
-        

@@ -10,6 +10,8 @@ def read_sfm(client, jsonstr):
     except ValueError:
         return
     # load into mongodb and download files from server
+    for link in obj["filelinks"]:
+        data = requests.get(link)
     
 def read_nerf(client, json):
     try:
