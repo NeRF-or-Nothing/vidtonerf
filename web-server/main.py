@@ -9,6 +9,7 @@ import threading
 
 from services.queue_service import RabbitMQService, rabbit_read_out
 from services.scene_service import SceneService, read_sfm, read_nerf
+from services.clean_service import cleanup
 
 
 def main():
@@ -26,6 +27,9 @@ def main():
         args=(lambda ch, method, properties, body : read_nerf(client, body), 'nerf-out'))
     sfm_thread.start()
     nerf_thread.start()
+    
+    cleanup_thread = threading.Thread(target=cleanup, args=(client))
+    cleanup_thread.start()
     
     sservice = SceneService(rmqservice)
 

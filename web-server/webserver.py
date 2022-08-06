@@ -84,13 +84,4 @@ class WebServer:
                 response = make_response("Error: does not exist")
             
             return response
-
-    # Eric moment
-    def write_to_colmap(self, video_fp: str):
-        pass
-
-    def write_to_nerf(self, video_fp: str):
-        pass
-
-    def write_to_tensorf(self, video_fp: str):
-        pass
+            

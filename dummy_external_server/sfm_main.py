@@ -12,7 +12,7 @@ import json
 import requests
 import os
     
-
+# Should split this up into multiple functions
 def process_sfm(jsonstr):
     print('got string %s', jsonstr)
     try:
