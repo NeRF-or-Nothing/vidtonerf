@@ -15,8 +15,8 @@ def read_sfm(client, jsonstr):
         # TODO: This is literally just saving files that are being arbitrarily served up.
         # Needs to be more secure.
         path = os.path.join(os.getcwd(), "data/sfm/" + filename)
-        with open(path, 'w') as f:
-            f.write(data)
+        with open(path, 'wb') as f:
+            f.write(data.content)
         
 def read_nerf(client, json):
     try:

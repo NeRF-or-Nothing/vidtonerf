@@ -21,7 +21,7 @@ class SfmServer:
     def add_routes(self) -> None:
 
         @self.app.route("/<path>", methods=["GET"])
-        def send_video(vidid: str):
+        def send_video(path: str):
             try:
                 path = os.path.join(os.getcwd(), "data/" + path)
                 response = make_response(send_file(path))

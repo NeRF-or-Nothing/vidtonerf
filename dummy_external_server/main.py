@@ -5,9 +5,12 @@ Afterwards, the Web Server is started.
 
 from argparser import create_arguments
 from sfm_server import SfmServer
+from time import sleep
 import threading
 import pika
 import json
+import requests
+import os
     
 
 def process_sfm(jsonstr):
@@ -22,11 +25,11 @@ def process_sfm(jsonstr):
         # TODO: This is literally just saving files that are being arbitrarily served up.
         # Needs to be more secure.
         path = os.path.join(os.getcwd(), "data/" + filename)
-        with open(path, 'w') as f:
-            f.write(data)
+        with open(path, 'wb') as f:
+            f.write(data.content)
     # 'process'
     print('processing')
-    sleep(60)
+    sleep(10)
     
     # make new json
     sfmjson = {}
@@ -42,7 +45,7 @@ def process_sfm(jsonstr):
     connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
     channel = connection.channel()
     channel.queue_declare(queue='sfm-out')
-    self.channel.basic_publish(exchange='', routing_key='sfm-in', body=json.dumps(sjmjson))
+    channel.basic_publish(exchange='', routing_key='sfm-in', body=json.dumps(sfmjson))
             
 def rabbit_read_out(callback, queue):
     connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
