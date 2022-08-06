@@ -40,7 +40,7 @@ class SceneService:
     def add_video(self, uuid):
         vidjson = {}
         vidjson["filelinks"] = []
-        vidjson["filelinks"].append(self.base_url + "/videos/" + uuid)
+        vidjson["filelinks"].append(self.base_url + "/video/" + uuid)
         # Currently, filenames are associated with filelinks only by order.
         # We may want to change this.
         vidjson["filenames"] = []

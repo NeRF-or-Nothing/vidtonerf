@@ -25,6 +25,7 @@ def process_sfm(jsonstr):
         # TODO: This is literally just saving files that are being arbitrarily served up.
         # Needs to be more secure.
         path = os.path.join(os.getcwd(), "data/" + filename)
+        # TODO: Add error checking for if the GET throws an error, instead of saving the error message to a file
         with open(path, 'wb') as f:
             f.write(data.content)
     # 'process'
@@ -45,7 +46,7 @@ def process_sfm(jsonstr):
     connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
     channel = connection.channel()
     channel.queue_declare(queue='sfm-out')
-    channel.basic_publish(exchange='', routing_key='sfm-in', body=json.dumps(sfmjson))
+    channel.basic_publish(exchange='', routing_key='sfm-out', body=json.dumps(sfmjson))
             
 def rabbit_read_out(callback, queue):
     connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))

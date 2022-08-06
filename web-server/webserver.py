@@ -1,7 +1,7 @@
 import argparse
 import os
 import magic
-from uuid import uuid4
+from uuid import uuid4, UUID
 
 from flask import Flask, request, make_response, send_file
 
@@ -9,7 +9,7 @@ from services.scene_service import SceneService
 
 def is_valid_uuid(value):
     try:
-        uuid.UUID(str(value))
+        UUID(str(value))
         return True
     except ValueError:
         return False
@@ -80,6 +80,7 @@ class WebServer:
                 else:
                     response = make_response("Error: invalid UUID")
             except Exception as e:
+                print(e)
                 response = make_response("Error: does not exist")
             
             return response
