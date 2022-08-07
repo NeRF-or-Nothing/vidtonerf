@@ -1,1 +1,4 @@
 __pycache__
+data/raw/videos/*
+data/sfm/*
+data/nerf/*

@@ -70,6 +70,7 @@ class Nerf:
         result: dict = {}
         result["model_file_path"] = from_union([from_str, from_none], self.model_file_path)
         result["rendered_video_path"] = from_union([from_str, from_none], self.rendered_video_path)
+
         #ingnore null
         result = {k:v for k,v in result.items() if v}
         return result
@@ -91,6 +92,7 @@ class Frame:
         result: dict = {}
         result["file_path"] = from_union([from_str, from_none], self.file_path)
         result["extrinsic_matrix"] = from_union([lambda x: from_list(lambda x: from_list(from_int, x), x), from_none], self.extrinsic_matrix).tolist()
+
         #ingnore null
         result = {k:v for k,v in result.items() if v}
         return result
@@ -112,6 +114,7 @@ class Sfm:
         result: dict = {}
         result["intrinsic_matrix"] = from_union([lambda x: from_list(lambda x: from_list(from_int, x), x), from_none], self.intrinsic_matrix.to_list())
         result["frames"] = from_union([lambda x: from_list(lambda x: to_class(Frame, x), x), from_none], self.frames)
+
         #ingnore null
         result = {k:v for k,v in result.items() if v}
         return result
@@ -145,6 +148,7 @@ class Video:
         result["fps"] = from_union([from_int, from_none], self.fps)
         result["duration"] = from_union([from_int, from_none], self.duration)
         result["frame_count"] = from_union([from_int, from_none], self.frame_count)
+
         #ingnore null
         result = {k:v for k,v in result.items() if v}
         return result
@@ -251,5 +255,3 @@ class SceneManager:
             return Sfm.from_dict(doc["nerf"])
         else:
             return None
-
-
