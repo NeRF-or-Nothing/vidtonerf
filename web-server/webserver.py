@@ -5,7 +5,7 @@ from uuid import uuid4, UUID
 
 from flask import Flask, request, make_response, send_file
 
-from services.scene_service import SceneService
+from services.scene_service import ClientService, SceneService
 
 def is_valid_uuid(value):
     try:
@@ -19,6 +19,7 @@ class WebServer:
         self.app = Flask(__name__)
         self.args = args
         self.sserv = sserv
+        self.cservice = ClientService()
 
     def run(self) -> None:
         self.app.logger.setLevel(
@@ -37,31 +38,23 @@ class WebServer:
         def hello_world():
             return "Do not access"
 
-        @self.app.route("/video", methods=["POST"])
+        @self.app.route("/video", methods=["POST", "PUT"])
         def recv_video():
             """
             Must decide if we want to hang here until video is done,
             or return a 20x received and let the front-end query an endpoint
             given a cookie to see if the video is done periodically
             """
-            video = request.files.get("file")
+            video_file = request.files.get("file")
+            print("VIDEO FILE", video_file)
             # TODO: UUID4 is cryptographically secure on CPython, but this is not guaranteed in the specifications.
             # Might want to change this.
             # TODO: Don't assume videos are in mp4 format
-            uuid = str(uuid4())
-            video_name = uuid + ".mp4"
-            path = "data/raw/videos/" + video_name
-            video.save(os.path.join(os.getcwd(), path))
-
-            try:
-                vid_type = magic.from_file(path, mime=True)
-                self.app.logger.info("video type: %s", vid_type)
-            except Exception as e:
-                response = make_response("Error: couldn't figure out file type " + repr(e))
+            uuid = self.cservice.handle_incoming_video(video_file)
+            if(uuid is None):
+                response = make_response("ERROR")
                 response.headers['Access-Control-Allow-Origin'] = '*'
-                return response    
-            
-            self.sserv.add_video(uuid)
+                return response
             
             # TODO: now pass to nerf/tensorf/colmap/sfm, and decide if synchronous or asynchronous
             # will we use a db for cookies/ids?
@@ -76,7 +69,7 @@ class WebServer:
             try:
                 if(is_valid_uuid(vidid)):
                     path = os.path.join(os.getcwd(), "data/raw/videos/" + vidid + ".mp4")
-                    response = make_response(send_file(path))
+                    response = make_response(send_file(path, as_attachment=True))
                 else:
                     response = make_response("Error: invalid UUID")
             except Exception as e:

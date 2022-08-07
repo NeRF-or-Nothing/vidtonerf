@@ -21,15 +21,15 @@ def main():
     # Starting async operations
     # This starts consuming messages from the queue, a blocking call, and when one comes in it
     # provides the body to read_sfm through the callback argument
-    sfm_thread = threading.Thread(target=rabbit_read_out,\
-        args=(lambda ch, method, properties, body : read_sfm(client, body), 'sfm-out'))
-    nerf_thread = threading.Thread(target=rabbit_read_out,\
-        args=(lambda ch, method, properties, body : read_nerf(client, body), 'nerf-out'))
-    sfm_thread.start()
-    nerf_thread.start()
+    #sfm_thread = threading.Thread(target=rabbit_read_out,\
+    #    args=(lambda ch, method, properties, body : read_sfm(client, body), 'sfm-out'))
+    #nerf_thread = threading.Thread(target=rabbit_read_out,\
+    #    args=(lambda ch, method, properties, body : read_nerf(client, body), 'nerf-out'))
+    #sfm_thread.start()
+    #nerf_thread.start()
     
-    cleanup_thread = threading.Thread(target=cleanup, args=(client))
-    cleanup_thread.start()
+    #cleanup_thread = threading.Thread(target=cleanup, args=(client))
+    #cleanup_thread.start()
     
     sservice = SceneService(rmqservice)
 

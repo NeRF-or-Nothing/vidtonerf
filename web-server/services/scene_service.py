@@ -1,8 +1,10 @@
 import os
 import requests
 import json
-from models.scene import SceneManager
+from models.scene import SceneManager, Video
 from services.queue_service import RabbitMQService, rabbit_read_out
+from uuid import uuid4, UUID
+from werkzeug.utils import secure_filename
 
 def read_sfm(client, jsonstr):
     try:
@@ -28,7 +30,7 @@ def read_nerf(client, json):
 
 class SceneService:
     def __init__(self, queue: RabbitMQService):
-        self.manager = SceneManager()
+        self.manager = SceneManager(MongoClient(host="localhost",port=27017))
         self.queue = queue
         
         # Needs to be set as soon as webserver is started
@@ -56,3 +58,44 @@ class SceneService:
         
     def get_nerf(self, uuid):
         pass
+
+from pymongo import MongoClient
+class ClientService:
+    def __init__(self):
+        mongoclient = MongoClient(host="localhost",port=27017)
+        self.manager = SceneManager(mongoclient)
+        #self.queue = queue
+
+    def handle_incoming_video(self, video_file):
+
+        # receive video and check for validity
+        file_name = secure_filename(video_file.filename)
+        if file_name == '':
+            print("ERROR: file not received")
+            return None
+
+        file_ext = os.path.splitext(file_name)[1]
+        if file_ext != ".mp4":
+            print("ERROR: improper file extension uploaded")
+            return None
+
+        # generate new id and save to file with db record
+        uuid = str(uuid4())
+        video_name = uuid + ".mp4"
+        videos_folder = "data/raw/videos"
+        video_file_path = os.path.join(videos_folder,video_name)
+        
+        video_file.save(video_file_path)
+
+        video = Video(video_file_path)
+        self.manager.set_video(uuid, video)
+
+        # create rabbitmq job for sfm
+        #TODO
+
+        return uuid
+
+
+
+
+
