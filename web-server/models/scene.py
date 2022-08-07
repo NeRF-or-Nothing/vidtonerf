@@ -70,6 +70,9 @@ class Nerf:
         result: dict = {}
         result["model_file_path"] = from_union([from_str, from_none], self.model_file_path)
         result["rendered_video_path"] = from_union([from_str, from_none], self.rendered_video_path)
+
+        #ingnore null
+        result = {k:v for k,v in result.items() if v}
         return result
 
 
@@ -89,6 +92,9 @@ class Frame:
         result: dict = {}
         result["file_path"] = from_union([from_str, from_none], self.file_path)
         result["extrinsic_matrix"] = from_union([lambda x: from_list(lambda x: from_list(from_int, x), x), from_none], self.extrinsic_matrix).tolist()
+
+        #ingnore null
+        result = {k:v for k,v in result.items() if v}
         return result
 
 
@@ -108,6 +114,9 @@ class Sfm:
         result: dict = {}
         result["intrinsic_matrix"] = from_union([lambda x: from_list(lambda x: from_list(from_int, x), x), from_none], self.intrinsic_matrix.to_list())
         result["frames"] = from_union([lambda x: from_list(lambda x: to_class(Frame, x), x), from_none], self.frames)
+
+        #ingnore null
+        result = {k:v for k,v in result.items() if v}
         return result
 
 
@@ -139,6 +148,9 @@ class Video:
         result["fps"] = from_union([from_int, from_none], self.fps)
         result["duration"] = from_union([from_int, from_none], self.duration)
         result["frame_count"] = from_union([from_int, from_none], self.frame_count)
+
+        #ingnore null
+        result = {k:v for k,v in result.items() if v}
         return result
 
 
@@ -167,6 +179,9 @@ class Scene:
         result["video"] = from_union([lambda x: to_class(Video, x), from_none], self.video)
         result["sfm"] = from_union([lambda x: to_class(Sfm, x), from_none], self.sfm)
         result["nerf"] = from_union([lambda x: to_class(Nerf, x), from_none], self.nerf)
+
+        #ingnore null
+        result = {k:v for k,v in result.items() if v}
         return result
 
 
@@ -179,34 +194,64 @@ def scene_to_dict(x: Scene) -> Any:
 
 
 class SceneManager:
-    def __init__(self) -> None:
-        pass
+    def __init__(self, client: MongoClient) -> None:
+        self.db = client["nerfdb"]
+        self.collection = self.db["scenes"]
+        self.upsert=True
     
+    #TODO: define set update get and delete for each object 
     # adds scene to the collection replacing any existing scene with the same id
-    def add_scene(self, _id: str, scene: Scene):
+    def set_scene(self, _id: str, scene: Scene):
         key = {"_id": _id}
         value = {"$set": scene.to_dict()}
-        self.collection.update_one(key, value,upsert=True)
+        self.collection.update_one(key, value, upsert=self.upsert)
 
-    def add_video(self, _id: str, vid: Video):
+    def set_video(self, _id: str, vid: Video):
         key = {"_id":_id}
+        fields = {"video."+k:v for k,v in vid.to_dict().items()}
+        value = {"$set": fields}
+        self.collection.update_one(key, value, upsert=self.upsert)
 
-        self.collection.update_one(key)
+    def set_sfm(self, _id: str, sfn: Sfm):
+        key = {"_id":_id}
+        fields = {"sfm."+k:v for k,v in sfn.to_dict().items()}
+        value = {"$set": fields}
+        self.collection.update_one(key, value, upsert=self.upsert)
 
+    def set_nerf(self, _id: str, nerf: Nerf):
+        key = {"_id":_id}
+        fields = {"nerf."+k:v for k,v in nerf.to_dict().items()}
+        value = {"$set": fields}
+        self.collection.update_one(key, value, upsert=self.upsert)
 
-import pymongo
-def test_db(id):
-    dblist = client.list_database_names()
-    print(dblist)
-    if "nerfdb" in dblist:
-        print("DB exists")
-    db = client["nerfdb"]
+    def get_scene(self, _id: str) -> Scene:
+        key = {"_id":_id}
+        doc = self.collection.find_one(key)
+        if doc:
+            return scene_from_dict(doc)
+        else:
+            return None
 
-    man = SceneManager(client)
-    scene = Scene(id)
+    def get_video(self, _id: str) -> Video:
+        key = {"_id":_id}
+        doc = self.collection.find_one(key)
+        if doc and "video" in doc:
+            return Video.from_dict(doc["video"])
+        else:
+            return None
 
-    scene.id = id
-    #scene.status = 1212
-    #scene.video = Video()
-
-    man.add_scene(id,scene)
+    def get_sfm(self, _id: str) -> Sfm:
+        key = {"_id":_id}
+        doc = self.collection.find_one(key)
+        if doc and "sfm" in doc:
+            return Sfm.from_dict(doc["sfm"])
+        else:
+            return None
+    
+    def get_nerf(self, _id: str) -> Nerf:
+        key = {"_id":_id}
+        doc = self.collection.find_one(key)
+        if doc and "nerf" in doc:
+            return Sfm.from_dict(doc["nerf"])
+        else:
+            return None
