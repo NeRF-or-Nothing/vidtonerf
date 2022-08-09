@@ -15,11 +15,10 @@ def is_valid_uuid(value):
         return False
 
 class WebServer:
-    def __init__(self, args: argparse.Namespace, sserv: SceneService) -> None:
+    def __init__(self, args: argparse.Namespace, cserv: ClientService) -> None:
         self.app = Flask(__name__)
         self.args = args
-        self.sserv = sserv
-        self.cservice = ClientService()
+        self.cservice = cserv
 
     def run(self) -> None:
         self.app.logger.setLevel(
@@ -30,8 +29,6 @@ class WebServer:
         
         # TODO: Change this to work based on where Flask server starts. Also, use the actual ip address
         ### self.sserv.base_url = request.remote_addr
-
-        self.sserv.base_url = "http://localhost:5000"
 
         self.app.run(port=self.args.port)
 
@@ -78,5 +75,7 @@ class WebServer:
                 print(e)
                 response = make_response("Error: does not exist")
             
+            # TODO: Remove only after website uses final NeRF data
+            response.headers['Access-Control-Allow-Origin'] = '*'
             return response
             

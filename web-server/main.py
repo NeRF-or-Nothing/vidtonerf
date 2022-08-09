@@ -8,13 +8,14 @@ from webserver import WebServer
 import threading
 
 from services.queue_service import RabbitMQService, rabbit_read_out
-from services.scene_service import SceneService, read_sfm, read_nerf
+from services.scene_service import SceneService, ClientService, read_sfm, read_nerf
 from services.clean_service import cleanup
+from pymongo import MongoClient
 
 
 def main():
     # MongoDB client, I don't know how to set this up
-    client = None
+    client = MongoClient(host="localhost",port=27017,username="admin",password="password123")
     parser = create_arguments()
     args = parser.parse_args()
     rmqservice = RabbitMQService()
@@ -31,9 +32,9 @@ def main():
     #cleanup_thread = threading.Thread(target=cleanup, args=(client))
     #cleanup_thread.start()
     
-    sservice = SceneService(rmqservice)
+    cservice = ClientService(client, rmqservice)
 
-    server = WebServer(args, sservice)
+    server = WebServer(args, cservice)
     server.run()
 
 if __name__ == "__main__":
