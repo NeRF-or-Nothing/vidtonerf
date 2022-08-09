@@ -87,7 +87,7 @@ class WebServer:
             if ospath == None or not os.path.exists(ospath):
                 response = make_response(status_str)
             else:
-                response = make_response("hello world")
+                response = make_response(send_file(ospath, as_attachment=True))
                 
             response.headers['Access-Control-Allow-Origin'] = '*'
             return response
