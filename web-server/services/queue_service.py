@@ -2,6 +2,9 @@
 import pika, os, logging
 
 def rabbit_read_out(callback, queue):
+    # TODO: Add security
+    credentials = pika.PlainCredentials('admin', 'password123')
+    parameters = pika.ConnectionParameters('localhost', 5672, '/', credentials)
     connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
     channel = connection.channel()
     channel.queue_declare(queue=queue)
@@ -13,8 +16,10 @@ def rabbit_read_out(callback, queue):
 class RabbitMQService:
     # TODO: Communicate with rabbitmq server on port defined in web-server arguments
     def __init__(self):
+        credentials = pika.PlainCredentials('admin', 'password123')
+        parameters = pika.ConnectionParameters('localhost', 5672, '/', credentials)
         # Change this ->
-        self.connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
+        self.connection = pika.BlockingConnection(parameters)
         self.channel = self.connection.channel()
         self.channel.queue_declare(queue='sfm-in')
         self.channel.queue_declare(queue='sfm-out')
