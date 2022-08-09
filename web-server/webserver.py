@@ -74,8 +74,22 @@ class WebServer:
             except Exception as e:
                 print(e)
                 response = make_response("Error: does not exist")
+           
+            return response
             
-            # TODO: Remove only after website uses final NeRF data
+        @self.app.route("/nerfvideo/<vidid>", methods=["GET"])
+        def send_nerf_video(vidid: str):
+            ospath = None
+            status_str = "Invalid UUID"
+            if is_valid_uuid(vidid):
+                status_str, ospath = self.cservice.get_nerf_video_path(vidid)
+            # Could change this to return both
+            if ospath == None or not os.path.exists(ospath):
+                response = make_response(status_str)
+            else:
+                response = make_response("hello world")
+                
             response.headers['Access-Control-Allow-Origin'] = '*'
             return response
             
+        

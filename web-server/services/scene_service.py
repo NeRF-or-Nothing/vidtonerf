@@ -69,7 +69,6 @@ class ClientService:
         #self.queue = queue
 
     def handle_incoming_video(self, video_file):
-
         # receive video and check for validity
         file_name = secure_filename(video_file.filename)
         if file_name == '':
@@ -97,7 +96,13 @@ class ClientService:
 
         return uuid
 
-
-
-
-
+    # Returns a string describing the status of the video in the database
+    # along with a path to the final video, if available
+    def get_nerf_video_path(self, uuid):
+        # TODO: depend on mongodb to load file path
+        # return None if not found
+        video_name = uuid + ".mp4"
+        videos_folder = "data/raw/videos"
+        video_file_path = os.path.join(videos_folder,video_name)
+        return ("Video ready", video_file_path)
+        
