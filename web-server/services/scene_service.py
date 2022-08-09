@@ -6,6 +6,8 @@ from services.queue_service import RabbitMQService, rabbit_read_out
 from uuid import uuid4, UUID
 from werkzeug.utils import secure_filename
 
+from pymongo import MongoClient
+
 def read_sfm(client, jsonstr):
     try:
         obj = json.loads(jsonstr)
@@ -29,7 +31,7 @@ def read_nerf(client, json):
     
 
 class SceneService:
-    def __init__(self, queue: RabbitMQService):
+    def __init__(self, client: MongoClient, queue: RabbitMQService):
         self.manager = SceneManager(MongoClient(host="localhost",port=27017))
         self.queue = queue
         
@@ -59,11 +61,11 @@ class SceneService:
     def get_nerf(self, uuid):
         pass
 
-from pymongo import MongoClient
 class ClientService:
-    def __init__(self):
-        mongoclient = MongoClient(host="localhost",port=27017)
-        self.manager = SceneManager(mongoclient)
+    def __init__(self, client: MongoClient, rmqservice: RabbitMQService):
+        self.manager = SceneManager(client)
+        self.rmqservice = rmqservice
+        
         #self.queue = queue
 
     def handle_incoming_video(self, video_file):
