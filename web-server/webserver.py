@@ -3,7 +3,7 @@ import os
 import magic
 from uuid import uuid4, UUID
 
-from flask import Flask, request, make_response, send_file
+from flask import Flask, request, make_response, send_file, send_from_directory
 
 from services.scene_service import ClientService, SceneService
 
@@ -91,5 +91,9 @@ class WebServer:
                 
             response.headers['Access-Control-Allow-Origin'] = '*'
             return response
+
+        @self.app.route("/worker-data/<path:path>")
+        def send_worker_data(path):
+            return send_from_directory('data',path[5:])
             
         

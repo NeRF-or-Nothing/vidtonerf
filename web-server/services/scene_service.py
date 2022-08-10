@@ -93,6 +93,7 @@ class ClientService:
 
         # create rabbitmq job for sfm
         #TODO
+        self.rmqservice.publish_sfm_job(uuid, video)
 
         return uuid
 
