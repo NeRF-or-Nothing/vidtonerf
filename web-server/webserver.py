@@ -94,6 +94,8 @@ class WebServer:
 
         @self.app.route("/worker-data/<path:path>")
         def send_worker_data(path):
+            # serves data directory for workers to pull any local data
+            # TODO make this access secure
             return send_from_directory('data',path[5:])
             
         
