@@ -123,12 +123,13 @@ class RabbitMQService:
 
         #convert each url to filepath
         #store png 
-        for fr_ in sfm_data['frame']:
-            prev_path = urlparse(fr_['filepath'])
-            filename = os.path.basename(filepath.path)
+        for i,fr_ in enumerate(sfm_data['frames']):
+            # TODO: This code trusts the file extensions from the worker
+            url_path = urlparse(fr_['file_path']).path
+            filename = url_path.split("/")[-1]
             filepath =  "data/sfm/" + id + "/" + filename
             path = os.path.join(os.getcwd(), filepath)
-            fr_['filepath'] = filepath
+            sfm_data['frames'][i] = filepath
 
         #if want png fileurl into filepath changed
         new_data = json.dumps(sfm_data)
