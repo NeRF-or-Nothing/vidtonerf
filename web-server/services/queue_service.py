@@ -77,8 +77,8 @@ class RabbitMQService:
         sfm_data = sfm.to_dict()
         for i,frame in enumerate(sfm_data["frames"]):
             file_path = frame["file_path"]
-            file_url = to_url(file_path)
-            sfm_data["frames"][i] = file_url
+            file_url = self.to_url(file_path)
+            sfm_data["frames"][i]["file_path"] = file_url
         
         combined_job = {**job, **sfm_data}
         json_job = json.dumps(combined_job)
@@ -93,7 +93,7 @@ class RabbitMQService:
         # "intrinsic_matrix": float[]
         # "frames" = array of urls and extrinsic_matrix[float]
     #   channel.basic.consume(on_message_callback = callback_sfm_job, queue = sfm_out)
-    def callback_sfm_job(ch,method,properties,body){
+    def callback_sfm_job(self, ch,method,properties,body):
 
         # maybe call sfm.from_dict and create a dictionary 
         # and then access each frame and convert url to filepath then store
@@ -119,7 +119,7 @@ class RabbitMQService:
 
         #load queue object
         sfm_data = json.load(body)
-        id = sfm_scene['id']
+        id = sfm_data['id']
 
         #convert each url to filepath
         #store png 
@@ -142,17 +142,14 @@ class RabbitMQService:
         # depends if you want autoack = True
         ch.basic_ack(delivery_tag = method.delivery_tag)
         #publish_nerf_job(id, vid: Video, sfm: Sfm)
-    }
 
 
-    def return_nerf_job(ch,method,properties,body){
+
+    def return_nerf_job(self, ch,method,properties,body):
         nerf_data = json.load(body)
         id = nerf_data['id']
         nerf = Nerf()
         nerf.from_dict(nerf_data)
         sManager = SceneManager()
         sManager.set_nerf(id, nerf)
-        
-
-    }
         
