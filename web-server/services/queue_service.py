@@ -5,17 +5,7 @@ import json
 from urllib.parse import urlparse
 import requests
 
-def rabbit_read_out(callback, queue):
-    # TODO: Add security
-    credentials = pika.PlainCredentials('admin', 'password123')
-    parameters = pika.ConnectionParameters('localhost', 5672, '/', credentials)
-    connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
-    channel = connection.channel()
-    channel.queue_declare(queue=queue)
-
-    channel.basic_consume(queue=queue, auto_ack=True, on_message_callback=callback)
-    channel.start_consuming()
-
+#TODO: make rabbitmq resistent to failed worker jobs
 
 class RabbitMQService:
     # TODO: Communicate with rabbitmq server on port defined in web-server arguments
@@ -26,28 +16,31 @@ class RabbitMQService:
         self.connection = pika.BlockingConnection(parameters)
         self.channel = self.connection.channel()
         self.channel.queue_declare(queue='sfm-in')
-        self.channel.queue_declare(queue='sfm-out')
         self.channel.queue_declare(queue='nerf-in')
-        self.channel.queue_declare(queue='nerf-out')
 
         #TODO: make this dynamic from config file
         self.base_url = "http://localhost:5000/"
-        
 
     def to_url(self,file_path):
         return self.base_url+"/worker-data/"+file_path
 
-        
+    #
     def publish_sfm_job(self, id: str, vid: Video ):
+        """
+            publish_sfm_job publishes a new job to the sfm-in que hosted on RabbitMQ
+        """
         job = {
             "id": id,
             "file_path": self.to_url(vid.file_path)
         }
         json_job = json.dumps(job)
         self.channel.basic_publish(exchange='', routing_key='sfm-in', body=json_job)
-        
-        
+           
     def publish_nerf_job(self, id: str, vid: Video, sfm: Sfm):
+        """
+            publish_nerf_job publishes a new job to the nerf-in que hosted on RabbitMQ
+            image sets are converted to links to be downloaded by the nerf worker
+        """
         job = {
             "id": id,
             "vid_width": vid.width,
@@ -75,7 +68,19 @@ class RabbitMQService:
         # "frames" = array of urls and extrinsic_matrix[float]
     #   channel.basic.consume(on_message_callback = callback_sfm_job, queue = sfm_out)
 
-    def callback_sfm_job(self, ch,method,properties,body):
+
+
+def digest_finished_sfms(scene_manager: SceneManager):
+
+    # create unique connection to rabbitmq since pika is NOT thread safe
+    credentials = pika.PlainCredentials('admin', 'password123')
+    parameters = pika.ConnectionParameters('localhost', 5672, '/', credentials)
+
+    connection = pika.BlockingConnection(parameters)
+    channel = connection.channel()
+    channel.queue_declare(queue='nerf-out')
+
+    def process_sfm_job(ch,method,properties,body):
         #load queue object
         sfm_data = json.load(body)
         id = sfm_data['id']
@@ -99,25 +104,36 @@ class RabbitMQService:
         #call SceneManager to store to database
         sfm = Sfm()
         sfm.from_dict(new_data)
-        sManager = SceneManager()
-        sManager.set_sfm(id,sfm)
+        scene_manager.set_sfm(id,sfm)
 
-        # depends if you want autoack = True
-        #   ch.basic_ack(delivery_tag = method.delivery_tag)
-        #publish_nerf_job(id, vid: Video, sfm: Sfm)
-
+     # Will block and call process_nerf_job repeatedly
+    channel.basic_consume(queue='sfm-out', on_message_callback=process_sfm_job)
+    channel.start_consuming()
 
 
-    def return_nerf_job(self, ch,method,properties,body):
-    
+def digest_finished_nerfs(scene_manager: SceneManager):
+
+    # create unique connection to rabbitmq since pika is NOT thread safe
+    credentials = pika.PlainCredentials('admin', 'password123')
+    parameters = pika.ConnectionParameters('localhost', 5672, '/', credentials)
+
+    connection = pika.BlockingConnection(parameters)
+    channel = connection.channel()
+    channel.queue_declare(queue='nerf-out')
+
+    def process_nerf_job(ch,method,properties,body):
         nerf_data = json.load(body)
-        video = requests.get(nerf_data['model_file_path'])
+        video = requests.get(nerf_data['rendered_video_path'])
         filepath = "data/nerf/" + id
         path = os.path.join(os.getcwd(), filepath)
         video.save(path)
         id = nerf_data['id']
         nerf = Nerf()
         nerf.from_dict(nerf_data)
-        sManager = SceneManager()
-        sManager.set_nerf(id, nerf)
+        scene_manager.set_nerf(id, nerf)
+
+    # Will block and call process_nerf_job repeatedly
+    channel.basic_consume(queue='nerf-out', on_message_callback=process_nerf_job)
+    channel.start_consuming()
+
         

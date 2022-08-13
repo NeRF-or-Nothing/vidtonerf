@@ -5,7 +5,7 @@ from uuid import uuid4, UUID
 
 from flask import Flask, request, make_response, send_file, send_from_directory
 
-from services.scene_service import ClientService, SceneService
+from services.scene_service import ClientService
 
 def is_valid_uuid(value):
     try:
@@ -65,6 +65,7 @@ class WebServer:
 
         @self.app.route("/video/<vidid>", methods=["GET"])
         def send_video(vidid: str):
+            # TODO: Change routing to serve rendered videos
             try:
                 if(is_valid_uuid(vidid)):
                     path = os.path.join(os.getcwd(), "data/raw/videos/" + vidid + ".mp4")
