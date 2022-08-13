@@ -3,6 +3,7 @@ import pika, os, logging
 from models.scene import Video, Sfm, Nerf, SceneManager
 import json
 from urllib.parse import urlparse
+import requests
 
 def rabbit_read_out(callback, queue):
     # TODO: Add security
@@ -15,26 +16,6 @@ def rabbit_read_out(callback, queue):
     channel.basic_consume(queue=queue, auto_ack=True, on_message_callback=callback)
     channel.start_consuming()
 
-#function to push job to queue
-#test async 
-#python -i file.py
-#async
-# nerf output
-#   model file - directory,id
-# 
-# sfm output
-# take off id
-# sfm object model convert into python file path is where the link locate 
-# convert to_dict make it into dictionary
-# id _dict
-# os.save...
-# with id
-# subfolder for images
-# iterate frames array of dict
-# filepath = link to resource (proper name .png)
-# from_dict to convert
-# saving to database
-# json format
 
 class RabbitMQService:
     # TODO: Communicate with rabbitmq server on port defined in web-server arguments
@@ -93,30 +74,8 @@ class RabbitMQService:
         # "intrinsic_matrix": float[]
         # "frames" = array of urls and extrinsic_matrix[float]
     #   channel.basic.consume(on_message_callback = callback_sfm_job, queue = sfm_out)
+
     def callback_sfm_job(self, ch,method,properties,body):
-
-        # maybe call sfm.from_dict and create a dictionary 
-        # and then access each frame and convert url to filepath then store
-        # modify member variable
-        # create sfm objects with sfmout data
-            #sfm = Sfm()
-            #sfm.from_dict(obj)
-        # store png into data/sfm/id/name
-            #json.load(body)
-            #body.get(frames)
-            #loop through frames
-                # convert url to filepath to filename
-                    # each png is url parse url to get filename by 
-                    # filepath = urlparse(fileurl);
-                    # filename = os.path.basename(filepath.path)
-                    # path = os.path.join(os.getcwd(), "data/sfm/" + id + "/" + filename)
-        # to store to database call scenemanager and set sfm
-            #sManager = SceneManage()
-            #sManager.set_sfm(id,sfm)
-        # channel.start_consuming()
-
-        # do we only read one object at a time?
-
         #load queue object
         sfm_data = json.load(body)
         id = sfm_data['id']
@@ -125,13 +84,16 @@ class RabbitMQService:
         #store png 
         for i,fr_ in enumerate(sfm_data['frames']):
             # TODO: This code trusts the file extensions from the worker
+            url = fr_['filepath']
+            png = requests.get(url)
             url_path = urlparse(fr_['file_path']).path
             filename = url_path.split("/")[-1]
             filepath =  "data/sfm/" + id + "/" + filename
             path = os.path.join(os.getcwd(), filepath)
+            png.save(path)
             sfm_data['frames'][i] = filepath
 
-        #if want png fileurl into filepath changed
+
         new_data = json.dumps(sfm_data)
 
         #call SceneManager to store to database
@@ -141,13 +103,18 @@ class RabbitMQService:
         sManager.set_sfm(id,sfm)
 
         # depends if you want autoack = True
-        ch.basic_ack(delivery_tag = method.delivery_tag)
+        #   ch.basic_ack(delivery_tag = method.delivery_tag)
         #publish_nerf_job(id, vid: Video, sfm: Sfm)
 
 
 
     def return_nerf_job(self, ch,method,properties,body):
+    
         nerf_data = json.load(body)
+        video = requests.get(nerf_data['model_file_path'])
+        filepath = "data/nerf/" + id
+        path = os.path.join(os.getcwd(), filepath)
+        video.save(path)
         id = nerf_data['id']
         nerf = Nerf()
         nerf.from_dict(nerf_data)
