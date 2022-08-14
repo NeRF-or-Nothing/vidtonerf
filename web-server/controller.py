@@ -81,13 +81,14 @@ class WebServer:
         @self.app.route("/nerfvideo/<vidid>", methods=["GET"])
         def send_nerf_video(vidid: str):
             ospath = None
-            status_str = "Invalid UUID"
+            status_str = "Processing"
             if is_valid_uuid(vidid):
-                status_str, ospath = self.cservice.get_nerf_video_path(vidid)
+                ospath = self.cservice.get_nerf_video_path(vidid)
             # Could change this to return both
             if ospath == None or not os.path.exists(ospath):
                 response = make_response(status_str)
             else:
+                status_str = "Video ready"
                 response = make_response(send_file(ospath, as_attachment=True))
                 
             response.headers['Access-Control-Allow-Origin'] = '*'

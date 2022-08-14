@@ -49,8 +49,8 @@ class ClientService:
     def get_nerf_video_path(self, uuid):
         # TODO: depend on mongodb to load file path
         # return None if not found
-        video_name = uuid + ".mp4"
-        videos_folder = "data/raw/videos"
-        video_file_path = os.path.join(videos_folder,video_name)
-        return ("Video ready", video_file_path)
+        nerf = self.manager.get_nerf(uuid)
+        if nerf:
+            return ("Video ready", nerf.rendered_video_path)
+        return None
         

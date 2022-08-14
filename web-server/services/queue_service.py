@@ -11,7 +11,7 @@ class RabbitMQService:
     # TODO: Communicate with rabbitmq server on port defined in web-server arguments
     def __init__(self):
         credentials = pika.PlainCredentials('admin', 'password123')
-        parameters = pika.ConnectionParameters('localhost', 5672, '/', credentials)
+        parameters = pika.ConnectionParameters('localhost', 5672, '/', credentials, heartbeat=300)
         # Change this ->
         self.connection = pika.BlockingConnection(parameters)
         self.channel = self.connection.channel()
@@ -74,39 +74,47 @@ def digest_finished_sfms(scene_manager: SceneManager):
 
     # create unique connection to rabbitmq since pika is NOT thread safe
     credentials = pika.PlainCredentials('admin', 'password123')
-    parameters = pika.ConnectionParameters('localhost', 5672, '/', credentials)
+    parameters = pika.ConnectionParameters('localhost', 5672, '/', credentials, heartbeat=300)
 
     connection = pika.BlockingConnection(parameters)
     channel = connection.channel()
-    channel.queue_declare(queue='nerf-out')
+    channel.queue_declare(queue='sfm-out')
 
     def process_sfm_job(ch,method,properties,body):
         #load queue object
-        sfm_data = json.load(body)
+        sfm_data = json.loads(body.decode())
         id = sfm_data['id']
 
         #convert each url to filepath
         #store png 
         for i,fr_ in enumerate(sfm_data['frames']):
             # TODO: This code trusts the file extensions from the worker
-            url = fr_['filepath']
-            png = requests.get(url)
+            # TODO: handle files not found
+            url = fr_['file_path']
+            img = requests.get(url)
             url_path = urlparse(fr_['file_path']).path
             filename = url_path.split("/")[-1]
-            filepath =  "data/sfm/" + id + "/" + filename
-            path = os.path.join(os.getcwd(), filepath)
-            png.save(path)
-            sfm_data['frames'][i] = filepath
+            file_path =  "data/sfm/" + id 
+            os.makedirs(file_path, exist_ok=True) 
+            file_path += "/" + filename
+            open(file_path,"wb").write(img.content)
 
+            path = os.path.join(os.getcwd(), file_path)
+            sfm_data['frames'][i]["file_path"] = file_path
 
-        new_data = json.dumps(sfm_data)
 
         #call SceneManager to store to database
-        sfm = Sfm()
-        sfm.from_dict(new_data)
+        vid = Video.from_dict(sfm_data)
+        sfm = Sfm.from_dict(sfm_data)
         scene_manager.set_sfm(id,sfm)
+        scene_manager.set_video(id,vid)
+
+        print("saved finished sfm job")
+        new_data = json.dumps(sfm_data)
+        ch.basic_ack(delivery_tag=method.delivery_tag)
 
      # Will block and call process_nerf_job repeatedly
+    channel.basic_qos(prefetch_count=1)
     channel.basic_consume(queue='sfm-out', on_message_callback=process_sfm_job)
     channel.start_consuming()
 
@@ -115,24 +123,29 @@ def digest_finished_nerfs(scene_manager: SceneManager):
 
     # create unique connection to rabbitmq since pika is NOT thread safe
     credentials = pika.PlainCredentials('admin', 'password123')
-    parameters = pika.ConnectionParameters('localhost', 5672, '/', credentials)
+    parameters = pika.ConnectionParameters('localhost', 5672, '/', credentials,heartbeat=300)
 
     connection = pika.BlockingConnection(parameters)
     channel = connection.channel()
     channel.queue_declare(queue='nerf-out')
 
     def process_nerf_job(ch,method,properties,body):
-        nerf_data = json.load(body)
+        nerf_data = json.loads(body.decode())
         video = requests.get(nerf_data['rendered_video_path'])
-        filepath = "data/nerf/" + id
-        path = os.path.join(os.getcwd(), filepath)
-        video.save(path)
+        filepath = "data/nerf/" 
+        os.mkdir(filepath, exist_ok=True)
+        filepath = os.path.join(filepath,+f"{id}.mp4" )
+        open(filepath,"wb").write(video.content)
+
+        nerf_data['rendered_video_path'] = filepath
         id = nerf_data['id']
         nerf = Nerf()
         nerf.from_dict(nerf_data)
         scene_manager.set_nerf(id, nerf)
+        #ch.basic_ack(delivery_tag=method.delivery_tag)
 
     # Will block and call process_nerf_job repeatedly
+    #channel.basic_qos(prefetch_count=1)
     channel.basic_consume(queue='nerf-out', on_message_callback=process_nerf_job)
     channel.start_consuming()
 
