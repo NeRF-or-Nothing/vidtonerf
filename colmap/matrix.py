@@ -115,7 +115,7 @@ def get_extrinsic(fp: str = "parsed_data.csv"):
 
         for row in csv_reader:
             image_name = str(row[0])
-            filepath = "./static/" + image_name
+            filepath = image_name
 
             qw = float(row[1])
             qx = float(row[2])
@@ -147,7 +147,7 @@ def get_extrinsic(fp: str = "parsed_data.csv"):
 
             extrinsic_list = extrinsic.tolist()        # convert to list for json
 
-            img_frame = { "filepath": filepath,
+            img_frame = { "file_path": filepath,
                           "extrinsic_matrix": extrinsic_list}
 
             frames.append(img_frame)
@@ -179,7 +179,12 @@ def get_intrinsic(fp: str = "cameras.txt"):
                 }
 
     return intrinsic
+def get_json_matrices(camera_file, motion_data ):
+    intrinsic = get_intrinsic(camera_file)
+    extrinsic = get_extrinsic(motion_data)
+    intrinsic["frames"] = extrinsic
 
+    return intrinsic
 
 def main():
     # check for input argument
