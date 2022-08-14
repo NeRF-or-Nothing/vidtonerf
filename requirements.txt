@@ -1,0 +1,5 @@
+Flask==2.1.2
+numpy==1.23.0
+pymongo==4.1.1
+python_magic==0.4.27
+Werkzeug==2.1.2
