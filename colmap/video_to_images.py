@@ -35,11 +35,12 @@ import sys
 #    2 = FileExistsError; happens when you try to create data in an already existing folder
 #    3 = FileNotFoundError; happens when you try to use an output folder that does not exist
 
-def split_video_into_frames(instance_name, output_path, ffmpeg_path, video_path, fps=0):
+def split_video_into_frames(instance_name, output_path, ffmpeg_path, video_path, fps=24):
     #Create our output folder
     if not output_path.endswith(("\\", "/")) and not instance_name.startswith(("\\", "/")):
         output_path = output_path + "/"
     instance_path = output_path + instance_name
+    print(ffmpeg_path, "-i", video_path, "-vf", "fps=" , fps, instance_path + '/%04d.png')
     try:
         os.mkdir(instance_path)
     except FileExistsError:
@@ -51,7 +52,7 @@ def split_video_into_frames(instance_name, output_path, ffmpeg_path, video_path,
 
     #Run ffmpeg
     try:
-        subprocess.call([ffmpeg_path, "-i", video_path, "-vf", "fps=" + fps, instance_path + '/%04d.png'])
+        subprocess.call([ffmpeg_path, "-i", video_path, "-vf", "fps=" + str(fps), instance_path + '/%04d.png'])
     except:
         return 1
 
