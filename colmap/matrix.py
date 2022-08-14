@@ -115,7 +115,7 @@ def get_extrinsic(fp: str = "parsed_data.csv"):
 
         for row in csv_reader:
             image_name = str(row[0])
-            filepath = "./static/" + "image_name"
+            filepath = image_name
 
             qw = float(row[1])
             qx = float(row[2])
@@ -132,23 +132,28 @@ def get_extrinsic(fp: str = "parsed_data.csv"):
 
 
             extrinsic = np.zeros((4,4))
-            extrinsic[0:3,0:3] = r;
-            extrinsic[0:3,3] = T;
+            extrinsic[0:3,0:3] = r
+            extrinsic[0:3,3] = T
 
             #T is not the position of the camera
             #r_t = r.transpose()
             #camera = -r_t @T
-            extrinsic[3][3] = 1;
+            extrinsic[3][3] = 1
+            extrinsic = np.linalg.inv(extrinsic)
+            extrinsic[0:3,2] *= -1  #flip the y and z axis
+            extrinsic[0:3,1] *= -1
+            extrinsic = extrinsic[[1,0,2,3],:]
+            extrinsic[2,:] *= -1  # flip world upsidedown
 
             extrinsic_list = extrinsic.tolist()        # convert to list for json
 
-            img_frame = { "filepath": filepath,
+            img_frame = { "file_path": filepath,
                           "extrinsic_matrix": extrinsic_list}
 
             frames.append(img_frame)
 
     return frames;
-
+# add the video name thing
 def get_intrinsic(fp: str = "cameras.txt"):
     infile = open(fp, "r")
     lines = infile.readlines()
@@ -174,7 +179,12 @@ def get_intrinsic(fp: str = "cameras.txt"):
                 }
 
     return intrinsic
+def get_json_matrices(camera_file, motion_data ):
+    intrinsic = get_intrinsic(camera_file)
+    extrinsic = get_extrinsic(motion_data)
+    intrinsic["frames"] = extrinsic
 
+    return intrinsic
 
 def main():
     # check for input argument
