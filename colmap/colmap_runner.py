@@ -52,18 +52,21 @@ def run_colmap(instance_name, output_path, colmap_path, images_path):
     try:
         database_path = instance_path + "/database.db"
         subprocess.call([colmap_path, "database_creator", "--database_path", database_path])
+        print("Created DB")
     except:
         return 1
 
     #Feature extracting
     try:
-        subprocess.call([colmap_path, "feature_extractor", "--database_path", database_path, "--image_path", images_path])
+        subprocess.call([colmap_path, "feature_extractor","--SiftExtraction.use_gpu=true","--ImageReader.single_camera=1", "--database_path", database_path, "--image_path", images_path])
+        print("Features Extracted")
     except:
         return 1
 
     #Feature matching
     try:
-        subprocess.call([colmap_path, "exhaustive_matcher", "--database_path", database_path])
+        print("Feature Matching")
+        subprocess.call([colmap_path, "exhaustive_matcher","--SiftMatching.use_gpu=true", "--database_path", database_path])
     except:
         return 1
 
@@ -75,11 +78,12 @@ def run_colmap(instance_name, output_path, colmap_path, images_path):
 
     #Getting model as text
     try:
-        subprocess.call([colmap_path, "model_converter", "--input_path", instance_path + r"\0", "--output_path", instance_path, "--output_type", "TXT"])
+        # TODO: no longer works on windows fix file paths or run in docker
+        subprocess.call([colmap_path, "model_converter", "--input_path", instance_path + r"/0", "--output_path", instance_path, "--output_type", "TXT"])
     except:
         return 1
 
-    return 0;
+    return 0
 
 
 if __name__ == '__main__':

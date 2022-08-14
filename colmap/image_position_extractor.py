@@ -32,9 +32,10 @@ def extract_position_data(infile, outfile, debug=False):
     images = []
 
     #Read each line of the file and add proper data to the images[] array
+    compatible_img_formats = (".jpg\n",".png\n")
     for line in lines:
         words = line.split(' ')
-        if words[-1].endswith(".JPG\n"):
+        if (words[-1].lower()).endswith(compatible_img_formats):
             image_data = {}
             qw, qx, qy, qz, tx, ty, tz = words[1:8]
             imageName = words[-1][:-1]
