@@ -18,9 +18,29 @@ class CameraPoseVisualizer:
         self.ax.set_xlabel('x')
         self.ax.set_ylabel('y')
         self.ax.set_zlabel('z')
+
+        # Create axis
+        axes = [3, 3, 3]
+        
+        # Create Data
+        data = np.ones(axes)
+        print(data.shape)
+        
+        # Control Transparency
+        alpha = 0.9
+        
+        # Control colour
+        colors = np.empty(axes + [4], dtype=np.float32)
+        
+        colors[:] = [1, 0, 0, alpha]  # red
+        x,y,z = np.indices((4,4,4),dtype='float32')
+        x-= 1.5
+        y-= 1.5
+        z-= 1.5
+        self.ax.voxels(x,y,z,data, facecolors=colors, edgecolors='grey')
         print('initialize camera pose visualizer')
 
-    def extrinsic2pyramid(self, extrinsic, color='r', focal_len_scaled=5, aspect_ratio=0.3):
+    def extrinsic2pyramid(self, extrinsic, color='r', focal_len_scaled=1, aspect_ratio=0.3):
         vertex_std = np.array([[0, 0, 0, 1],
                                [focal_len_scaled * aspect_ratio, -focal_len_scaled * aspect_ratio, focal_len_scaled, 1],
                                [focal_len_scaled * aspect_ratio, focal_len_scaled * aspect_ratio, focal_len_scaled, 1],
@@ -49,6 +69,7 @@ class CameraPoseVisualizer:
         self.fig.colorbar(mpl.cm.ScalarMappable(norm=norm, cmap=cmap), orientation='vertical', label='Frame Number')
 
     def show(self):
+        print("Displaying Data")
         plt.title('Extrinsic Parameters')
         plt.show()
 
@@ -58,15 +79,25 @@ if __name__ =='__main__':
 
     input_str = open(input_file)
     input = json.loads(input_str.read())
+    #intrinsic = np.asarray(input["intrinsic_matrix"])
+    #intrinsic = np.c_[ intrinsic, np.zeros(3) ]  
+    #intrinsic = np.expand_dims(intrinsic,axis=0)
+    #print(intrinsic)
 
     extrins = []
     for f in input["frames"]:
-        extrins+=[np.array(f["extrinsic_matrix"])]
+        extrinsic = np.array(f["extrinsic_matrix"])
+        #transform = (intrinsic @ extrinsic)
+        #transform = np.r_[transform, [np.zeros(4)]]
+        #transform[-1,-1] = 1
+        #print(transform)
+        #print(transform.shape)
+        extrins+=[ extrinsic ]
 
     visualizer = CameraPoseVisualizer([-5, 5], [-5, 5], [0, 5])
     cams = []
     for i,e in enumerate(extrins):
-        if i%5 == 0:
+        if i%3 == 0:
             visualizer.extrinsic2pyramid(e, plt.cm.rainbow(i / len(extrins)))
         #print(e)
         r = e[0:3,0:3]
@@ -79,9 +110,9 @@ if __name__ =='__main__':
         #print(c)
     visualizer.show()
 
-    for i in range(len(cams)-1):
-        diff = cams[i]-cams[i+1]
-        print(diff[0]/diff[1])
+    #for i in range(len(cams)-1):
+    #    diff = cams[i]-cams[i+1]
+    #    print(diff[0]/diff[1])
 
 
 
