@@ -56,6 +56,7 @@ Quaternion can also be used to calculate the Euler angles which contains the rol
 - colmap_runner.py → run colmap from command line
 - image_position_extractor.py → used in matrix.py to extract colmap output
 - matrix.py → outputs json object of intrinsic and extrinsic matrix
+- main.py → starts worker to process requests automatically from the web-server (start the web-server before running)
 
 ### Reference for Additional Research
 - COLMAP Installation\
