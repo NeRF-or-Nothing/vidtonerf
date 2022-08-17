@@ -28,6 +28,52 @@ def start_flask():
 def to_url(local_file_path: str):
     return base_url+"/data/imgs/"+local_file_path
 
+def run_full_sfm_pipeline(id,video_file_path, input_data_dir, output_data_dir): 
+    #run colmap and save data to custom directory
+    #(1) vid_to_images.py
+    # TODO: fix this path and make fps dynamic
+    ffmpeg_path= "/usr/bin/ffmpeg"
+    ffmpeg_out_id = f"ffmpeg-{id}"
+    status = split_video_into_frames(ffmpeg_out_id, output_data_dir, ffmpeg_path, video_file_path, fps=24)
+    if status == 0:
+        print("ffmpeg ran successfully.")
+    elif status == 1:
+        print("ERROR: There was an unknown error running ffmpeg")
+    elif status == 2:
+        print(f"ERROR: ffmpeg - file {output_data_dir}/{ffmpeg_out_id} already exists.")
+    elif status == 3:
+        print(f"ERROR: ffmpeg - file {output_data_dir} could not be found.")
+    # imgs are now in output_data_dir/id
+
+    #(2) colmap_runner.py
+    colmap_path = "/usr/local/bin/colmap"
+    images_path = os.path.join(output_data_dir,ffmpeg_out_id)
+    colmap_out_id = f"colmap-{id}"
+    colmap_output_path = os.path.join(output_data_dir,colmap_out_id)
+    status = run_colmap(colmap_out_id, output_data_dir, colmap_path, images_path)
+    if status == 0:
+        print("COLMAP ran successfully.")
+    elif status == 1:
+        print("ERROR: There was an unknown error running COLMAP")
+    elif status == 2:
+        print(f"ERROR: COLMAP - file {output_data_dir}/{colmap_out_id} already exists.")
+    elif status == 3:
+        print(f"ERROR: COLMAP - file {output_data_dir} could not be found.")
+    
+    #(3) matrix.py
+    initial_motion_path = os.path.join(colmap_output_path,"images.txt")
+    camera_stats_path = os.path.join(colmap_output_path,"cameras.txt")
+    parsed_motion_path = os.path.join(colmap_output_path,"parsed_data.csv")
+
+    extract_position_data(initial_motion_path, parsed_motion_path)
+    motion_data = get_json_matrices(camera_stats_path, parsed_motion_path)
+    motion_data["id"] = id
+
+    # Save copy of motion data
+    with open(os.path.join(colmap_output_path,"transforms_data.json"), 'w') as outfile:
+        outfile.write(json.dumps(motion_data, indent=4))
+
+    return motion_data, ffmpeg_out_id
 
 def colmap_worker():
     credentials = pika.PlainCredentials('admin', 'password123')
@@ -54,55 +100,13 @@ def colmap_worker():
         video_file_path = f"{input_data_dir}{id}.mp4"
         open(video_file_path,"wb").write(video.content)
         
-        #run colmap and save data to custom directory
-        #(1) vid_to_images.py
-        # TODO: fix this path and make fps dynamic
-        ffmpeg_path= "/usr/bin/ffmpeg"
-        ffmpeg_out_id = f"ffmpeg-{id}"
-        status = split_video_into_frames(ffmpeg_out_id, output_data_dir, ffmpeg_path, video_file_path, fps=24)
-        if status == 0:
-            print("ffmpeg ran successfully.")
-        elif status == 1:
-            print("ERROR: There was an unknown error running ffmpeg")
-        elif status == 2:
-            print(f"ERROR: ffmpeg - file {output_data_dir}/{ffmpeg_out_id} already exists.")
-        elif status == 3:
-            print(f"ERROR: ffmpeg - file {output_data_dir} could not be found.")
-        # imgs are now in output_data_dir/id
-
-        #(2) colmap_runner.py
-        colmap_path = "/usr/local/bin/colmap"
-        images_path = os.path.join(output_data_dir,ffmpeg_out_id)
-        colmap_out_id = f"colmap-{id}"
-        colmap_output_path = os.path.join(output_data_dir,colmap_out_id)
-        status = run_colmap(colmap_out_id, output_data_dir, colmap_path, images_path)
-        if status == 0:
-            print("COLMAP ran successfully.")
-        elif status == 1:
-            print("ERROR: There was an unknown error running COLMAP")
-        elif status == 2:
-            print(f"ERROR: COLMAP - file {output_data_dir}/{colmap_out_id} already exists.")
-        elif status == 3:
-            print(f"ERROR: COLMAP - file {output_data_dir} could not be found.")
-        
-        #(3) matrix.py
-        initial_motion_path = os.path.join(colmap_output_path,"images.txt")
-        camera_stats_path = os.path.join(colmap_output_path,"cameras.txt")
-        parsed_motion_path = os.path.join(colmap_output_path,"parsed_data.csv")
-
-        extract_position_data(initial_motion_path, parsed_motion_path)
-        motion_data = get_json_matrices(camera_stats_path, parsed_motion_path)
-        motion_data["id"] = id
-
-        # Save copy of motion data
-        with open(os.path.join(colmap_output_path,"transforms_data.json"), 'w') as outfile:
-            outfile.write(json.dumps(motion_data, indent=4))
-
+        # RUNS COLMAP AND CONVERSION CODE
+        motion_data, imgs_folder = run_full_sfm_pipeline(id, video_file_path, input_data_dir, output_data_dir)
 
         # create links to local data to serve
         for i,frame in enumerate(motion_data["frames"]):
             file_name = frame["file_path"]
-            file_path = os.path.join(ffmpeg_out_id,file_name)
+            file_path = os.path.join(imgs_folder,file_name)
             file_url = to_url(file_path)
             motion_data["frames"][i]["file_path"] = file_url
 
