@@ -1,6 +1,7 @@
 import subprocess
 import os
 import sys
+from pathlib import Path
 
 #Usage: python colmap_runner.py --flags
 #Flags: --colmap_exe_path "path" ==> Path to the colmap executeable.
@@ -40,7 +41,7 @@ def run_colmap(instance_name, output_path, colmap_path, images_path):
     instance_path = output_path + instance_name
 
     try:
-        os.mkdir(instance_path)
+        Path(f"{instance_path}").mkdir(parents=True, exist_ok=True)
     except FileExistsError:
         return 2
     except FileNotFoundError:
@@ -58,7 +59,7 @@ def run_colmap(instance_name, output_path, colmap_path, images_path):
 
     #Feature extracting
     try:
-        subprocess.call([colmap_path, "feature_extractor","--SiftExtraction.use_gpu=true","--ImageReader.single_camera=1", "--database_path", database_path, "--image_path", images_path])
+        subprocess.call([colmap_path, "feature_extractor","--ImageReader.camera_model","PINHOLE","--SiftExtraction.use_gpu=true","--ImageReader.single_camera=1", "--database_path", database_path, "--image_path", images_path])
         print("Features Extracted")
     except:
         return 1
