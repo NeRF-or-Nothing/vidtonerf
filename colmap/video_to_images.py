@@ -1,6 +1,8 @@
+from genericpath import exists
 import subprocess
 import os
 import sys
+from pathlib import Path
 
 #Usage: python video_to_images.py --flags
 #Flags: --ffmpeg_exe_path "path" ==> Path to the ffmpeg executeable.
@@ -42,12 +44,13 @@ def split_video_into_frames(instance_name, output_path, ffmpeg_path, video_path,
     instance_path = output_path + instance_name
     print(ffmpeg_path, "-i", video_path, "-vf", "fps=" , fps, instance_path + '/%04d.png')
     try:
-        os.mkdir(instance_path)
+        Path(f"{instance_path}").mkdir(parents=True, exist_ok=True)
     except FileExistsError:
         return 2
     except FileNotFoundError:
         return 3
     except:
+        print("BRUHHH")
         return 1
 
     #Run ffmpeg
