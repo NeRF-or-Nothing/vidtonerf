@@ -1,5 +1,4 @@
 import argparse
-from typing import Union
 
 
 def create_arguments() -> argparse.ArgumentParser:
@@ -12,8 +11,18 @@ def create_arguments() -> argparse.ArgumentParser:
         "-l",
         "--log",
         help="set log level",
-        choices=["10", "20", "30", "40", "50", "DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
-
+        choices=[
+            "10",
+            "20",
+            "30",
+            "40",
+            "50",
+            "DEBUG",
+            "INFO",
+            "WARNING",
+            "ERROR",
+            "CRITICAL",
+        ],
         default="ERROR",
     )
 
