@@ -4,6 +4,11 @@ import os
 import sys
 from pathlib import Path
 
+# new imports
+import cv2
+import os
+import random
+
 #Usage: python video_to_images.py --flags
 #Flags: --ffmpeg_exe_path "path" ==> Path to the ffmpeg executeable.
 #                                  > Defaults to looking for ffmpeg.exe in the folder this script is in.
@@ -53,14 +58,47 @@ def split_video_into_frames(instance_name, output_path, ffmpeg_path, video_path,
         print("BRUHHH")
         return 1
 
-    #Run ffmpeg
-    try:
-        subprocess.call([ffmpeg_path, "-i", video_path, "-vf", "fps=" + str(fps), instance_path + '/%04d.png'])
-    except:
-        return 1
 
+    ## determine video length:
+    vidcap = cv2.VideoCapture(video_path + '.MOV')
+    frame_count = vidcap.get(cv2.CAP_PROP_FRAME_COUNT)
+
+    print(f"frames = {frame_count}")
+
+    success, image = vidcap.read()
+    count = 1
+
+    ## treating fps variable as total images we want
+    ## how do we get the total images we want? Use a probability!
+    probability = (fps / frame_count)
+    print(f"probability:{probability}")
+    while success:
+      random_number = random.uniform(0,1)
+      if (random_number < probability):
+        cv2.imwrite(f"{output_path}/image_{count}.png", image)  
+        print('Saved image ', count)
+      success, image = vidcap.read()
+      count += 1
+
+
+
+    #Run ffmpeg
+    '''
+    try:
+      subprocess.call([ffmpeg_path, "-i", video_path, "-vf", "fps=" + str(fps), instance_path + '/%04d.png'])
+    #except:
+      return 1
+    '''
     #Sucess, return 0
     return 0
+
+def test():
+  instance_name = "test"
+  output_path = "test_out"
+  ffmpeg_path = ""
+  video_path = "airpodvideo"
+  fps = 97
+  split_video_into_frames(instance_name, output_path, ffmpeg_path, video_path, fps)
 
 if __name__ == '__main__':
     #Default flags
@@ -68,10 +106,11 @@ if __name__ == '__main__':
     output_path = "./"
     ffmpeg_path = r".\ffmpeg.exe"
     video_path = r".\video.mp4"
-    fps = 0
+    fps = 24
 
     #Parse flags
     #Flag format up top
+    """
     for i in range (len(sys.argv)):
         if i == 0:
             continue
@@ -89,7 +128,7 @@ if __name__ == '__main__':
                     fps = sys.argv[i+1]
                 case _:
                     print("ERROR: Unrecognized flag", sys.argv[i])
-                    quit()
+                    quit()"""
     
     #Calling split_video_into_frames
     status = split_video_into_frames(instance_name, output_path, ffmpeg_path, video_path, fps=fps)
