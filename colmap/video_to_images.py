@@ -42,6 +42,8 @@ import random
 #    2 = FileExistsError; happens when you try to create data in an already existing folder
 #    3 = FileNotFoundError; happens when you try to use an output folder that does not exist
 
+##TODO: Edit Fps parameter into "frames_wanted" or something similar
+
 def split_video_into_frames(instance_name, output_path, ffmpeg_path, video_path, fps=24):
     #Create our output folder
     if not output_path.endswith(("\\", "/")) and not instance_name.startswith(("\\", "/")):
