@@ -46,7 +46,8 @@ def split_video_into_frames(video_path, output_path, max_frames=200):
 
 
     ## determine video length:
-    vidcap = cv2.VideoCapture(video_path + '.MOV')
+    # TODO: Check video type to ensure it is supported
+    vidcap = cv2.VideoCapture(video_path )
     frame_count = vidcap.get(cv2.CAP_PROP_FRAME_COUNT)
     frame_count = int(frame_count)
 
@@ -61,10 +62,11 @@ def split_video_into_frames(video_path, output_path, max_frames=200):
     needs_adjust = False
 
     ## adjust as necessary
-    MAX_WIDTH = 1000  
-    MAX_HEIGHT = 1000
+    MAX_WIDTH = 200 
+    MAX_HEIGHT = 200
 
     ## for resizing images
+    # TODO: Fix image resizing to preserve aspect ratio
     if (img_height > MAX_HEIGHT):
       scaler = MAX_HEIGHT / img_height
       img_height = (int) (img_height * scaler)
@@ -92,8 +94,8 @@ def split_video_into_frames(video_path, output_path, max_frames=200):
         next_up += 1
         if (needs_adjust == True):
           image = cv2.resize(image, dimensions, interpolation=cv2.INTER_LANCZOS4)
-        cv2.imwrite(f"{output_path}/img_{count}.png", image)  
-        print('Saved image ', count)
+        cv2.imwrite(f"{output_path}/img_{next_up}.png", image)  
+        print('Saved image ', next_up)
       success, image = vidcap.read()
       count += 1
     vidcap.release()
