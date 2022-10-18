@@ -54,13 +54,16 @@ def split_video_into_frames(video_path, output_path, max_frames=200):
     ## sample up to max frame count
     sample_count = min(frame_count,max_frames)
 
-    print(f"frames = {frame_count}")
+    #print(f"frames = {frame_count}")
 
     success, image = vidcap.read()
     img_height = image.shape[0]
     img_width = image.shape[1]
-    needs_adjust = False
-
+    needs_adjust = False ## determines if we need to adjust
+    aspect_ratio = img_height / img_width
+    #print (f"aspect ratio: {aspect_ratio}")
+    #print (f"img_width: {img_width}")
+    #print (f"img_height: {img_height}")
     ## adjust as necessary
     MAX_WIDTH = 200 
     MAX_HEIGHT = 200
@@ -77,6 +80,14 @@ def split_video_into_frames(video_path, output_path, max_frames=200):
       img_width = (int) (scaler * img_width)
       needs_adjust = True
     
+    ## applying aspect ratio
+    if (aspect_ratio > 1):
+      img_width = (int) (img_width / aspect_ratio)
+    else:
+      img_height = (int) (img_height * aspect_ratio)
+
+    #print(f"new img height: {img_height}")
+    #print(f"new img width: {img_width}")
     dimensions = (img_width, img_height)
 
     count = 0
@@ -108,7 +119,7 @@ def test():
   instance_name = "test"
   output_path = "test_out"
   ffmpeg_path = ""
-  video_path = "airpodvideo" # change to whatever vid you want
+  video_path = "landscape_video" # change to whatever vid you want
   wanted_frames = 200
   split_video_into_frames(instance_name, output_path, ffmpeg_path, video_path, wanted_frames)
 
