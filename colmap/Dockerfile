@@ -4,12 +4,22 @@ FROM colmap/colmap:latest
 # https://forums.developer.nvidia.com/t/gpg-error-http-developer-download-nvidia-com-compute-cuda-repos-ubuntu1804-x86-64/212904
 # Updating GPG Key for Nvidia manually
 RUN apt-key adv --fetch-keys http://developer.download.nvidia.com/compute/cuda/repos/ubuntu1604/x86_64/3bf863cc.pub
-RUN apt-get update -y  && \
-	apt-get install python3-pip -y
+RUN export DEBIAN_FRONTEND=noninteractive && \
+	apt-get update -y  && \
+	apt-get install software-properties-common -y && \
+	add-apt-repository ppa:deadsnakes/ppa && \
+	apt-get update -y  && \
+	apt-get install curl -y && \
+	apt-get install python3.10 -y && \
+	apt-get install python3-pip -y 
+
 
 WORKDIR /sfmworker
 COPY . /sfmworker/
-RUN pip3 install --upgrade pip && \
-	pip3 install -r requirements.txt
+RUN curl -sS https://bootstrap.pypa.io/get-pip.py | python3.10
+RUN python3.10 -m pip install --upgrade pip && \
+	python3.10 -m pip install -r requirements.txt
 
-CMD ["python3", "main.py"]
+
+#CMD ["python3", "-V"]
+CMD ["python3.10", "main.py"]
