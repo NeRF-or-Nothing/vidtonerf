@@ -30,47 +30,42 @@ def to_url(local_file_path: str):
 
 def run_full_sfm_pipeline(id,video_file_path, input_data_dir, output_data_dir): 
     #run colmap and save data to custom directory
+    # Create output directory under data/output_data_dir/id
+    # TODO: use library to fix filepath joining
+    if not output_data_dir.endswith(("\\", "/")) and not id.startswith(("\\", "/")):
+        output_data_dir = output_data_dir + "/"
+    output_path = output_data_dir + id
+    Path(f"{output_path}").mkdir(parents=True, exist_ok=True)
+
+
     #(1) vid_to_images.py
-    # TODO: fix this path and make fps dynamic
-    ffmpeg_path= "/usr/bin/ffmpeg"
-    ffmpeg_out_id = f"ffmpeg-{id}"
-    status = split_video_into_frames(ffmpeg_out_id, output_data_dir, ffmpeg_path, video_file_path, fps=24)
-    if status == 0:
-        print("ffmpeg ran successfully.")
-    elif status == 1:
-        print("ERROR: There was an unknown error running ffmpeg")
-    elif status == 2:
-        print(f"ERROR: ffmpeg - file {output_data_dir}/{ffmpeg_out_id} already exists.")
-    elif status == 3:
-        print(f"ERROR: ffmpeg - file {output_data_dir} could not be found.")
+    imgs_folder = os.path.join(output_path, "imgs")
+    print(video_file_path)
+
+    split_video_into_frames(video_file_path, imgs_folder, 100)
     # imgs are now in output_data_dir/id
+
 
     #(2) colmap_runner.py
     colmap_path = "/usr/local/bin/colmap"
-    images_path = os.path.join(output_data_dir,ffmpeg_out_id)
-    colmap_out_id = f"colmap-{id}"
-    colmap_output_path = os.path.join(output_data_dir,colmap_out_id)
-    status = run_colmap(colmap_out_id, output_data_dir, colmap_path, images_path)
+    status = run_colmap(colmap_path, imgs_folder, output_path)
     if status == 0:
         print("COLMAP ran successfully.")
     elif status == 1:
         print("ERROR: There was an unknown error running COLMAP")
-    elif status == 2:
-        print(f"ERROR: COLMAP - file {output_data_dir}/{colmap_out_id} already exists.")
-    elif status == 3:
-        print(f"ERROR: COLMAP - file {output_data_dir} could not be found.")
+
     
     #(3) matrix.py
-    initial_motion_path = os.path.join(colmap_output_path,"images.txt")
-    camera_stats_path = os.path.join(colmap_output_path,"cameras.txt")
-    parsed_motion_path = os.path.join(colmap_output_path,"parsed_data.csv")
+    initial_motion_path = os.path.join(output_path,"images.txt")
+    camera_stats_path = os.path.join(output_path,"cameras.txt")
+    parsed_motion_path = os.path.join(output_path,"parsed_data.csv")
 
     extract_position_data(initial_motion_path, parsed_motion_path)
     motion_data = get_json_matrices(camera_stats_path, parsed_motion_path)
     motion_data["id"] = id
 
     # Save copy of motion data
-    with open(os.path.join(colmap_output_path,"transforms_data.json"), 'w') as outfile:
+    with open(os.path.join(output_path,"transforms_data.json"), 'w') as outfile:
         outfile.write(json.dumps(motion_data, indent=4))
 
     return motion_data, ffmpeg_out_id
@@ -116,14 +111,10 @@ def colmap_worker():
         # confirm to rabbitmq job is done
         ch.basic_ack(delivery_tag=method.delivery_tag)
 
-
-
-
     channel.basic_qos(prefetch_count=1)
     channel.basic_consume(queue='sfm-in', on_message_callback=process_colmap_job)
     channel.start_consuming()
     print("should not get here")
-
 
 
 if __name__ == "__main__":
