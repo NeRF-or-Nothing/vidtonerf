@@ -72,7 +72,7 @@ def run_full_sfm_pipeline(id,video_file_path, input_data_dir, output_data_dir):
 
 def colmap_worker():
     credentials = pika.PlainCredentials('admin', 'password123')
-    parameters = pika.ConnectionParameters('localhost', 5672, '/', credentials,heartbeat=600)
+    parameters = pika.ConnectionParameters('localhost', 5672, '/', credentials,heartbeat=300)
 
     connection = pika.BlockingConnection(parameters)
     channel = connection.channel()
@@ -90,10 +90,12 @@ def colmap_worker():
         id = job_data["id"]
         print(f"Running New Job With ID: {id}")
         
-        #TODO: Handle exceptions and enable steaming to make safer
-        video = requests.get(job_data['file_path'])
+        #TODO: Handle exceptions and enable steaming to make safer 
+        video = requests.get(job_data['file_path'], timeout=10)
+        print("Web server pinged")
         video_file_path = f"{input_data_dir}{id}.mp4"
         open(video_file_path,"wb").write(video.content)
+        print("Video downloaded")
         
         # RUNS COLMAP AND CONVERSION CODE
         motion_data, imgs_folder = run_full_sfm_pipeline(id, video_file_path, input_data_dir, output_data_dir)

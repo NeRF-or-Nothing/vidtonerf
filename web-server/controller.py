@@ -1,9 +1,10 @@
 import argparse
 import os
+from pickle import TRUE
 import magic
 from uuid import uuid4, UUID
 
-from flask import Flask, request, make_response, send_file, send_from_directory
+from flask import Flask, request, make_response, send_file, send_from_directory, url_for
 
 from services.scene_service import ClientService
 
@@ -30,7 +31,7 @@ class WebServer:
         # TODO: Change this to work based on where Flask server starts. Also, use the actual ip address
         ### self.sserv.base_url = request.remote_addr
 
-        self.app.run(port=self.args.port)
+        self.app.run(host='0.0.0.0',port=self.args.port)
 
     def add_routes(self) -> None:
         @self.app.route("/")
