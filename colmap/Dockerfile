@@ -6,6 +6,7 @@ FROM colmap/colmap:latest
 RUN apt-key adv --fetch-keys http://developer.download.nvidia.com/compute/cuda/repos/ubuntu1604/x86_64/3bf863cc.pub
 RUN export DEBIAN_FRONTEND=noninteractive && \
 	apt-get update -y  && \
+	apt-get install libssl-dev -y && \
 	apt-get install software-properties-common -y && \
 	add-apt-repository ppa:deadsnakes/ppa && \
 	apt-get update -y  && \

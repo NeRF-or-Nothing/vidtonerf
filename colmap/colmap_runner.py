@@ -47,6 +47,7 @@ def run_colmap(colmap_path, images_path, output_path):
 
     #Feature extracting
     try:
+        # --SiftExtraction.use_gpu=false for docker
         subprocess.call([colmap_path, "feature_extractor","--ImageReader.camera_model","PINHOLE","--SiftExtraction.use_gpu=true","--ImageReader.single_camera=1", "--database_path", database_path, "--image_path", images_path])
         print("Features Extracted")
     except:
