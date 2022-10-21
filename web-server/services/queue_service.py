@@ -4,6 +4,7 @@ from models.scene import Video, Sfm, Nerf, SceneManager
 import json
 from urllib.parse import urlparse
 import requests
+from flask import url_for
 
 #TODO: make rabbitmq resistent to failed worker jobs
 
@@ -20,6 +21,8 @@ class RabbitMQService:
 
         #TODO: make this dynamic from config file
         self.base_url = "http://localhost:5000/"
+        # for docker
+        self.base_url = "http://host.docker.internal:5000/"
 
     def to_url(self,file_path):
         return self.base_url+"/worker-data/"+file_path
