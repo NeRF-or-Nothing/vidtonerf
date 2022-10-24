@@ -22,7 +22,7 @@ import numpy as np
 import image_position_extractor
 import json
 import os
-
+from random import sample
 
 # https://en.wikipedia.org/wiki/Conversion_between_quaternions_and_Euler_angles
 def euler_from_quaternion(x, y, z, w):
@@ -270,8 +270,26 @@ def get_extrinsics_center(fp: str = "points3D.txt"):
     print("Central point: ", central_point)
     return central_point
 
+def random_sample_motion_data(motion_data):
+  # take a 100 random frames
+  indeces = [i for i in range(len(motion_data["frames"]))] # change 100 with amt of images we want
+  indeces = sample(indeces, 100)    # change 100 with amt of images we want
+  indeces = sorted(indeces)
 
-def get_json_matrices(camera_file, motion_data ):
+  # obtain frames
+  frame_list = []
+  for index in indeces:
+    frame_list.append(motion_data["frames"][index])
+  
+  motion_data["frames"] = frame_list
+  return motion_data
+
+def distance_sample_motion_data(motion_data):
+  # sample uniformly (unique images)
+  
+  return motion_data
+
+def get_matrices(camera_file, motion_data ):
     point_path = os.path.join(os.path.dirname(camera_file),"points3D.txt")
     center_point = get_extrinsics_center(point_path)
     intrinsic = get_intrinsic(camera_file)
