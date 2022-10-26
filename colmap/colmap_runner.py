@@ -35,6 +35,8 @@ from pathlib import Path
 
 def run_colmap(colmap_path, images_path, output_path):
     ### Create a new folder to store our data
+    # TODO: determine GPU use on start
+    use_gpu = "false"
     Path(f"{output_path}").mkdir(parents=True, exist_ok=True)
 
     #Creating a new database for colmap
@@ -48,7 +50,8 @@ def run_colmap(colmap_path, images_path, output_path):
     #Feature extracting
     try:
         # --SiftExtraction.use_gpu=false for docker
-        subprocess.call([colmap_path, "feature_extractor","--ImageReader.camera_model","PINHOLE","--SiftExtraction.use_gpu=true","--ImageReader.single_camera=1", "--database_path", database_path, "--image_path", images_path])
+        # TODO: make gpu use dynamic
+        subprocess.call([colmap_path, "feature_extractor","--ImageReader.camera_model","PINHOLE",f"--SiftExtraction.use_gpu={use_gpu}}","--ImageReader.single_camera=1", "--database_path", database_path, "--image_path", images_path])
         print("Features Extracted")
     except:
         return 1
@@ -56,7 +59,7 @@ def run_colmap(colmap_path, images_path, output_path):
     #Feature matching
     try:
         print("Feature Matching")
-        subprocess.call([colmap_path, "exhaustive_matcher","--SiftMatching.use_gpu=true", "--database_path", database_path])
+        subprocess.call([colmap_path, "exhaustive_matcher",f"--SiftMatching.use_gpu={use_gpu}", "--database_path", database_path])
     except:
         return 1
 
