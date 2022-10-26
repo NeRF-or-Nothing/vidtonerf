@@ -1,7 +1,7 @@
 import argparse
 import os
 from pickle import TRUE
-import magic
+#import magic
 from uuid import uuid4, UUID
 
 from flask import Flask, request, make_response, send_file, send_from_directory, url_for
