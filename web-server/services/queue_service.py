@@ -11,8 +11,9 @@ from flask import url_for
 class RabbitMQService:
     # TODO: Communicate with rabbitmq server on port defined in web-server arguments
     def __init__(self):
+        rabbitmq_domain = "rabbitmq"
         credentials = pika.PlainCredentials('admin', 'password123')
-        parameters = pika.ConnectionParameters('localhost', 5672, '/', credentials, heartbeat=300)
+        parameters = pika.ConnectionParameters(rabbitmq_domain, 5672, '/', credentials, heartbeat=300)
         # Change this ->
         self.connection = pika.BlockingConnection(parameters)
         self.channel = self.connection.channel()
@@ -76,8 +77,9 @@ class RabbitMQService:
 def digest_finished_sfms(scene_manager: SceneManager):
 
     # create unique connection to rabbitmq since pika is NOT thread safe
+    rabbitmq_domain = "rabbitmq"
     credentials = pika.PlainCredentials('admin', 'password123')
-    parameters = pika.ConnectionParameters('localhost', 5672, '/', credentials, heartbeat=300)
+    parameters = pika.ConnectionParameters(rabbitmq_domain, 5672, '/', credentials, heartbeat=300)
 
     connection = pika.BlockingConnection(parameters)
     channel = connection.channel()
@@ -125,8 +127,9 @@ def digest_finished_sfms(scene_manager: SceneManager):
 def digest_finished_nerfs(scene_manager: SceneManager):
 
     # create unique connection to rabbitmq since pika is NOT thread safe
+    rabbitmq_domain = "rabbitmq"
     credentials = pika.PlainCredentials('admin', 'password123')
-    parameters = pika.ConnectionParameters('localhost', 5672, '/', credentials,heartbeat=300)
+    parameters = pika.ConnectionParameters(rabbitmq_domain, 5672, '/', credentials,heartbeat=300)
 
     connection = pika.BlockingConnection(parameters)
     channel = connection.channel()
