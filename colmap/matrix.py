@@ -284,9 +284,34 @@ def random_sample_motion_data(motion_data):
   motion_data["frames"] = frame_list
   return motion_data
 
+
+def repeated_frame_remover(transposition_matrix_container):
+  index_list = [] # which indeces to return
+  
+  # find which values are repeated, add those to list
+  return index_list
+
 def distance_sample_motion_data(motion_data):
   # sample uniformly (unique images)
   
+  # find trasposition of camera after rotation
+  # sus run time O(num of frames * matrix multiplication)
+  transposition_matrix_container = []
+  for index in motion_data["frames"]:
+    rotation_matrix = np.array(motion_data["frames"][index]["extrinsic_matrix"][:3, :3])
+    translation_matrix = np.array(motion_data["frames"][index]["extrinsic_matrix"][:3, 3:4])
+    transposition_matrix = np.matmul(rotation_matrix, translation_matrix)
+    transposition_matrix_container.append(transposition_matrix)
+  
+  # compare values in each transposition matrix
+  # if very similar, remove
+  # should have n log n runtime where n is amount of elements
+  index_list = repeated_frame_remover(transposition_matrix_container)
+  for c in range(len(motion_data["frames"])):
+    for i in index_list:
+      if (i == c):
+        motion_data["frames"].pop(i)
+
   return motion_data
 
 def get_matrices(camera_file, motion_data ):
