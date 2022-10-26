@@ -14,8 +14,10 @@ from pymongo import MongoClient
 
 
 def main():
+    print("Starting web-app...")
     # MongoDB client shared across threads since it is thread safe
-    m_client = MongoClient(host="localhost",port=27017,username="admin",password="password123")
+    mongodb_domain = "mongodb"
+    m_client = MongoClient(host=mongodb_domain,port=27017,username="admin",password="password123")
     parser = create_arguments()
     args = parser.parse_args()
     

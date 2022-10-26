@@ -51,7 +51,7 @@ def run_colmap(colmap_path, images_path, output_path):
     try:
         # --SiftExtraction.use_gpu=false for docker
         # TODO: make gpu use dynamic
-        subprocess.call([colmap_path, "feature_extractor","--ImageReader.camera_model","PINHOLE",f"--SiftExtraction.use_gpu={use_gpu}}","--ImageReader.single_camera=1", "--database_path", database_path, "--image_path", images_path])
+        subprocess.call([colmap_path, "feature_extractor","--ImageReader.camera_model","PINHOLE",f"--SiftExtraction.use_gpu={use_gpu}","--ImageReader.single_camera=1", "--database_path", database_path, "--image_path", images_path])
         print("Features Extracted")
     except:
         return 1

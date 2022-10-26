@@ -2,7 +2,13 @@ version: '3.7'
 services:
   sfmworker:
     build: .
-    network_mode: host  
     volumes:
       - .:/sfmworker
     command: python3.10 main.py
+    networks:
+      - backend 
+
+networks:
+  backend:
+    name: backend_network
+    external: true

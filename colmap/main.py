@@ -14,7 +14,7 @@ import os
 
 
 app = Flask(__name__)
-base_url = "http://localhost:5100/"
+base_url = "http://0.0.0.0:5100/"
 
 @app.route('/data/imgs/<path:path>')
 def send_video(path):
@@ -23,7 +23,7 @@ def send_video(path):
 
 def start_flask():
     global app
-    app.run(host="localhost", port=5100,debug=True)
+    app.run(host="0.0.0.0", port=5100,debug=True)
 
 def to_url(local_file_path: str):
     return base_url+"/data/imgs/"+local_file_path
@@ -71,8 +71,9 @@ def run_full_sfm_pipeline(id,video_file_path, input_data_dir, output_data_dir):
     return motion_data, ffmpeg_out_id
 
 def colmap_worker():
+    rabbitmq_domain = "rabbitmq"
     credentials = pika.PlainCredentials('admin', 'password123')
-    parameters = pika.ConnectionParameters('localhost', 5672, '/', credentials,heartbeat=300)
+    parameters = pika.ConnectionParameters(rabbitmq_domain, 5672, '/', credentials,heartbeat=300)
 
     connection = pika.BlockingConnection(parameters)
     channel = connection.channel()
