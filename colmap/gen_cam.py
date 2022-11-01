@@ -27,4 +27,16 @@ def gen_cam():
 
       writer.writerows(q_point)
 
-
+def gen_3d():
+   file = open("points3D.txt", "a")
+   points = []
+   for i in range(4123):
+      x = random.uniform(-30,30)
+      y = random.uniform(-30,20)
+      z = random.uniform(0,40)
+      points.append(i)
+      points.append(x)
+      points.append(y)
+      points.append(z)
+      file.writeline(' '.join(points))
+      
