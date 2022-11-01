@@ -2,6 +2,7 @@ version: '3.7'
 services:
   mongodb:
     image: mongo:latest
+    container_name: mongodb
     environment:
       MONGO_INITDB_ROOT_USERNAME: admin
       MONGO_INITDB_ROOT_PASSWORD: password123
@@ -13,7 +14,7 @@ services:
       - backend
   
   rabbitmq:
-    container_name: "rabbitmq"
+    container_name: rabbitmq
     image: rabbitmq:3.8-management-alpine
     environment:
        - RABBITMQ_DEFAULT_USER=admin
@@ -28,7 +29,8 @@ services:
     
   web-server:
     build: .
-    image: web-server
+    image: web-server-img
+    container_name: web-server
     depends_on:
     - rabbitmq
     - mongodb
@@ -44,7 +46,7 @@ services:
 
 networks:
   backend:
-    name: backend_network
+    name: backend-network
     driver: bridge
 
 volumes:

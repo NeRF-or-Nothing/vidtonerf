@@ -16,11 +16,12 @@ RUN export DEBIAN_FRONTEND=noninteractive && \
 
 
 WORKDIR /sfmworker
-COPY . /sfmworker/
 RUN curl -sS https://bootstrap.pypa.io/get-pip.py | python3.10
-RUN python3.10 -m pip install --upgrade pip && \
-	python3.10 -m pip install -r requirements.txt
+# Requirements.txt copied seperately to utilize docker build cache
+COPY ./requirements.txt /sfmworker
+RUN python3.10 -m pip install --upgrade -r requirements.txt
 
+COPY . /sfmworker/
 
 #CMD ["python3", "-V"]
 CMD ["python3.10", "main.py"]
