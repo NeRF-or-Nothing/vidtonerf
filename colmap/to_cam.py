@@ -10,7 +10,7 @@ from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 class CameraPoseVisualizer:
     def __init__(self, xlim, ylim, zlim):
         self.fig = plt.figure(figsize=(18, 7))
-        self.ax = self.fig.gca(projection='3d')
+        self.ax = self.fig.add_subplot(projection='3d')
         self.ax.set_aspect("auto")
         self.ax.set_xlim(xlim)
         self.ax.set_ylim(ylim)
@@ -67,6 +67,10 @@ class CameraPoseVisualizer:
         cmap = mpl.cm.rainbow
         norm = mpl.colors.Normalize(vmin=0, vmax=max_frame_length)
         self.fig.colorbar(mpl.cm.ScalarMappable(norm=norm, cmap=cmap), orientation='vertical', label='Frame Number')
+    
+    def plot_cam(self, cam):
+        self.ax.scatter(cam[0],cam[1],cam[2], c= 'blue')
+
 
     def show(self):
         print("Displaying Data")
@@ -99,12 +103,15 @@ if __name__ =='__main__':
     for i,e in enumerate(extrins):
         if i%3 == 0:
             visualizer.extrinsic2pyramid(e, plt.cm.rainbow(i / len(extrins)))
-        #print(e)
-        r = e[0:3,0:3]
-        t = e[0:3,3]
-        #print(r)
-        #print(t)
-        c = -r.T @ t
+            r = e[0:3,0:3]
+            t = e[0:3,3]
+            c = -r.T @ t
+            print(r)
+            print(t)
+            print(c)
+            print()
+            #visualizer.plot_cam(c)
+
         cams.append(c)
         #c = c/np.linalg.norm(c)
         #print(c)

@@ -4,14 +4,16 @@ from models.scene import Video, Sfm, Nerf, SceneManager
 import json
 from urllib.parse import urlparse
 import requests
+from flask import url_for
 
 #TODO: make rabbitmq resistent to failed worker jobs
 
 class RabbitMQService:
     # TODO: Communicate with rabbitmq server on port defined in web-server arguments
     def __init__(self):
+        rabbitmq_domain = "rabbitmq"
         credentials = pika.PlainCredentials('admin', 'password123')
-        parameters = pika.ConnectionParameters('localhost', 5672, '/', credentials, heartbeat=300)
+        parameters = pika.ConnectionParameters(rabbitmq_domain, 5672, '/', credentials, heartbeat=300)
         # Change this ->
         self.connection = pika.BlockingConnection(parameters)
         self.channel = self.connection.channel()
@@ -20,6 +22,8 @@ class RabbitMQService:
 
         #TODO: make this dynamic from config file
         self.base_url = "http://localhost:5000/"
+        # for docker
+        self.base_url = "http://host.docker.internal:5000/"
 
     def to_url(self,file_path):
         return self.base_url+"/worker-data/"+file_path
@@ -73,8 +77,9 @@ class RabbitMQService:
 def digest_finished_sfms(scene_manager: SceneManager):
 
     # create unique connection to rabbitmq since pika is NOT thread safe
+    rabbitmq_domain = "rabbitmq"
     credentials = pika.PlainCredentials('admin', 'password123')
-    parameters = pika.ConnectionParameters('localhost', 5672, '/', credentials, heartbeat=300)
+    parameters = pika.ConnectionParameters(rabbitmq_domain, 5672, '/', credentials, heartbeat=300)
 
     connection = pika.BlockingConnection(parameters)
     channel = connection.channel()
@@ -122,8 +127,9 @@ def digest_finished_sfms(scene_manager: SceneManager):
 def digest_finished_nerfs(scene_manager: SceneManager):
 
     # create unique connection to rabbitmq since pika is NOT thread safe
+    rabbitmq_domain = "rabbitmq"
     credentials = pika.PlainCredentials('admin', 'password123')
-    parameters = pika.ConnectionParameters('localhost', 5672, '/', credentials,heartbeat=300)
+    parameters = pika.ConnectionParameters(rabbitmq_domain, 5672, '/', credentials,heartbeat=300)
 
     connection = pika.BlockingConnection(parameters)
     channel = connection.channel()
