@@ -287,38 +287,59 @@ def random_sample_motion_data(motion_data):
 
 ######################################################################
 ## new stuff by alex yay
-def isSimilar(transposition1, transposition2):
-  MAX_X_DIFFERENCE = 5
-  MAX_Y_DIFFERENCE = 5
-  MAX_Z_DIFFERENCE = 5
+def isSimilar(transposition1, transposition2, max_diff):  
   similar = True
-  if (abs(transposition1[0] - transposition2[0]) > MAX_X_DIFFERENCE):
+  if (abs(transposition1[0] - transposition2[0]) > max_diff):
     similar = False
-  if (abs(transposition1[1] - transposition2[1]) > MAX_Y_DIFFERENCE):
+  if (abs(transposition1[1] - transposition2[1]) > max_diff):
     similar = False
-  if (abs(transposition1[2] - transposition2[2]) > MAX_Z_DIFFERENCE):
+  if (abs(transposition1[2] - transposition2[2]) > max_diff):
     similar = False
 
   return similar
   
-def theconquer(container, low, middle, high):
+def theconquer(container, low, max_diff, high):
   # compare the values and see which are unique
   sizeofeach = high-low-1
   for i in range(sizeofeach):
     for j in range(sizeofeach):
-      if (isSimilar(container[low+i], container[low+j+sizeofeach]) == True):
+      if (isSimilar(container[low+i], container[low+j+sizeofeach], max_diff) == True):
         container[low+j+sizeofeach] = [-5, -5, -5]
 
-def thedivide(container, low, high):
+def thedivide(container, low, high, max_diff):
   if low < high:
     middle = (int) (low + high) / 2
-    thedivide(container, low, middle)
-    thedivide(container, middle+1, high)
-    theconquer(container, low, middle, high)
+    thedivide(container, low, middle, max_diff)
+    thedivide(container, middle+1, high, max_diff)
+    theconquer(container, low, max_diff, high)
 
 def repeated_frame_remover(index_list, transposition_matrix_container):  
+  # find the max difference we want before considering values unique
+  # make the max difference any distances closer than the average distance
+  addedvalues = 0
+  for i in range(1,len(transposition_matrix_container)):
+    xdiff = transposition_matrix_container[i-1][0] - transposition_matrix_container[i][0]
+    ydiff = transposition_matrix_container[i-1][1] - transposition_matrix_container[i][1]
+    zdiff = transposition_matrix_container[i-1][2] - transposition_matrix_container[i][2]
+    addedvalues += (xdiff + ydiff + zdiff) / 3
+  
+  max_diff = addedvalues / len(transposition_matrix_container)
+
+  ''' 
+  ## OPTIONAL: make it within one standard deviation (stricter distance necessary to be unique)
+  sumdifferences = 0
+  for i in range(1,len(transposition_matrix_container)):
+    xdiff = transposition_matrix_container[i-1][0] - transposition_matrix_container[i][0]
+    ydiff = transposition_matrix_container[i-1][1] - transposition_matrix_container[i][1]
+    zdiff = transposition_matrix_container[i-1][2] - transposition_matrix_container[i][2]
+    sumdifferences += ((xdiff + ydiff + zdiff) / 3) - max_diff
+  
+  sumdifferences *= sumdifferences # we need to square it
+  std_dev = math.sqrt(sumdifferences / len(transposition_matrix_container))
+  '''
+  
   # O(n log n) baby we dividing and conquering (but if they are dupes, we remove)
-  thedivide(transposition_matrix_container, 0, transposition_matrix_container.size())
+  thedivide(transposition_matrix_container, 0, transposition_matrix_container.size(), max_diff)
   # find the [-5, -5, -5] matrices and put them in the index list
   for i in range(0, transposition_matrix_container.size()):
     if (transposition_matrix_container[i] == [-5, -5, -5]):
