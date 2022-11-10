@@ -3,40 +3,47 @@ import csv
 
 def gen_cam():
    #generate 100 sample points
-   q_point = []
+   images = []
+   file = open('images.csv', 'w')
+   writer = csv.writer(file)
    for i in range(100, 0, -1):
-      q = []
-      q.append(i)
+      image_data = {}
+      image_data["Image_Name"] = i
 
       #quaternion is 4d
       #each coefficient range from -1 to 1
-      for j in range(4):
-         q.append(random.uniform(-1,1))
-
+     
+      image_data["QW"] = random.uniform(-1,1)
+      image_data["QX"] = random.uniform(-1,1)
+      image_data["QY"] = random.uniform(-1,1)
+      image_data["QZ"] = random.uniform(-1,1)
+     
       #adding translation
-      for j in range(3):
-         q.append(random.uniform(-6,6))
+      image_data["TX"] = random.uniform(-6,6)
+      image_data["TY"] = random.uniform(-6,6) 
+      image_data["TZ"] = random.uniform(-6,6)
 
-      q.append(1)
-      q.append('img_'+str(i))
-      q_point.append(q)
-      print(q)
-   # write to csv
-   with open('gen_point.csv', 'w', encoding='UTF8', newline='') as f:
-      writer = csv.writer(f)
+      images.append(image_data)
+   
+   with open("images.csv", mode = 'w', newline='') as csv_file:
+      csv_file.truncate(0)
+      fieldnames = ['Image_Name', 'QW', 'QX', 'QY', 'QZ', 'TX', 'TY', 'TZ']
+      writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
 
-      writer.writerows(q_point)
+      writer.writeheader()
+      for image in images:
+         writer.writerow(image)  
 
 def gen_3d():
    file = open("points3D.txt", "a")
    points = []
-   for i in range(4123):
+   for i in range(100):
       x = random.uniform(-30,30)
       y = random.uniform(-30,20)
       z = random.uniform(0,40)
-      points.append(i)
-      points.append(x)
-      points.append(y)
-      points.append(z)
-      file.writeline(' '.join(points))
-      
+      s = str(i) + " "  + str(x) + " "  + str(y) + " " + str(z)
+      file.writelines(s)
+     
+
+
+ 
