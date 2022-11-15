@@ -15,6 +15,7 @@ matrix to out_matrix.txt with the following info:
 4. extrinsic matrix for each image w/ image name
 """
 
+from operator import index
 import sys
 import csv
 import math
@@ -22,7 +23,7 @@ import numpy as np
 import image_position_extractor
 import json
 import os
-
+from random import sample
 
 # https://en.wikipedia.org/wiki/Conversion_between_quaternions_and_Euler_angles
 def euler_from_quaternion(x, y, z, w):
@@ -270,8 +271,124 @@ def get_extrinsics_center(fp: str = "points3D.txt"):
     print("Central point: ", central_point)
     return central_point
 
+def random_sample_motion_data(motion_data):
+  # take a 100 random frames
+  indeces = [i for i in range(len(motion_data["frames"]))] # change 100 with amt of images we want
+  indeces = sample(indeces, 100)    # change 100 with amt of images we want
+  indeces = sorted(indeces)
 
-def get_json_matrices(camera_file, motion_data ):
+  # obtain frames
+  frame_list = []
+  for index in indeces:
+    frame_list.append(motion_data["frames"][index])
+  
+  motion_data["frames"] = frame_list
+  return motion_data
+
+######################################################################
+## new stuff by alex yay
+def isSimilar(transposition1, transposition2, max_diff):  
+  similar = True
+  if (abs(transposition1[0] - transposition2[0]) > max_diff):
+    similar = False
+  if (abs(transposition1[1] - transposition2[1]) > max_diff):
+    similar = False
+  if (abs(transposition1[2] - transposition2[2]) > max_diff):
+    similar = False
+  if (transposition1[2] == -5 or transposition2[2] == -5):
+    similar = False # an extra just in case
+
+  '''
+  ## OPTIONAL: Use distance formula
+  ## if distance is greater than max_diff
+  if (math.sqrt(math.pow(transposition1[0] - transposition2[0], 2) + math.pow(transposition1[1] - transposition2[1]) + math.pow(transposition1[2] - transposition2[2])) > max_diff):
+    similar = False
+  '''
+
+  return similar
+  
+def theconquer(container, low, max_diff, high):
+  # compare the values and see which are unique
+  sizeofeach = high-low-1
+  for i in range(sizeofeach):
+    for j in range(sizeofeach):
+      if (isSimilar(container[low+i], container[low+j+sizeofeach], max_diff) == True):
+        container[low+j+sizeofeach] = [-5, -5, -5]
+
+def thedivide(container, low, high, max_diff):
+  if low < high:
+    middle = (int) (low + high) / 2
+    thedivide(container, low, middle, max_diff)
+    thedivide(container, middle+1, high, max_diff)
+    theconquer(container, low, max_diff, high)
+
+def repeated_frame_remover(index_list, tmc):  
+  # find the max difference we want before considering values unique
+  # make the max difference any distances closer than the average distance
+  addedvalues = 0
+  for i in range(1,len(tmc)):
+    xdiff = tmc[i-1][0] - tmc[i][0]
+    ydiff = tmc[i-1][1] - tmc[i][1]
+    zdiff = tmc[i-1][2] - tmc[i][2]
+    addedvalues += (xdiff + ydiff + zdiff) / 3
+  
+  max_diff = addedvalues / len(tmc)
+
+  ''' 
+  ## OPTIONAL: make it within one standard deviation (stricter distance necessary to be unique)
+  sumdifferences = 0
+  for i in range(1,len(tmc)):
+    xdiff = tmc[i-1][0] - tmc[i][0]
+    ydiff = tmc[i-1][1] - tmc[i][1]
+    zdiff = tmc[i-1][2] - tmc[i][2]
+    sumdifferences += ((xdiff + ydiff + zdiff) / 3) - max_diff
+  
+  sumdifferences *= sumdifferences # we need to square it
+  std_dev = math.sqrt(sumdifferences / len(tmc))
+  '''
+
+  '''
+  ## OPTIONAL: use distance formula 
+  ## put in for loop for added values:
+  (math.sqrt(math.pow(tmc[i-1][0] - tmc[i][0], 2) + math.pow(tmc[i-1][1] - tmc[i][1]) + math.pow(tmc[i-1][2] - tmc[i][2]))
+  '''
+  
+  # O(n log n) baby we dividing and conquering (but if they are dupes, we remove)
+  thedivide(tmc, 0, tmc.size(), max_diff)
+  # find the [-5, -5, -5] matrices and put them in the index list
+  for i in range(0, tmc.size()):
+    if (tmc[i] == [-5, -5, -5]):
+      index_list.append(i)
+      
+  return index_list
+
+def distance_sample_motion_data(motion_data):
+  # sample uniformly (unique images)
+  
+  # find trasposition of camera after rotation
+  # sus run time O(num of frames * matrix multiplication)
+  tmc = [] # stands for transposition_matrix_container
+  for index in motion_data["frames"]:
+    rotation_matrix = np.array(motion_data["frames"][index]["extrinsic_matrix"][:3, :3])
+    translation_matrix = np.array(motion_data["frames"][index]["extrinsic_matrix"][:3, 3:4])
+    transposition_matrix = np.matmul(rotation_matrix, translation_matrix)
+    tmc.append(transposition_matrix)
+  
+  # compare values in each transposition matrix
+  # if very similar, remove
+  # should have n log n runtime where n is amount of elements
+  index_list= []
+  index_list = repeated_frame_remover(tmc)
+  for c in range(len(motion_data["frames"])):
+    for i in index_list:
+      if (i == c):
+        motion_data["frames"].pop(i)
+
+  return motion_data
+
+## end new stuff by alex
+##########################################################
+def get_matrices(camera_file, motion_data ):
     point_path = os.path.join(os.path.dirname(camera_file),"points3D.txt")
     center_point = get_extrinsics_center(point_path)
     intrinsic = get_intrinsic(camera_file)

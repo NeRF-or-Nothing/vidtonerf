@@ -3,7 +3,7 @@ from flask import send_from_directory
 from pathlib import Path
 from video_to_images import split_video_into_frames
 from colmap_runner import run_colmap
-from matrix import get_json_matrices
+from matrix import get_json_matrices, sample_motion_data
 from image_position_extractor import extract_position_data
 import requests
 import pika
@@ -62,10 +62,11 @@ def run_full_sfm_pipeline(id,video_file_path, input_data_dir, output_data_dir):
     parsed_motion_path = os.path.join(output_path,"parsed_data.csv")
 
     extract_position_data(initial_motion_path, parsed_motion_path)
-    motion_data = get_json_matrices(camera_stats_path, parsed_motion_path)
+    motion_data = get_matrices(camera_stats_path, parsed_motion_path)
     motion_data["id"] = id
 
-
+    motion_data = sample_motion_data(motion_data)
+    
     # Save copy of motion data
     with open(os.path.join(output_path,"transforms_data.json"), 'w') as outfile:
         outfile.write(json.dumps(motion_data, indent=4))
