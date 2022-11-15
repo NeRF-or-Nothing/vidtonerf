@@ -68,7 +68,7 @@ def run_full_sfm_pipeline(id,video_file_path, input_data_dir, output_data_dir):
     extract_position_data(initial_motion_path, parsed_motion_path)
     motion_data = get_matrices(camera_stats_path, parsed_motion_path)
     motion_data["id"] = id
-    motion_data = sample_motion_data(motion_data)
+    motion_data = distance_sample_motion_data(motion_data)
     # Save copy of motion data
     with open(os.path.join(colmap_output_path,"transforms_data.json"), 'w') as outfile:
         outfile.write(json.dumps(motion_data, indent=4))

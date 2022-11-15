@@ -384,6 +384,9 @@ def distance_sample_motion_data(motion_data):
       if (i == c):
         motion_data["frames"].pop(i)
 
+  for i in range(len(index_list)):
+    print("Frame taken:", index_list[i])
+
   return motion_data
 
 ## end new stuff by alex
