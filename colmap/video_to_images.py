@@ -40,31 +40,19 @@ from random import sample
 #    2 = FileExistsError; happens when you try to create data in an already existing folder
 #    3 = FileNotFoundError; happens when you try to use an output folder that does not exist
 
-def split_video_into_frames(instance_name, output_path, ffmpeg_path, video_path, wanted_frames=200):
-    #Create our output folder
-    if not output_path.endswith(("\\", "/")) and not instance_name.startswith(("\\", "/")):
-        output_path = output_path + "/"
-    instance_path = output_path + instance_name
-    print(ffmpeg_path, "-i", video_path, "-vf", instance_path + '/%04d.png')
-    try:
-        Path(f"{instance_path}").mkdir(parents=True, exist_ok=True)
-    except FileExistsError:
-        return 2
-    except FileNotFoundError:
-        return 3
-    except:
-        print("BRUHHH")
-        return 1
+def split_video_into_frames(video_path, output_path, max_frames=200):
+   # Create output folder
+    Path(f"{output_path}").mkdir(parents=True, exist_ok=True)
 
 
     ## determine video length:
-    vidcap = cv2.VideoCapture(video_path + '.MOV')
+    # TODO: Check video type to ensure it is supported
+    vidcap = cv2.VideoCapture(video_path )
     frame_count = vidcap.get(cv2.CAP_PROP_FRAME_COUNT)
     frame_count = int(frame_count)
 
-    ## check if we have enough frames
-    if (frame_count < wanted_frames):
-      wanted_frames = frame_count
+    ## sample up to max frame count
+    sample_count = min(frame_count,max_frames)
 
     #print(f"frames = {frame_count}")
 
@@ -77,10 +65,11 @@ def split_video_into_frames(instance_name, output_path, ffmpeg_path, video_path,
     #print (f"img_width: {img_width}")
     #print (f"img_height: {img_height}")
     ## adjust as necessary
-    MAX_WIDTH = 1000  
-    MAX_HEIGHT = 1000
+    MAX_WIDTH = 200 
+    MAX_HEIGHT = 200
 
     ## for resizing images
+    # TODO: Fix image resizing to preserve aspect ratio
     if (img_height > MAX_HEIGHT):
       scaler = MAX_HEIGHT / img_height
       img_height = (int) (img_height * scaler)
@@ -106,7 +95,7 @@ def split_video_into_frames(instance_name, output_path, ffmpeg_path, video_path,
 
     ## finding which images we will randomly take
     image_indexes = [i for i in range(frame_count)]
-    chosen_list = sample(image_indexes, wanted_frames)
+    chosen_list = sample(image_indexes, sample_count)
     chosen_list = sorted(chosen_list)
     print(chosen_list)
     while success:
@@ -116,20 +105,12 @@ def split_video_into_frames(instance_name, output_path, ffmpeg_path, video_path,
         next_up += 1
         if (needs_adjust == True):
           image = cv2.resize(image, dimensions, interpolation=cv2.INTER_LANCZOS4)
-        cv2.imwrite(f"{output_path}/image_{count}.png", image)  
-        print('Saved image ', count)
+        cv2.imwrite(f"{output_path}/img_{next_up}.png", image)  
+        print('Saved image ', next_up)
       success, image = vidcap.read()
       count += 1
     vidcap.release()
 
-
-    #Run ffmpeg
-    '''
-    try:
-      subprocess.call([ffmpeg_path, "-i", video_path, "-vf", "fps=" + str(fps), instance_path + '/%04d.png'])
-    #except:
-      return 1
-    '''
     #Sucess, return 0
     ## can return img_width, img_height, and wanted_frames
     return 0

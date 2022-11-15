@@ -33,25 +33,15 @@ from pathlib import Path
 #    2 = FileExistsError; happens when you try to create data in an already existing folder
 #    3 = FileNotFoundError; happens when you try to use an output folder that does not exist
 
-def run_colmap(instance_name, output_path, colmap_path, images_path):
+def run_colmap(colmap_path, images_path, output_path):
     ### Create a new folder to store our data
-      # Add a / to the path if there isn't one
-    if not output_path.endswith(("\\", "/")) and not instance_name.startswith(("\\", "/")):
-        output_path = output_path + "/"
-    instance_path = output_path + instance_name
-
-    try:
-        Path(f"{instance_path}").mkdir(parents=True, exist_ok=True)
-    except FileExistsError:
-        return 2
-    except FileNotFoundError:
-        return 3
-    except:
-        return 1
+    # TODO: determine GPU use on start
+    use_gpu = "false"
+    Path(f"{output_path}").mkdir(parents=True, exist_ok=True)
 
     #Creating a new database for colmap
     try:
-        database_path = instance_path + "/database.db"
+        database_path = output_path + "/database.db"
         subprocess.call([colmap_path, "database_creator", "--database_path", database_path])
         print("Created DB")
     except:
@@ -59,7 +49,9 @@ def run_colmap(instance_name, output_path, colmap_path, images_path):
 
     #Feature extracting
     try:
-        subprocess.call([colmap_path, "feature_extractor","--ImageReader.camera_model","PINHOLE","--SiftExtraction.use_gpu=true","--ImageReader.single_camera=1", "--database_path", database_path, "--image_path", images_path])
+        # --SiftExtraction.use_gpu=false for docker
+        # TODO: make gpu use dynamic
+        subprocess.call([colmap_path, "feature_extractor","--ImageReader.camera_model","PINHOLE",f"--SiftExtraction.use_gpu={use_gpu}","--ImageReader.single_camera=1", "--database_path", database_path, "--image_path", images_path])
         print("Features Extracted")
     except:
         return 1
@@ -67,20 +59,20 @@ def run_colmap(instance_name, output_path, colmap_path, images_path):
     #Feature matching
     try:
         print("Feature Matching")
-        subprocess.call([colmap_path, "exhaustive_matcher","--SiftMatching.use_gpu=true", "--database_path", database_path])
+        subprocess.call([colmap_path, "exhaustive_matcher",f"--SiftMatching.use_gpu={use_gpu}", "--database_path", database_path])
     except:
         return 1
 
     #Generating model
     try:
-        subprocess.call([colmap_path, "mapper", "--database_path", database_path, "--image_path", images_path, "--output_path", instance_path])
+        subprocess.call([colmap_path, "mapper", "--database_path", database_path, "--image_path", images_path, "--output_path", output_path])
     except:
         return 1
 
     #Getting model as text
     try:
         # TODO: no longer works on windows fix file paths or run in docker
-        subprocess.call([colmap_path, "model_converter", "--input_path", instance_path + r"/0", "--output_path", instance_path, "--output_type", "TXT"])
+        subprocess.call([colmap_path, "model_converter", "--input_path", output_path + r"/0", "--output_path", output_path, "--output_type", "TXT"])
     except:
         return 1
 
