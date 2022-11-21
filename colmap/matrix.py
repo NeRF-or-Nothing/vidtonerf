@@ -404,7 +404,9 @@ def distance_sample_motion_data(motion_data):
   print("finished matrix multiplication")
   index_list = repeated_frame_remover(tmc)
   for c in range(len(motion_data["frames"])):
-    for i in index_list:
+    ## i is the frame's number
+    ## c is the index of a frame
+    for i in reversed(index_list):
       if (i == c):
         motion_data["frames"].pop(i)
 
