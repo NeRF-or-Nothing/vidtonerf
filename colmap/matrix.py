@@ -312,21 +312,21 @@ def theconquer(container, low, max_diff, high):
   sizeofeach = high-low-1
   for i in range(sizeofeach):
     for j in range(sizeofeach):
-      if (isSimilar(container[low+i], container[low+j+sizeofeach], max_diff) == True):
-        container[low+j+sizeofeach] = [-5, -5, -5]
+      if (isSimilar(container[low+i], container[low+j], max_diff) == True):
+        container[low+j] = [-5, -5, -5]
 
 def thedivide(container, low, high, max_diff):
   if low < high:
-    middle = (int) (low + high) / 2
+    middle = (int) ((low + high) / 2)
     thedivide(container, low, middle, max_diff)
     thedivide(container, middle+1, high, max_diff)
     theconquer(container, low, max_diff, high)
 
-def repeated_frame_remover(index_list, tmc):  
+def repeated_frame_remover(tmc):  
   # find the max difference we want before considering values unique
   # make the max difference any distances closer than the average distance
   addedvalues = 0
-  for i in range(1,len(tmc)):
+  for i in range(len(tmc)):
     xdiff = tmc[i-1][0] - tmc[i][0]
     ydiff = tmc[i-1][1] - tmc[i][1]
     zdiff = tmc[i-1][2] - tmc[i][2]
@@ -334,6 +334,8 @@ def repeated_frame_remover(index_list, tmc):
   
   max_diff = addedvalues / len(tmc)
 
+  # observe tmc with -5 
+  # put those in the index list to return
   ''' 
   ## OPTIONAL: make it within one standard deviation (stricter distance necessary to be unique)
   sumdifferences = 0
@@ -354,10 +356,11 @@ def repeated_frame_remover(index_list, tmc):
   '''
   
   # O(n log n) baby we dividing and conquering (but if they are dupes, we remove)
-  thedivide(tmc, 0, tmc.size(), max_diff)
+  thedivide(tmc, 0, len(tmc), max_diff)
   # find the [-5, -5, -5] matrices and put them in the index list
-  for i in range(0, tmc.size()):
-    if (tmc[i] == [-5, -5, -5]):
+  index_list = []
+  for i in range(len(tmc)):
+    if (tmc[i][2] == -5):
       index_list.append(i)
       
   return index_list
@@ -368,16 +371,37 @@ def distance_sample_motion_data(motion_data):
   # find trasposition of camera after rotation
   # sus run time O(num of frames * matrix multiplication)
   tmc = [] # stands for transposition_matrix_container
-  for index in motion_data["frames"]:
-    rotation_matrix = np.array(motion_data["frames"][index]["extrinsic_matrix"][:3, :3])
-    translation_matrix = np.array(motion_data["frames"][index]["extrinsic_matrix"][:3, 3:4])
+  print("before for loop")
+  for index in range(len(motion_data["frames"])):
+    print("rotation_matrix:", motion_data["frames"][index]["extrinsic_matrix"][0][0])
+    r11 = motion_data["frames"][index]["extrinsic_matrix"][0][0]
+    r12 = motion_data["frames"][index]["extrinsic_matrix"][0][1]
+    r13 = motion_data["frames"][index]["extrinsic_matrix"][0][2]
+    r14 = motion_data["frames"][index]["extrinsic_matrix"][0][3]
+    r21 = motion_data["frames"][index]["extrinsic_matrix"][1][0]
+    r22 = motion_data["frames"][index]["extrinsic_matrix"][1][1]
+    r23 = motion_data["frames"][index]["extrinsic_matrix"][1][2]
+    r24 = motion_data["frames"][index]["extrinsic_matrix"][1][3]
+    r31 = motion_data["frames"][index]["extrinsic_matrix"][2][0]
+    r32 = motion_data["frames"][index]["extrinsic_matrix"][2][1]
+    r33 = motion_data["frames"][index]["extrinsic_matrix"][2][2]
+    r34 = motion_data["frames"][index]["extrinsic_matrix"][2][3]
+    rotation_matrix = np.array([[r11, r12, r13, r14],
+                                [r21, r22, r23, r24],
+                                [r31, r32, r33, r34]])
+    x = motion_data["frames"][index]["extrinsic_matrix"][3][0]
+    y = motion_data["frames"][index]["extrinsic_matrix"][3][1]
+    z = motion_data["frames"][index]["extrinsic_matrix"][3][2]
+    translation_matrix = np.array([x,y,z,1])
+    print("size of translatoin matrix:", )
     transposition_matrix = np.matmul(rotation_matrix, translation_matrix)
     tmc.append(transposition_matrix)
-  
+  print("after for loop")
   # compare values in each transposition matrix
   # if very similar, remove
   # should have n log n runtime where n is amount of elements
   index_list= []
+  print("finished matrix multiplication")
   index_list = repeated_frame_remover(tmc)
   for c in range(len(motion_data["frames"])):
     for i in index_list:
