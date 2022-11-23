@@ -68,8 +68,8 @@ class CameraPoseVisualizer:
         norm = mpl.colors.Normalize(vmin=0, vmax=max_frame_length)
         self.fig.colorbar(mpl.cm.ScalarMappable(norm=norm, cmap=cmap), orientation='vertical', label='Frame Number')
     
-    def plot_cam(self, cam):
-        self.ax.scatter(cam[0],cam[1],cam[2], c= 'blue')
+    def plot_cam(self, cam, color="blue"):
+        self.ax.scatter(cam[0],cam[1],cam[2], color= color)
 
 
     def show(self):
@@ -83,43 +83,35 @@ if __name__ =='__main__':
 
     input_str = open(input_file)
     input = json.loads(input_str.read())
-    #intrinsic = np.asarray(input["intrinsic_matrix"])
-    #intrinsic = np.c_[ intrinsic, np.zeros(3) ]  
-    #intrinsic = np.expand_dims(intrinsic,axis=0)
-    #print(intrinsic)
 
     extrins = []
     for f in input["frames"]:
         extrinsic = np.array(f["extrinsic_matrix"])
-        #transform = (intrinsic @ extrinsic)
-        #transform = np.r_[transform, [np.zeros(4)]]
-        #transform[-1,-1] = 1
-        #print(transform)
-        #print(transform.shape)
         extrins+=[ extrinsic ]
 
     visualizer = CameraPoseVisualizer([-5, 5], [-5, 5], [0, 5])
     cams = []
     for i,e in enumerate(extrins):
         if i%3 == 0:
-            visualizer.extrinsic2pyramid(e, plt.cm.rainbow(i / len(extrins)))
+            color = plt.cm.rainbow(i / len(extrins))
+            visualizer.extrinsic2pyramid(e, color)
+            primary_point = np.asarray([0,0,-2,1])
+
             r = e[0:3,0:3]
             t = e[0:3,3]
             c = -r.T @ t
-            print(r)
-            print(t)
-            print(c)
+            print("Rotation:\n",r)
+            print("Translation:\n",t)
+            print("Cam:\n",c)
             print()
-            #visualizer.plot_cam(c)
+            visualizer.plot_cam(e @ primary_point, color)
+            secondary_point = np.asarray([0,0,-3,1])
+            visualizer.plot_cam(e @ secondary_point, color)
+
 
         cams.append(c)
-        #c = c/np.linalg.norm(c)
-        #print(c)
     visualizer.show()
 
-    #for i in range(len(cams)-1):
-    #    diff = cams[i]-cams[i+1]
-    #    print(diff[0]/diff[1])
 
 
 
