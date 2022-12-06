@@ -80,6 +80,7 @@ class CameraPoseVisualizer:
 if __name__ =='__main__':
     print("Starting conversion")
     input_file = sys.argv[1]
+    skip = int(sys.argv[2])
 
     input_str = open(input_file)
     input = json.loads(input_str.read())
@@ -92,7 +93,7 @@ if __name__ =='__main__':
     visualizer = CameraPoseVisualizer([-5, 5], [-5, 5], [0, 5])
     cams = []
     for i,e in enumerate(extrins):
-        if i%3 == 0:
+        if i%skip == 0:
             color = plt.cm.rainbow(i / len(extrins))
             visualizer.extrinsic2pyramid(e, color)
             primary_point = np.asarray([0,0,-2,1])

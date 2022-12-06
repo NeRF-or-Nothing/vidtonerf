@@ -191,6 +191,8 @@ def get_extrinsic(center_point, fp: str = "parsed_data.csv"):
     #center_point = np.average(extrinsic_matrices[:,0:3,3],axis=0)
     print(center_point.shape)
     print("center point ",center_point)
+    center_point = np.mean(extrinsic_matrices[:,0:3,3],axis=0)
+    print(f"New Center Point {center_point}")
     extrinsic_matrices[:,0:3,3] -= center_point
 
     # Z offset assuming cameras are never below the object
@@ -198,7 +200,7 @@ def get_extrinsic(center_point, fp: str = "parsed_data.csv"):
 
     # Normalize extrinsic transformation to remain within bounding box
     translation_magnitudes = np.linalg.norm(extrinsic_matrices[:,0:3,3],axis=1)
-    avg_translation_magnitude = np.average(translation_magnitudes)
+    avg_translation_magnitude = np.average(translation_magnitudes)*2.5
     print("Translation mag: ",avg_translation_magnitude)
     extrinsic_matrices[:,0:3,3] /= avg_translation_magnitude
 
