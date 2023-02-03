@@ -45,6 +45,15 @@ def split_video_into_frames(video_path, output_path, max_frames=200):
   ## determines whether image is blurry or not.
   # uses the variance of a laplacian transform to check for edges and returns true
   # if the variance is less than the threshold and the video is determined to be blurry
+  def is_blurry(image, threshold):
+    ## Convert image to grayscale
+    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    ## run the variance of the laplacian transform to test blurriness
+    laplacian_var = cv2.Laplacian(gray, cv2.CV_64F).var()
+    return laplacian_var < threshold
+
+  ## determines amount of blurriness
+  # see IS_BLURRY for more information
   def blurriness(image):
     ## Convert image to grayscale
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
@@ -52,10 +61,8 @@ def split_video_into_frames(video_path, output_path, max_frames=200):
     laplacian_var = cv2.Laplacian(gray, cv2.CV_64F).var()
     return laplacian_var
 
-
   # Create output folder
   Path(f"{output_path}").mkdir(parents=True, exist_ok=True)
-
 
   ## determine video length:
   # TODO: Check video type to ensure it is supported
@@ -72,12 +79,22 @@ def split_video_into_frames(video_path, output_path, max_frames=200):
 
   ## Rank all images based off bluriness
   image_blur = blurriness(image)
+  image_test_count = min(frame_count, max_frames*1.5)
+  ## try to take 1.5 times more images than max frames if available.
+  blur_list = [image_test_count]
+
+  ## check blurriness of all images and sort to caluculate threshold
   img_index = 0
-  blur_list = [frame_count]
   while success:
     blur_list[img_index] = image_blur
     img_index += 1
     success, image = vidcap.read()
+
+  blur_list.sort()
+  THRESHOLD = blur_list[sample_count-1]
+
+  ## TODO if this threshold is too low, completely reject video 
+
   
   img_height = image.shape[0]
   img_width = image.shape[1]
