@@ -41,79 +41,101 @@ from random import sample
 #    3 = FileNotFoundError; happens when you try to use an output folder that does not exist
 
 def split_video_into_frames(video_path, output_path, max_frames=200):
-   # Create output folder
-    Path(f"{output_path}").mkdir(parents=True, exist_ok=True)
+
+  ## determines whether image is blurry or not.
+  # uses the variance of a laplacian transform to check for edges and returns true
+  # if the variance is less than the threshold and the video is determined to be blurry
+  def is_blurry(image, threshold):
+    ## Convert image to grayscale
+    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    ## run the variance of the laplacian transform to test blurriness
+    laplacian_var = cv2.Laplacian(gray, cv2.CV_64F).var()
+    return laplacian_var < threshold
 
 
-    ## determine video length:
-    # TODO: Check video type to ensure it is supported
-    vidcap = cv2.VideoCapture(video_path )
-    frame_count = vidcap.get(cv2.CAP_PROP_FRAME_COUNT)
-    frame_count = int(frame_count)
+  # Create output folder
+  Path(f"{output_path}").mkdir(parents=True, exist_ok=True)
 
-    ## sample up to max frame count
-    sample_count = min(frame_count,max_frames)
 
-    #print(f"frames = {frame_count}")
+  ## determine video length:
+  # TODO: Check video type to ensure it is supported
+  vidcap = cv2.VideoCapture(video_path )
+  frame_count = vidcap.get(cv2.CAP_PROP_FRAME_COUNT)
+  frame_count = int(frame_count)
 
-    success, image = vidcap.read()
-    img_height = image.shape[0]
-    img_width = image.shape[1]
-    needs_adjust = False ## determines if we need to adjust
-    aspect_ratio = img_height / img_width
-    #print (f"aspect ratio: {aspect_ratio}")
-    #print (f"img_width: {img_width}")
-    #print (f"img_height: {img_height}")
-    ## adjust as necessary
-    MAX_WIDTH = 200 
-    MAX_HEIGHT = 200
+  ## sample up to max frame count
+  sample_count = min(frame_count,max_frames)
 
-    ## for resizing images
-    # TODO: Fix image resizing to preserve aspect ratio
-    if (img_height > MAX_HEIGHT):
-      scaler = MAX_HEIGHT / img_height
-      img_height = (int) (img_height * scaler)
-      needs_adjust = True
+  #print(f"frames = {frame_count}")
 
-    if (img_width > MAX_WIDTH):
-      scaler = MAX_WIDTH / img_width
-      img_width = (int) (scaler * img_width)
-      needs_adjust = True
+  success, image = vidcap.read()
+  img_height = image.shape[0]
+  img_width = image.shape[1]
+  needs_adjust = False ## determines if we need to adjust
+  aspect_ratio = img_height / img_width
+  #print (f"aspect ratio: {aspect_ratio}")
+  #print (f"img_width: {img_width}")
+  #print (f"img_height: {img_height}")
+  ## adjust as necessary
+  MAX_WIDTH = 200 
+  MAX_HEIGHT = 200
+
+  ## for resizing images
+  # TODO: Fix image resizing to preserve aspect ratio
+  if (img_height > MAX_HEIGHT):
+    scaler = MAX_HEIGHT / img_height
+    img_height = (int) (img_height * scaler)
+    needs_adjust = True
+
+  if (img_width > MAX_WIDTH):
+    scaler = MAX_WIDTH / img_width
+    img_width = (int) (scaler * img_width)
+    needs_adjust = True
+  
+  ## applying aspect ratio
+  if (aspect_ratio > 1):
+    img_width = (int) (img_width / aspect_ratio)
+  else:
+    img_height = (int) (img_height * aspect_ratio)
+
+  #print(f"new img height: {img_height}")
+  #print(f"new img width: {img_width}")
+  dimensions = (img_width, img_height)
+
+  count = 0
+  next_up = 0 # used for iterating through the sorted sample images
+
+  ## finding which images we will randomly take
+  image_indexes = [i for i in range(frame_count)]
+  chosen_list = sample(image_indexes, sample_count)
+  chosen_list = sorted(chosen_list)
+  print(chosen_list)
+
+  ## Blurriness Threshold
+  threshold = 100
+
+  while success:
+    if (next_up == len(chosen_list)):
+      break
     
-    ## applying aspect ratio
-    if (aspect_ratio > 1):
-      img_width = (int) (img_width / aspect_ratio)
-    else:
-      img_height = (int) (img_height * aspect_ratio)
+    laplacian_var = cv2.Laplacian(image, cv2.CV_64F).var()
+    if (laplacian_var > threshold):
+      
 
-    #print(f"new img height: {img_height}")
-    #print(f"new img width: {img_width}")
-    dimensions = (img_width, img_height)
-
-    count = 0
-    next_up = 0 # used for iterating through the sorted sample images
-
-    ## finding which images we will randomly take
-    image_indexes = [i for i in range(frame_count)]
-    chosen_list = sample(image_indexes, sample_count)
-    chosen_list = sorted(chosen_list)
-    print(chosen_list)
-    while success:
-      if (next_up == len(chosen_list)):
-        break
       if (chosen_list[next_up] == count):
         next_up += 1
         if (needs_adjust == True):
           image = cv2.resize(image, dimensions, interpolation=cv2.INTER_LANCZOS4)
         cv2.imwrite(f"{output_path}/img_{next_up}.png", image)  
         print('Saved image ', next_up)
-      success, image = vidcap.read()
-      count += 1
-    vidcap.release()
+    success, image = vidcap.read()
+    
+    count += 1
+  vidcap.release()
 
-    #Sucess, return 0
-    ## can return img_width, img_height, and wanted_frames
-    return 0
+  #Sucess, return 0
+  ## can return img_width, img_height, and wanted_frames
+  return 0
 
 def test():
   instance_name = "test"
