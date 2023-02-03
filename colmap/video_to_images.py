@@ -117,17 +117,12 @@ def split_video_into_frames(video_path, output_path, max_frames=200):
   while success:
     if (next_up == len(chosen_list)):
       break
-    
-    laplacian_var = cv2.Laplacian(image, cv2.CV_64F).var()
-    if (laplacian_var > threshold):
-      
-
-      if (chosen_list[next_up] == count):
-        next_up += 1
-        if (needs_adjust == True):
-          image = cv2.resize(image, dimensions, interpolation=cv2.INTER_LANCZOS4)
-        cv2.imwrite(f"{output_path}/img_{next_up}.png", image)  
-        print('Saved image ', next_up)
+    if (chosen_list[next_up] == count):
+      next_up += 1
+      if (needs_adjust == True):
+        image = cv2.resize(image, dimensions, interpolation=cv2.INTER_LANCZOS4)
+      cv2.imwrite(f"{output_path}/img_{next_up}.png", image)  
+      print('Saved image ', next_up)
     success, image = vidcap.read()
     
     count += 1
