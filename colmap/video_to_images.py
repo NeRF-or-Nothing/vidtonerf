@@ -45,12 +45,12 @@ def split_video_into_frames(video_path, output_path, max_frames=200):
   ## determines whether image is blurry or not.
   # uses the variance of a laplacian transform to check for edges and returns true
   # if the variance is less than the threshold and the video is determined to be blurry
-  def is_blurry(image, threshold):
+  def blurriness(image):
     ## Convert image to grayscale
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     ## run the variance of the laplacian transform to test blurriness
     laplacian_var = cv2.Laplacian(gray, cv2.CV_64F).var()
-    return laplacian_var < threshold
+    return laplacian_var
 
 
   # Create output folder
@@ -69,6 +69,16 @@ def split_video_into_frames(video_path, output_path, max_frames=200):
   #print(f"frames = {frame_count}")
 
   success, image = vidcap.read()
+
+  ## Rank all images based off bluriness
+  image_blur = blurriness(image)
+  img_index = 0
+  blur_list = [frame_count]
+  while success:
+    blur_list[img_index] = image_blur
+    img_index += 1
+    success, image = vidcap.read()
+  
   img_height = image.shape[0]
   img_width = image.shape[1]
   needs_adjust = False ## determines if we need to adjust
@@ -102,18 +112,19 @@ def split_video_into_frames(video_path, output_path, max_frames=200):
   #print(f"new img width: {img_width}")
   dimensions = (img_width, img_height)
 
+
   count = 0
   next_up = 0 # used for iterating through the sorted sample images
 
-  ## finding which images we will randomly take
+  ## TODO: take images that are the most clear
   image_indexes = [i for i in range(frame_count)]
   chosen_list = sample(image_indexes, sample_count)
   chosen_list = sorted(chosen_list)
   print(chosen_list)
 
-  ## Blurriness Threshold
-  threshold = 100
-
+  ## write to the folder the images we want
+  vidcap = cv2.VideoCapture(video_path)
+  success, image = vidcap.read()
   while success:
     if (next_up == len(chosen_list)):
       break
