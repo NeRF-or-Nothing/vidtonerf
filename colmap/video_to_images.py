@@ -93,11 +93,21 @@ def split_video_into_frames(video_path, output_path, max_frames=200):
     count = 0
     next_up = 0 # used for iterating through the sorted sample images
 
+    ## find blurry images 
+    THRESHOLD = 100 ## 100 is a commmon threshold but can be adjusted
+    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    ## convert the image into grayscale so we can take second derivate (laplace)
+    fm = cv2.Laplacian(gray, cv2.CV_64F).var()
+    if (fm < THRESHOLD): 
+      ## image is blurry, shouldn't be taken 
+      print("blurry image found")
+
     ## finding which images we will randomly take
     image_indexes = [i for i in range(frame_count)]
     chosen_list = sample(image_indexes, sample_count)
     chosen_list = sorted(chosen_list)
     print(chosen_list)
+    
     while success:
       if (next_up == len(chosen_list)):
         break
