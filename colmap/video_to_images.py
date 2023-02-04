@@ -45,12 +45,12 @@ def split_video_into_frames(video_path, output_path, max_frames=200):
   ## determines whether image is blurry or not.
   # uses the variance of a laplacian transform to check for edges and returns true
   # if the variance is less than the threshold and the video is determined to be blurry
-  def is_blurry(image, threshold):
+  def is_blurry(image, THRESHOLD):
     ## Convert image to grayscale
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     ## run the variance of the laplacian transform to test blurriness
     laplacian_var = cv2.Laplacian(gray, cv2.CV_64F).var()
-    return laplacian_var < threshold
+    return laplacian_var < THRESHOLD
 
   ## determines amount of blurriness
   # see IS_BLURRY for more information
@@ -78,22 +78,21 @@ def split_video_into_frames(video_path, output_path, max_frames=200):
   success, image = vidcap.read()
 
   ## Rank all images based off bluriness
-  image_blur = blurriness(image)
-  image_test_count = min(frame_count, max_frames*1.5)
-  ## try to take 1.5 times more images than max frames if available.
-  blur_list = [image_test_count]
+  blur_list = [frame_count]
 
   ## check blurriness of all images and sort to caluculate threshold
   img_index = 0
   while success:
+    image_blur = blurriness(image)
     blur_list[img_index] = image_blur
     img_index += 1
     success, image = vidcap.read()
 
-  blur_list.sort()
-  THRESHOLD = blur_list[sample_count-1]
+  sorted_list = blur_list.sort()
+  THRESHOLD = sorted_list[sample_count-1]
+  vidcap.release()
 
-  ## TODO if this threshold is too low, completely reject video 
+  ## TODO: if this threshold is too low, completely reject video 
 
   
   img_height = image.shape[0]
@@ -108,7 +107,6 @@ def split_video_into_frames(video_path, output_path, max_frames=200):
   MAX_HEIGHT = 200
 
   ## for resizing images
-  # TODO: Fix image resizing to preserve aspect ratio
   if (img_height > MAX_HEIGHT):
     scaler = MAX_HEIGHT / img_height
     img_height = (int) (img_height * scaler)
@@ -131,26 +129,16 @@ def split_video_into_frames(video_path, output_path, max_frames=200):
 
 
   count = 0
-  next_up = 0 # used for iterating through the sorted sample images
-
-  ## TODO: take images that are the most clear
-  image_indexes = [i for i in range(frame_count)]
-  chosen_list = sample(image_indexes, sample_count)
-  chosen_list = sorted(chosen_list)
-  print(chosen_list)
 
   ## write to the folder the images we want
   vidcap = cv2.VideoCapture(video_path)
   success, image = vidcap.read()
   while success:
-    if (next_up == len(chosen_list)):
-      break
-    if (chosen_list[next_up] == count):
-      next_up += 1
+    if (blur_list[count] < THRESHOLD):
       if (needs_adjust == True):
         image = cv2.resize(image, dimensions, interpolation=cv2.INTER_LANCZOS4)
       cv2.imwrite(f"{output_path}/img_{next_up}.png", image)  
-      print('Saved image ', next_up)
+      print('Saved image ', count)
     success, image = vidcap.read()
     
     count += 1
