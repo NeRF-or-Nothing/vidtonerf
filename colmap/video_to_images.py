@@ -76,10 +76,11 @@ def split_video_into_frames(video_path, output_path, max_frames=200):
   #print(f"frames = {frame_count}")
 
   success, image = vidcap.read()
+  img_height = image.shape[0]
+  img_width = image.shape[1]
 
   ## Rank all images based off bluriness
   blur_list = [frame_count]
-
   ## check blurriness of all images and sort to caluculate threshold
   img_index = 0
   while success:
@@ -88,15 +89,11 @@ def split_video_into_frames(video_path, output_path, max_frames=200):
     img_index += 1
     success, image = vidcap.read()
 
+  vidcap.release()
   sorted_list = blur_list.sort()
   THRESHOLD = sorted_list[sample_count-1]
-  vidcap.release()
 
   ## TODO: if this threshold is too low, completely reject video 
-
-  
-  img_height = image.shape[0]
-  img_width = image.shape[1]
   needs_adjust = False ## determines if we need to adjust
   aspect_ratio = img_height / img_width
   #print (f"aspect ratio: {aspect_ratio}")
@@ -137,7 +134,7 @@ def split_video_into_frames(video_path, output_path, max_frames=200):
     if (blur_list[count] < THRESHOLD):
       if (needs_adjust == True):
         image = cv2.resize(image, dimensions, interpolation=cv2.INTER_LANCZOS4)
-      cv2.imwrite(f"{output_path}/img_{next_up}.png", image)  
+      cv2.imwrite(f"{output_path}/img_{count}.png", image)  
       print('Saved image ', count)
     success, image = vidcap.read()
     
