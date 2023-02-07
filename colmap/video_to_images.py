@@ -80,13 +80,11 @@ def split_video_into_frames(video_path, output_path, max_frames=200):
   img_width = image.shape[1]
 
   ## Rank all images based off bluriness
-  blur_list = [frame_count]
+  blur_list = []
   ## check blurriness of all images and sort to caluculate threshold
-  img_index = 0
   while success:
     image_blur = blurriness(image)
-    blur_list[img_index] = image_blur
-    img_index += 1
+    blur_list.append(image_blur)
     success, image = vidcap.read()
 
   vidcap.release()
