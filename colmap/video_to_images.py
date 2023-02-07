@@ -94,12 +94,14 @@ def split_video_into_frames(video_path, output_path, max_frames=200):
   THRESHOLD = sorted_list[sample_count-1]
 
   ## TODO: if this threshold is too low, completely reject video 
+
+
   needs_adjust = False ## determines if we need to adjust
   aspect_ratio = img_height / img_width
   #print (f"aspect ratio: {aspect_ratio}")
   #print (f"img_width: {img_width}")
   #print (f"img_height: {img_height}")
-  ## adjust as necessary
+  ## adjust as necessaryx 
   MAX_WIDTH = 200 
   MAX_HEIGHT = 200
 
@@ -193,3 +195,5 @@ if __name__ == '__main__':
         print(f"ERROR: ffmpeg - file {output_path}/{instance_name} already exists.")
     elif status == 3:
         print(f"ERROR: ffmpeg - file {output_path} could not be found.")
+    elif status == 4:
+        print("ERROR: Video is too blurry. Please try again.")
