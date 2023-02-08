@@ -50,7 +50,7 @@ To run the project install and run the web-server, the nerf worker, and the colm
 
 ### Prerequisites
 1. Have [Docker](https://www.docker.com/) installed locally
-NOTE: Docker contrainer comes preloaded with ffmpeg and colmap. If you wish to run this outside of the docker environment you would have to install these locally.
+NOTE: The Docker container comes preloaded with ffmpeg and colmap. If you wish to run this outside of the docker environment you would have to install these locally.
 2. If you intend to run the NeRF and COLMAP workers locally ensure you have NVIDIA GPUS with atleast 6GB of vram as these are resource intensive applications
 ## Output Example 
 Converting the training images from the [nerf-synthetic](https://drive.google.com/drive/folders/1JDdLGDruGNXWnM1eqY1FNL9PlStjaKWi) dataset lego example to a video then running vidtonerf produces the following result:
@@ -124,4 +124,4 @@ Or inquire at: `nerf@quicktechtime.com`
 [Bootstrap.com]: https://img.shields.io/badge/Bootstrap-563D7C?style=for-the-badge&logo=bootstrap&logoColor=white
 [Bootstrap-url]: https://getbootstrap.com
 [JQuery.com]: https://img.shields.io/badge/jQuery-0769AD?style=for-the-badge&logo=jquery&logoColor=white
-[JQuery-url]: https://jquery.com 
+[JQuery-url]: https://jquery.com
