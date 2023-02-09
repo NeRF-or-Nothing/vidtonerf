@@ -169,4 +169,4 @@ passphrase then looks like mine.
 ![Keychain SSH](./pics/ssh-keychain-1.png)
 </br>
 
-### Hopefully SSH seems less daunting, and now you can get back to work with a bit more confidence and ease.
+### Hopefully SSH seems less daunting, and now you can get back to work with a bit more confidence and ease. 
