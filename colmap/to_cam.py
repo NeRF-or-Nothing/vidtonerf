@@ -94,6 +94,8 @@ if __name__ =='__main__':
     cams = []
     for i,e in enumerate(extrins):
         if i%skip == 0:
+            e[0:3,3] = e[0:3,3]/2.2
+            e[2,3] -= 0.5
             color = plt.cm.rainbow(i / len(extrins))
             visualizer.extrinsic2pyramid(e, color)
             primary_point = np.asarray([0,0,-2,1])
@@ -109,8 +111,16 @@ if __name__ =='__main__':
             secondary_point = np.asarray([0,0,-3,1])
             visualizer.plot_cam(e @ secondary_point, color)
 
+    for i in range(len(input["frames"])):
+        e = np.array(input["frames"][i]["extrinsic_matrix"])
+        e[0:3,3] = e[0:3,3]/2.2
+        e[2,3] -= 0.5
+        extrins+=[ extrinsic ]
+        input["frames"][i]["extrinsic_matrix"] = e.tolist() 
+    json_object = json.dumps(input, indent=4)
+    with open('new_render.json', 'w') as outfile:
+        outfile.write(json_object)
 
-        cams.append(c)
     visualizer.show()
 
 
