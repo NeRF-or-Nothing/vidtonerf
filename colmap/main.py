@@ -137,7 +137,7 @@ if __name__ == "__main__":
     if "--local_run" in sys.argv: 
         nerfProcess = Process(target=colmap_worker, args= ())
         nerfProcess.start()
-        motion_data, imgs_folder = run_full_sfm_pipeline("Local_Test", "/Users/michaelchen/Documents/vidtonerf/colmap/data/video/input.mp4", input_data_dir, output_data_dir)
+        motion_data, imgs_folder = run_full_sfm_pipeline("Local_Test", "/data/video/input.mp4", input_data_dir, output_data_dir)
         print(motion_data)
         json_motion_data = json.dumps(motion_data)
         
