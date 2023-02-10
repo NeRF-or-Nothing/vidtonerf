@@ -93,8 +93,12 @@ def split_video_into_frames(video_path, output_path, max_frames=200):
   ## e.g, if we want 75 images out of 100, threshold should be 25th image
   THRESHOLD = sorted_list[len(blur_list) - sample_count]
 
-  ## TODO: if this threshold is too low, completely reject video 
-
+  ## If this threshold is too low, completely reject video 
+  avg_threshold = (sorted_list[-1] + THRESHOLD)/2
+  if avg_threshold < 100:
+    # ERROR: Video is too blurry. Please try again.
+    return 4
+  
 
   needs_adjust = False ## determines if we need to adjust
   aspect_ratio = img_height / img_width
