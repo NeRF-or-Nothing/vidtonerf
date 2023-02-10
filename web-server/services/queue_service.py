@@ -5,6 +5,7 @@ import json
 from urllib.parse import urlparse
 import requests
 from flask import url_for
+import time
 
 #TODO: make rabbitmq resistent to failed worker jobs
 
@@ -15,10 +16,24 @@ class RabbitMQService:
         credentials = pika.PlainCredentials('admin', 'password123')
         parameters = pika.ConnectionParameters(rabbitmq_domain, 5672, '/', credentials, heartbeat=300)
         # Change this ->
-        self.connection = pika.BlockingConnection(parameters)
-        self.channel = self.connection.channel()
-        self.channel.queue_declare(queue='sfm-in')
-        self.channel.queue_declare(queue='nerf-in')
+        timeout = time.time() + 60 * 2
+
+        while(True):
+            if time.time() > timeout:
+                raise Exception("Program took too long to connect to services")
+            try:
+                self.connection = pika.BlockingConnection(parameters)  
+                self.channel = self.connection.channel() 
+                self.channel.queue_declare(queue='sfm-in')
+                self.channel.queue_declare(queue='nerf-in')
+                try: 
+                    self.channel.start_consuming()
+                except KeyboardInterrupt:
+                    self.channel.stop_consuming()
+                    self.connection.close()
+                    break
+            except pika.exceptions.AMQPConnectionError:
+                continue
 
         #TODO: make this dynamic from config file
         self.base_url = "http://localhost:5000/"
