@@ -137,7 +137,7 @@ def split_video_into_frames(video_path, output_path, max_frames=200):
   vidcap = cv2.VideoCapture(video_path)
   success, image = vidcap.read()
   while success:
-    if (blur_list[count] > THRESHOLD):
+    if (blur_list[count] >= THRESHOLD):
       if (needs_adjust == True):
         image = cv2.resize(image, dimensions, interpolation=cv2.INTER_LANCZOS4)
       cv2.imwrite(f"{output_path}/img_{count}.png", image)  
