@@ -91,7 +91,22 @@ def split_video_into_frames(video_path, output_path, max_frames=200):
   sorted_list = sorted(blur_list)
   ## we want the remaining best images
   ## e.g, if we want 75 images out of 100, threshold should be 25th image
-  THRESHOLD = sorted_list[len(blur_list) - sample_count - 1]
+  threshold_img = len(blur_list) - sample_count
+  THRESHOLD = sorted_list[threshold_img]
+
+  ## checks number of images within the threshold
+  count_good_img = 0
+  for i in blur_list:
+    if i > THRESHOLD:
+      count_good_img += 1
+
+  ## account for not enough images in threshold so that we return the exact number of images
+  if count_good_img > sample_count:
+    for i in range(count_good_img - sample_count):
+      for val in blur_list:
+        if val > THRESHOLD:
+          val = 0
+       
 
   ## If this threshold is too low, completely reject video 
   avg_threshold = (sorted_list[-1] + THRESHOLD)/2
@@ -137,7 +152,7 @@ def split_video_into_frames(video_path, output_path, max_frames=200):
   vidcap = cv2.VideoCapture(video_path)
   success, image = vidcap.read()
   while success:
-    if (blur_list[count] > THRESHOLD):
+    if (blur_list[count] >= THRESHOLD):
       if (needs_adjust == True):
         image = cv2.resize(image, dimensions, interpolation=cv2.INTER_LANCZOS4)
       cv2.imwrite(f"{output_path}/img_{count}.png", image)  
