@@ -91,7 +91,7 @@ def split_video_into_frames(video_path, output_path, max_frames=200):
   sorted_list = sorted(blur_list)
   ## we want the remaining best images
   ## e.g, if we want 75 images out of 100, threshold should be 25th image
-  THRESHOLD = sorted_list[len(blur_list) - sample_count]
+  THRESHOLD = sorted_list[len(blur_list) - sample_count - 1]
 
   ## If this threshold is too low, completely reject video 
   avg_threshold = (sorted_list[-1] + THRESHOLD)/2
