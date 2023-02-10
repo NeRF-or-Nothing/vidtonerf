@@ -41,7 +41,6 @@ from random import sample
 #    3 = FileNotFoundError; happens when you try to use an output folder that does not exist
 
 def split_video_into_frames(video_path, output_path, max_frames=200):
-
   ## determines whether image is blurry or not.
   # uses the variance of a laplacian transform to check for edges and returns true
   # if the variance is less than the threshold and the video is determined to be blurry
@@ -72,6 +71,7 @@ def split_video_into_frames(video_path, output_path, max_frames=200):
 
   ## sample up to max frame count
   sample_count = min(frame_count,max_frames)
+  print("SAMPLE COUNT:", sample_count)
 
   #print(f"frames = {frame_count}")
 
@@ -137,7 +137,7 @@ def split_video_into_frames(video_path, output_path, max_frames=200):
   vidcap = cv2.VideoCapture(video_path)
   success, image = vidcap.read()
   while success:
-    if (blur_list[count] >= THRESHOLD):
+    if (blur_list[count] > THRESHOLD):
       if (needs_adjust == True):
         image = cv2.resize(image, dimensions, interpolation=cv2.INTER_LANCZOS4)
       cv2.imwrite(f"{output_path}/img_{count}.png", image)  
