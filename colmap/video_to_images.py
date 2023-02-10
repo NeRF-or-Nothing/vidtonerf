@@ -97,15 +97,16 @@ def split_video_into_frames(video_path, output_path, max_frames=200):
   ## checks number of images within the threshold
   count_good_img = 0
   for i in blur_list:
-    if i > THRESHOLD:
+    if i >= THRESHOLD:
       count_good_img += 1
 
   ## account for not enough images in threshold so that we return the exact number of images
   if count_good_img > sample_count:
     for i in range(count_good_img - sample_count):
       for val in blur_list:
-        if val > THRESHOLD:
+        if val >= THRESHOLD:
           val = 0
+          break
        
 
   ## If this threshold is too low, completely reject video 
