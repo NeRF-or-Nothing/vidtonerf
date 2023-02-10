@@ -89,7 +89,9 @@ def split_video_into_frames(video_path, output_path, max_frames=200):
 
   vidcap.release()
   sorted_list = sorted(blur_list)
-  THRESHOLD = sorted_list[sample_count-1]
+  ## we want the remaining best images
+  ## e.g, if we want 75 images out of 100, threshold should be 25th image
+  THRESHOLD = sorted_list[len(blur_list) - sample_count]
 
   ## TODO: if this threshold is too low, completely reject video 
 
