@@ -75,7 +75,6 @@ def run_full_sfm_pipeline(id,video_file_path, input_data_dir, output_data_dir):
     return motion_data, imgs_folder
 
 def colmap_worker(use_rabbitmq = False):
-
     input_data_dir = "data/inputs/"
     output_data_dir = "data/outputs/"
     Path(f"{input_data_dir}").mkdir(parents=True, exist_ok=True)
@@ -131,12 +130,21 @@ def colmap_worker(use_rabbitmq = False):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description=("Run locally or on RabbitMQ"))
-    if "--run_mode" in sys.argv: 
-        print("Run_Mode Test")
-    # flaskProcess = Process(target=start_flask, args= ())
-    # nerfProcess = Process(target=colmap_worker, args= ())
-    # flaskProcess.start()
-    # nerfProcess.start()
-    # flaskProcess.join()
-    # nerfProcess.join()``
+    input_data_dir = "data/inputs/"
+    output_data_dir = "data/outputs/"
+    Path(f"{input_data_dir}").mkdir(parents=True, exist_ok=True)
+    Path(f"{output_data_dir}").mkdir(parents=True, exist_ok=True)
+    if "--local_run" in sys.argv: 
+        nerfProcess = Process(target=colmap_worker, args= ())
+        nerfProcess.start()
+        motion_data, imgs_folder = run_full_sfm_pipeline("Local_Test", "/Users/michaelchen/Documents/vidtonerf/colmap/data/video/input.mp4", input_data_dir, output_data_dir)
+        print(motion_data)
+        json_motion_data = json.dumps(motion_data)
+        
+    else:
+        nerfProcess = Process(target=colmap_worker, args= (True))
+        flaskProcess = Process(target=start_flask, args= ())
+        flaskProcess.start()
+        nerfProcess.start()
+        flaskProcess.join()
+        nerfProcess.join()
