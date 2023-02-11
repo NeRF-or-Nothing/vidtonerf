@@ -1,4 +1,4 @@
-version: '3.7'
+version: "3.7"
 services:
   mongodb:
     image: mongo:latest
@@ -12,28 +12,28 @@ services:
       - mongodb_data_container:/data/db
     networks:
       - backend
-  
+
   rabbitmq:
     container_name: rabbitmq
     image: rabbitmq:3.8-management-alpine
     environment:
-       - RABBITMQ_DEFAULT_USER=admin
-       - RABBITMQ_DEFAULT_PASS=password123
+      - RABBITMQ_DEFAULT_USER=admin
+      - RABBITMQ_DEFAULT_PASS=password123
     ports:
-       # AMQP protocol port
-       - '5672:5672'
-       # HTTP management UI
-       - '15672:15672'
+      # AMQP protocol port
+      - "5672:5672"
+      # HTTP management UI
+      - "15672:15672"
     networks:
       - backend
-    
+
   web-server:
     build: .
     image: web-server-img
     container_name: web-server
     depends_on:
-    - rabbitmq
-    - mongodb
+      - rabbitmq
+      - mongodb
     environment:
       APP_PORT: 5000
     volumes:

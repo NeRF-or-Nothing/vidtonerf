@@ -15,13 +15,14 @@ matrix to out_matrix.txt with the following info:
 4. extrinsic matrix for each image w/ image name
 """
 
-import sys
 import csv
-import math
-import numpy as np
-import image_position_extractor
 import json
+import math
 import os
+import sys
+
+import image_position_extractor
+import numpy as np
 
 
 # https://en.wikipedia.org/wiki/Conversion_between_quaternions_and_Euler_angles
@@ -98,16 +99,15 @@ def quaternion_rotation_matrix(qw, qx, qy, qz) -> np.ndarray:
     r22 = 1 - 2 * qx**2 - 2 * qy**2
 
     # 3x3 rotation matrix
-    rotation_matrix = np.array([[r00, r01, r02],
-                                [r10, r11, r12],
-                                [r20, r21, r22]])
+    rotation_matrix = np.array([[r00, r01, r02], [r10, r11, r12], [r20, r21, r22]])
     # np.set_printoptions(threshold=sys.maxsize)
     return rotation_matrix
+
 
 # Function from https://stackoverflow.com/questions/45142959/calculate-rotation-matrix-to-align-two-vectors-in-3d-space
 # Authored by Peter
 def rotation_matrix_from_vectors(vec1, vec2):
-    """ Find the rotation matrix that aligns vec1 to vec2
+    """Find the rotation matrix that aligns vec1 to vec2
     :param vec1: A 3d "source" vector
     :param vec2: A 3d "destination" vector
     :return mat: A transform matrix (3x3) which when applied to vec1, aligns it with vec2.
@@ -117,12 +117,12 @@ def rotation_matrix_from_vectors(vec1, vec2):
     c = np.dot(a, b)
     s = np.linalg.norm(v)
     kmat = np.array([[0, -v[2], v[1]], [v[2], 0, -v[0]], [-v[1], v[0], 0]])
-    rotation_matrix = np.eye(3) + kmat + kmat.dot(kmat) * ((1 - c) / (s ** 2))
+    rotation_matrix = np.eye(3) + kmat + kmat.dot(kmat) * ((1 - c) / (s**2))
     return rotation_matrix
+
 
 def get_extrinsic(center_point, fp: str = "parsed_data.csv"):
 
-    
     # contrains filepath and extrinsic matrix
     filepaths = []
     extrinsic_matrices = []
@@ -147,79 +147,76 @@ def get_extrinsic(center_point, fp: str = "parsed_data.csv"):
             T = np.array([tx, ty, tz])
             r = quaternion_rotation_matrix(qw, qx, qy, qz)  # rotational matrix
 
+            extrinsic = np.zeros((4, 4))
+            extrinsic[0:3, 0:3] = r
+            extrinsic[0:3, 3] = T
 
-            extrinsic = np.zeros((4,4))
-            extrinsic[0:3,0:3] = r
-            extrinsic[0:3,3] = T
-
-            #T is not the position of the camera
-            #r_t = r.transpose()
-            #camera = -r_t @T
+            # T is not the position of the camera
+            # r_t = r.transpose()
+            # camera = -r_t @T
             extrinsic[3][3] = 1
             c2w = np.linalg.inv(extrinsic)
 
             # convert from OPENCV to OPENGL coordinates
-            conversion = np.array([[1,0,0,0],
-                                   [0,-1,0,0],
-                                   [0,0,-1,0],
-                                    [0,0,0,1]])
+            conversion = np.array([[1, 0, 0, 0], [0, -1, 0, 0], [0, 0, -1, 0], [0, 0, 0, 1]])
             # flips y and z coords
-            c2w =  c2w @ conversion
+            c2w = c2w @ conversion
 
             extrinsic_matrices.append(c2w)
 
             # Center extrinsics around center point:
-            #extrinsic[0:3,3] += center_point
+            # extrinsic[0:3,3] += center_point
 
     # stack all extrinsic to perform faster transformations to the whole stack
-    extrinsic_matrices = np.stack(extrinsic_matrices,axis=0)
+    extrinsic_matrices = np.stack(extrinsic_matrices, axis=0)
     print(extrinsic_matrices.shape)
-    avg_y_axis = np.sum(extrinsic_matrices[:,0:3,1], axis=0)
-    avg_y_axis = avg_y_axis/np.linalg.norm(avg_y_axis)
-    print("Consensus Y axis: ",avg_y_axis)
+    avg_y_axis = np.sum(extrinsic_matrices[:, 0:3, 1], axis=0)
+    avg_y_axis = avg_y_axis / np.linalg.norm(avg_y_axis)
+    print("Consensus Y axis: ", avg_y_axis)
 
     # Find a matrix to rotate the average y axis with the y-axis unit vector thus aligning every extrinsic to point in the same direction
-    Rot = np.zeros((4,4))
-    Rot[0:3,0:3] = rotation_matrix_from_vectors(avg_y_axis,np.asarray([0,0,1]))
-    Rot[-1,-1] = 1
-    Rot = np.expand_dims(Rot,axis=0)
+    Rot = np.zeros((4, 4))
+    Rot[0:3, 0:3] = rotation_matrix_from_vectors(avg_y_axis, np.asarray([0, 0, 1]))
+    Rot[-1, -1] = 1
+    Rot = np.expand_dims(Rot, axis=0)
 
     # Rotate Extrinsic to all face up
     extrinsic_matrices = Rot @ extrinsic_matrices
 
     # Adjust extrinsic to center around the central point
-    #center_point = np.average(extrinsic_matrices[:,0:3,3],axis=0)
+    # center_point = np.average(extrinsic_matrices[:,0:3,3],axis=0)
     print(center_point.shape)
-    print("center point ",center_point)
-    extrinsic_matrices[:,0:3,3] -= center_point
+    print("center point ", center_point)
+    extrinsic_matrices[:, 0:3, 3] -= center_point
 
     # Z offset assuming cameras are never below the object
-    extrinsic_matrices[:,2,3] -= min(extrinsic_matrices[:,2,3].min(),0)
+    extrinsic_matrices[:, 2, 3] -= min(extrinsic_matrices[:, 2, 3].min(), 0)
 
     # Normalize extrinsic transformation to remain within bounding box
-    translation_magnitudes = np.linalg.norm(extrinsic_matrices[:,0:3,3],axis=1)
+    translation_magnitudes = np.linalg.norm(extrinsic_matrices[:, 0:3, 3], axis=1)
     avg_translation_magnitude = np.average(translation_magnitudes)
-    print("Translation mag: ",avg_translation_magnitude)
-    extrinsic_matrices[:,0:3,3] /= avg_translation_magnitude
+    print("Translation mag: ", avg_translation_magnitude)
+    extrinsic_matrices[:, 0:3, 3] /= avg_translation_magnitude
 
     # scale back up TODO: make dynamic
-    extrinsic_matrices[:,0:3,3] *= 4
+    extrinsic_matrices[:, 0:3, 3] *= 4
 
-    print("Max ",extrinsic_matrices[:,0:3,3].max())
-    print("Min ",extrinsic_matrices[:,0:3,3].min())
-    print("avg ",np.average(extrinsic_matrices[:,0:3,3]))
+    print("Max ", extrinsic_matrices[:, 0:3, 3].max())
+    print("Min ", extrinsic_matrices[:, 0:3, 3].min())
+    print("avg ", np.average(extrinsic_matrices[:, 0:3, 3]))
 
     # Convert to json
     frames = []
-    for extrin, file_path in zip(extrinsic_matrices,filepaths):
-        extrinsic_list = extrin.tolist()        # convert to list for json
+    for extrin, file_path in zip(extrinsic_matrices, filepaths):
+        extrinsic_list = extrin.tolist()  # convert to list for json
 
-        img_frame = { "file_path": file_path,
-                          "extrinsic_matrix": extrinsic_list}
+        img_frame = {"file_path": file_path, "extrinsic_matrix": extrinsic_list}
 
         frames.append(img_frame)
 
     return frames
+
+
 # add the video name thing
 def get_intrinsic(fp: str = "cameras.txt"):
     infile = open(fp, "r")
@@ -237,17 +234,13 @@ def get_intrinsic(fp: str = "cameras.txt"):
             x0 = float(data[6])
             y0 = float(data[7])
 
-    intrinsic = np.array([[fx, 0, x0], 
-                          [0, fy, y0],
-                          [0, 0, 1]])
-    intrinsic_list = intrinsic.tolist()      # convert to list for json
+    intrinsic = np.array([[fx, 0, x0], [0, fy, y0], [0, 0, 1]])
+    intrinsic_list = intrinsic.tolist()  # convert to list for json
 
-    intrinsic = { "vid_width": width,
-                  "vid_height": height,
-                  "intrinsic_matrix": intrinsic_list
-                }
+    intrinsic = {"vid_width": width, "vid_height": height, "intrinsic_matrix": intrinsic_list}
 
     return intrinsic
+
 
 # COLMAP TO NDC
 def get_extrinsics_center(fp: str = "points3D.txt"):
@@ -264,21 +257,22 @@ def get_extrinsics_center(fp: str = "points3D.txt"):
             central_point[0] += float(data[1])
             central_point[1] += float(data[2])
             central_point[2] += float(data[3])
-            point_count+=1
+            point_count += 1
 
     central_point /= point_count
     print("Central point: ", central_point)
     return central_point
 
 
-def get_json_matrices(camera_file, motion_data ):
-    point_path = os.path.join(os.path.dirname(camera_file),"points3D.txt")
+def get_json_matrices(camera_file, motion_data):
+    point_path = os.path.join(os.path.dirname(camera_file), "points3D.txt")
     center_point = get_extrinsics_center(point_path)
     intrinsic = get_intrinsic(camera_file)
-    extrinsic = get_extrinsic(center_point,motion_data)
+    extrinsic = get_extrinsic(center_point, motion_data)
     intrinsic["frames"] = extrinsic
 
     return intrinsic
+
 
 def main():
     # check for input argument
@@ -292,12 +286,12 @@ def main():
     intrinsic = get_intrinsic()
     extrinsic = get_extrinsic(center_point)
     intrinsic["frames"] = extrinsic
-    json_object= json.dumps(intrinsic, indent=4)
+    json_object = json.dumps(intrinsic, indent=4)
 
-    with open('data.json', 'w') as outfile:
+    with open("data.json", "w") as outfile:
         outfile.write(json_object)
+
 
 if __name__ == "__main__":
     image_position_extractor.extract_position_data("images.txt", "parsed_data.csv")
     main()
-

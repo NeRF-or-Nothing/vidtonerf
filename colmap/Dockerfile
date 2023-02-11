@@ -14,7 +14,6 @@ RUN export DEBIAN_FRONTEND=noninteractive && \
 	apt-get install python3.10 -y && \
 	apt-get install python3-pip -y 
 
-
 WORKDIR /sfmworker
 RUN curl -sS https://bootstrap.pypa.io/get-pip.py | python3.10
 # Requirements.txt copied seperately to utilize docker build cache

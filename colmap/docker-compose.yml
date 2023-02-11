@@ -1,4 +1,4 @@
-version: '3.7'
+version: "3.7"
 services:
   sfmworker:
     build: .
@@ -8,8 +8,8 @@ services:
       - .:/sfmworker
     command: python3.10 main.py
     networks:
-      - backend 
-    ports: 
+      - backend
+    ports:
       - 5100:5100
 
 networks:

@@ -3,9 +3,7 @@ from typing import Union
 
 
 def create_arguments() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(
-        description="Web Server", formatter_class=argparse.ArgumentDefaultsHelpFormatter
-    )
+    parser = argparse.ArgumentParser(description="Web Server", formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
     # consult LOGLEVELS.md for possible values
     parser.add_argument(
@@ -13,12 +11,9 @@ def create_arguments() -> argparse.ArgumentParser:
         "--log",
         help="set log level",
         choices=["10", "20", "30", "40", "50", "DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
-
         default="ERROR",
     )
 
-    parser.add_argument(
-        "-p", "--port", help="set port to listen on", type=int, default=5000
-    )
+    parser.add_argument("-p", "--port", help="set port to listen on", type=int, default=5000)
 
     return parser
