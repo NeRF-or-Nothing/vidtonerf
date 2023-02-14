@@ -126,14 +126,29 @@ def digest_finished_sfms(scene_manager: SceneManager):
     credentials = pika.PlainCredentials('admin', 'password123')
     parameters = pika.ConnectionParameters(rabbitmq_domain, 5672, '/', credentials, heartbeat=300)
 
-    connection = pika.BlockingConnection(parameters)
-    channel = connection.channel()
-    channel.queue_declare(queue='sfm-out')
+    #2 minute timer
+    timeout = time.time() + 60 * 2
 
-     # Will block and call process_nerf_job repeatedly
-    channel.basic_qos(prefetch_count=1)
-    channel.basic_consume(queue='sfm-out', on_message_callback=process_sfm_job)
-    channel.start_consuming()
+    #retries connection until conencts or 2 minutes pass
+    while(True):
+        if time.time() > timeout:
+            raise Exception("digest_finished_sfms took too long to connect to rabbitmq")
+        try:
+            connection = pika.BlockingConnection(parameters)
+            channel = connection.channel()
+            channel.queue_declare(queue='sfm-out')
+
+            # Will block and call process_nerf_job repeatedly
+            channel.basic_qos(prefetch_count=1)
+            channel.basic_consume(queue='sfm-out', on_message_callback=process_sfm_job)
+            try:
+                channel.start_consuming()
+            except KeyboardInterrupt:
+                channel.stop_consuming()
+                connection.close()
+                break
+        except pika.exceptions.AMQPConnectionError:
+            continue
 
 
 def digest_finished_nerfs(scene_manager: SceneManager):
