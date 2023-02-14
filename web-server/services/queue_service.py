@@ -15,23 +15,20 @@ class RabbitMQService:
         rabbitmq_domain = "rabbitmq"
         credentials = pika.PlainCredentials('admin', 'password123')
         parameters = pika.ConnectionParameters(rabbitmq_domain, 5672, '/', credentials, heartbeat=300)
-        # Change this ->
+        
+        #2 minute timer
         timeout = time.time() + 60 * 2
 
+        #retries connection until conencts or 2 minutes pass
         while(True):
             if time.time() > timeout:
-                raise Exception("Program took too long to connect to services")
+                raise Exception("RabbitMQService, _init_, took too long to connect to rabbitmq")
             try:
                 self.connection = pika.BlockingConnection(parameters)  
                 self.channel = self.connection.channel() 
                 self.channel.queue_declare(queue='sfm-in')
                 self.channel.queue_declare(queue='nerf-in')
-                try: 
-                    self.channel.start_consuming()
-                except KeyboardInterrupt:
-                    self.channel.stop_consuming()
-                    self.connection.close()
-                    break
+                break
             except pika.exceptions.AMQPConnectionError:
                 continue
 
@@ -91,15 +88,6 @@ class RabbitMQService:
 
 def digest_finished_sfms(scene_manager: SceneManager):
 
-    # create unique connection to rabbitmq since pika is NOT thread safe
-    rabbitmq_domain = "rabbitmq"
-    credentials = pika.PlainCredentials('admin', 'password123')
-    parameters = pika.ConnectionParameters(rabbitmq_domain, 5672, '/', credentials, heartbeat=300)
-
-    connection = pika.BlockingConnection(parameters)
-    channel = connection.channel()
-    channel.queue_declare(queue='sfm-out')
-
     def process_sfm_job(ch,method,properties,body):
         #load queue object
         sfm_data = json.loads(body.decode())
@@ -133,6 +121,15 @@ def digest_finished_sfms(scene_manager: SceneManager):
         new_data = json.dumps(sfm_data)
         ch.basic_ack(delivery_tag=method.delivery_tag)
 
+    # create unique connection to rabbitmq since pika is NOT thread safe
+    rabbitmq_domain = "rabbitmq"
+    credentials = pika.PlainCredentials('admin', 'password123')
+    parameters = pika.ConnectionParameters(rabbitmq_domain, 5672, '/', credentials, heartbeat=300)
+
+    connection = pika.BlockingConnection(parameters)
+    channel = connection.channel()
+    channel.queue_declare(queue='sfm-out')
+
      # Will block and call process_nerf_job repeatedly
     channel.basic_qos(prefetch_count=1)
     channel.basic_consume(queue='sfm-out', on_message_callback=process_sfm_job)
@@ -140,15 +137,6 @@ def digest_finished_sfms(scene_manager: SceneManager):
 
 
 def digest_finished_nerfs(scene_manager: SceneManager):
-
-    # create unique connection to rabbitmq since pika is NOT thread safe
-    rabbitmq_domain = "rabbitmq"
-    credentials = pika.PlainCredentials('admin', 'password123')
-    parameters = pika.ConnectionParameters(rabbitmq_domain, 5672, '/', credentials,heartbeat=300)
-
-    connection = pika.BlockingConnection(parameters)
-    channel = connection.channel()
-    channel.queue_declare(queue='nerf-out')
 
     def process_nerf_job(ch,method,properties,body):
         nerf_data = json.loads(body.decode())
@@ -164,6 +152,15 @@ def digest_finished_nerfs(scene_manager: SceneManager):
         nerf.from_dict(nerf_data)
         scene_manager.set_nerf(id, nerf)
         #ch.basic_ack(delivery_tag=method.delivery_tag)
+    
+    # create unique connection to rabbitmq since pika is NOT thread safe
+    rabbitmq_domain = "rabbitmq"
+    credentials = pika.PlainCredentials('admin', 'password123')
+    parameters = pika.ConnectionParameters(rabbitmq_domain, 5672, '/', credentials,heartbeat=300)
+
+    connection = pika.BlockingConnection(parameters)
+    channel = connection.channel()
+    channel.queue_declare(queue='nerf-out')
 
     # Will block and call process_nerf_job repeatedly
     #channel.basic_qos(prefetch_count=1)
