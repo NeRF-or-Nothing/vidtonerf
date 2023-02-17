@@ -3,7 +3,7 @@ FROM colmap/colmap:latest
 
 # https://forums.developer.nvidia.com/t/gpg-error-http-developer-download-nvidia-com-compute-cuda-repos-ubuntu1804-x86-64/212904
 # Updating GPG Key for Nvidia manually
-RUN apt-key adv --fetch-keys http://developer.download.nvidia.com/compute/cuda/repos/ubuntu1604/x86_64/3bf863cc.pub
+RUN apt-key adv --fetch-keys https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1604/x86_64/3bf863cc.pub
 RUN export DEBIAN_FRONTEND=noninteractive && \
 	apt-get update -y  && \
 	apt-get install libssl-dev -y && \
@@ -24,4 +24,4 @@ RUN python3.10 -m pip install --upgrade -r requirements.txt
 COPY . /sfmworker/
 
 #CMD ["python3", "-V"]
-CMD ["python3.10", "main.py"]
+CMD ["python3.10", "main.py", "--config=configs/default.txt"]
