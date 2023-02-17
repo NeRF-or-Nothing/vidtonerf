@@ -20,7 +20,7 @@ class RabbitMQService:
         timeout = time.time() + 60 * 2
 
         #retries connection until conencts or 2 minutes pass
-        while(True):
+        while True:
             if time.time() > timeout:
                 raise Exception("RabbitMQService, _init_, took too long to connect to rabbitmq")
             try:
@@ -130,7 +130,7 @@ def digest_finished_sfms(scene_manager: SceneManager):
     timeout = time.time() + 60 * 2
 
     #retries connection until connects or 2 minutes pass
-    while(True):
+    while True:
         if time.time() > timeout:
             raise Exception("digest_finished_sfms took too long to connect to rabbitmq")
         try:
@@ -177,7 +177,7 @@ def digest_finished_nerfs(scene_manager: SceneManager):
     timeout = time.time() + 60 * 2
 
     #retries connection until connects or 2 minutes pass
-    while(True):
+    while True:
         if time.time() > timeout:
             raise Exception("digest_finished_nerfs took too long to connect to rabbitmq")
         try:
