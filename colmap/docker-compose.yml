@@ -6,7 +6,7 @@ services:
     container_name: sfm-worker
     volumes:
       - .:/sfmworker
-    command: python3.10 main.py --config=configs/default.txt
+    command: python3.10 main.py
     networks:
       - backend 
     ports: 
