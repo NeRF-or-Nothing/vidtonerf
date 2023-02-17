@@ -5,6 +5,7 @@ from video_to_images import split_video_into_frames
 from colmap_runner import run_colmap
 from matrix import get_json_matrices
 from image_position_extractor import extract_position_data
+from opt import config_parser
 import requests
 import pika
 import json
@@ -134,17 +135,31 @@ if __name__ == "__main__":
     output_data_dir = "data/outputs/"
     Path(f"{input_data_dir}").mkdir(parents=True, exist_ok=True)
     Path(f"{output_data_dir}").mkdir(parents=True, exist_ok=True)
-    if "--local_run" in sys.argv: 
-        nerfProcess = Process(target=colmap_worker, args= ())
+
+    #Load args from config file
+    args = config_parser()
+
+    #Local run behavior
+    if args.local_run == True:
+
+        print('local run')
+        print(args)
+
+        '''nerfProcess = Process(target=colmap_worker, args= ())
         nerfProcess.start()
-        motion_data, imgs_folder = run_full_sfm_pipeline("Local_Test", "/data/inputs/video/input.mp4", input_data_dir, output_data_dir)
+        motion_data, imgs_folder = run_full_sfm_pipeline("Local_Test", args.input_data_path, input_data_dir, output_data_dir)
         print(motion_data)
-        json_motion_data = json.dumps(motion_data)
+        json_motion_data = json.dumps(motion_data)'''
         
+    #Standard webserver run behavior
     else:
-        nerfProcess = Process(target=colmap_worker, args= ())
+
+        print('standard run')
+        print(args)
+
+        '''nerfProcess = Process(target=colmap_worker, args= ())
         flaskProcess = Process(target=start_flask, args= ())
         flaskProcess.start()
         nerfProcess.start()
         flaskProcess.join()
-        nerfProcess.join()
+        nerfProcess.join()'''

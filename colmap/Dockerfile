@@ -24,4 +24,4 @@ RUN python3.10 -m pip install --upgrade -r requirements.txt
 COPY . /sfmworker/
 
 #CMD ["python3", "-V"]
-CMD ["python3.10", "main.py", "--local_run"]
+CMD ["python3.10", "main.py", "--config=configs/local.txt"]
