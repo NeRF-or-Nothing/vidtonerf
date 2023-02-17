@@ -68,6 +68,8 @@ Nerf:
 
 ### RabbitMQ
 RabbitMQ is used to send job requests and final products to and from the web-server to seperate worker processes. This is achieved through 4 queues, nerf-in, nerf-out, sfm-in, sfm-out. Instead of serializing data and sending large files over RabbitMQ everything published to the que will provide URIs to access non text data like videos and images so the other end of the queue can pull the data when needed. On the web-server this happens on two asynchronous threads that listen on sfm-out and nerf-out respectively waiting for jobs to finish before accessing the final product through the URI's provided by the workers and saving it to the local database (MongoDb).
+
+Note: There will be a delay the first time the services are started. RabbitMQ will keep retrying the connection until the program either connects or two minutes have elapsed. If the connection takes longer than two minutes to complete, then the program will shut down and raise an exception detailing what function the connection was taking too long to complete. There are three functions in the program that are trying to connect to the services, see [services/queue_service.py](./services/queue_service.py), `_init_, digest_finished_sfms, digest_finished_nerfs`.
 ## Getting Started
 
 ### Dependencies
