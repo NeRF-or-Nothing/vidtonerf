@@ -17,8 +17,8 @@ services:
     container_name: rabbitmq
     image: rabbitmq:3.8-management-alpine
     environment:
-       - RABBITMQ_DEFAULT_USER=admin
-       - RABBITMQ_DEFAULT_PASS=password123
+       RABBITMQ_DEFAULT_USER: admin
+       RABBITMQ_DEFAULT_PASS: password123
     ports:
        # AMQP protocol port
        - '5672:5672'
@@ -28,7 +28,7 @@ services:
       - backend
     
   web-server:
-    build: .
+    build: ./web-server
     image: web-server-img
     container_name: web-server
     depends_on:
@@ -37,12 +37,27 @@ services:
     environment:
       APP_PORT: 5000
     volumes:
-      - .:/web-server
+      # Host directory : Container directory
+      - ./web-server:/web-server
     ports:
       - "5000:5000"
     networks:
       - backend
     command: python3 main.py
+
+  sfm-worker:
+      build: ./colmap
+      image: sfm-worker-img
+      container_name: sfm-worker
+      depends_on:
+        - rabbitmq
+      volumes:
+        - ./colmap:/sfm-worker
+      ports: 
+        - 5100:5100
+      networks:
+        - backend 
+      command: python3.10 main.py
 
 networks:
   backend:
