@@ -2,4 +2,4 @@
 local_run = True
 
 #Specify input data file path used for local runs ONLY
-input_data_path = data\inputs\video\input.mp4
+input_data_path = data/inputs/video/input.mp4
