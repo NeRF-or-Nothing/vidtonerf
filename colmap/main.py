@@ -153,8 +153,8 @@ if __name__ == "__main__":
     # Standard webserver run behavior
     else:
         sfmProcess = Process(target=colmap_worker, args=())
-        sfmProcess = Process(target=start_flask, args=())
+        flaskProcess = Process(target=start_flask, args=())
         flaskProcess.start()
-        nerfProcess.start()
+        sfmProcess.start()
         flaskProcess.join()
-        nerfProcess.join()
+        sfmProcess.join()
