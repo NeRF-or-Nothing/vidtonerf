@@ -1,0 +1,5 @@
+#set local run status / run colmap worker with or without webserver
+local_run = True
+
+#Specify input data file path used for local runs ONLY
+input_data_path = data/inputs/video/input.mp4
