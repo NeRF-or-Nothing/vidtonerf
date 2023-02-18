@@ -203,7 +203,8 @@ def scene_to_dict(x: Scene) -> Any:
 
 
 class SceneManager:
-    def __init__(self, client: MongoClient) -> None:
+    def __init__(self) -> None:
+        client = MongoClient(host="mongodb",port=27017,username="admin",password="password123")
         self.db = client["nerfdb"]
         self.collection = self.db["scenes"]
         self.upsert=True

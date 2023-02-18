@@ -34,10 +34,8 @@ class WebServer:
         self.app.run(host='0.0.0.0',port=self.args.port)
 
     def add_routes(self) -> None:
-        @self.app.route("/")
-        def hello_world():
-            return "Do not access"
 
+        #TODO: Write error handling so the whole server doesn't crash when the user sends incorrect data.
         @self.app.route("/video", methods=["POST", "PUT"])
         def recv_video():
             """
