@@ -75,66 +75,63 @@ def run_full_sfm_pipeline(id, video_file_path, input_data_dir, output_data_dir):
     return motion_data, imgs_folder
 
 
-def colmap_worker(use_rabbitmq=False):
+def colmap_worker():
     input_data_dir = "data/inputs/"
     output_data_dir = "data/outputs/"
     Path(f"{input_data_dir}").mkdir(parents=True, exist_ok=True)
     Path(f"{output_data_dir}").mkdir(parents=True, exist_ok=True)
 
-    if use_rabbitmq:
-        rabbitmq_domain = "rabbitmq"
-        credentials = pika.PlainCredentials("admin", "password123")
-        parameters = pika.ConnectionParameters(
-            rabbitmq_domain, 5672, "/", credentials, heartbeat=300
+    
+    rabbitmq_domain = "rabbitmq"
+    credentials = pika.PlainCredentials("admin", "password123")
+    parameters = pika.ConnectionParameters(
+        rabbitmq_domain, 5672, "/", credentials, heartbeat=300
+    )
+
+    connection = pika.BlockingConnection(parameters)
+    channel = connection.channel()
+    channel.queue_declare(queue="sfm-in")
+    channel.queue_declare(queue="sfm-out")
+
+    def process_colmap_job(ch, method, properties, body):
+        print("Starting New Job")
+        print(body.decode())
+        job_data = json.loads(body.decode())
+        id = job_data["id"]
+        print(f"Running New Job With ID: {id}")
+
+        # TODO: Handle exceptions and enable steaming to make safer
+        video = requests.get(job_data["file_path"], timeout=10)
+        print("Web server pinged")
+        video_file_path = f"{input_data_dir}{id}.mp4"
+        open(video_file_path, "wb").write(video.content)
+        print("Video downloaded")
+
+        # RUNS COLMAP AND CONVERSION CODE
+        motion_data, imgs_folder = run_full_sfm_pipeline(
+            id, video_file_path, input_data_dir, output_data_dir
         )
 
-        connection = pika.BlockingConnection(parameters)
-        channel = connection.channel()
-        channel.queue_declare(queue="sfm-in")
-        channel.queue_declare(queue="sfm-out")
+        # create links to local data to serve
+        for i, frame in enumerate(motion_data["frames"]):
+            file_name = frame["file_path"]
+            file_path = os.path.join(imgs_folder, file_name)
+            file_url = to_url(file_path)
+            motion_data["frames"][i]["file_path"] = file_url
 
-        def process_colmap_job(ch, method, properties, body):
-            print("Starting New Job")
-            print(body.decode())
-            job_data = json.loads(body.decode())
-            id = job_data["id"]
-            print(f"Running New Job With ID: {id}")
+        json_motion_data = json.dumps(motion_data)
+        channel.basic_publish(
+            exchange="", routing_key="sfm-out", body=json_motion_data
+        )
 
-            # TODO: Handle exceptions and enable steaming to make safer
-            video = requests.get(job_data["file_path"], timeout=10)
-            print("Web server pinged")
-            video_file_path = f"{input_data_dir}{id}.mp4"
-            open(video_file_path, "wb").write(video.content)
-            print("Video downloaded")
+        # confirm to rabbitmq job is done
+        ch.basic_ack(delivery_tag=method.delivery_tag)
+        print("Job complete")
 
-            # RUNS COLMAP AND CONVERSION CODE
-            motion_data, imgs_folder = run_full_sfm_pipeline(
-                id, video_file_path, input_data_dir, output_data_dir
-            )
-
-            # create links to local data to serve
-            for i, frame in enumerate(motion_data["frames"]):
-                file_name = frame["file_path"]
-                file_path = os.path.join(imgs_folder, file_name)
-                file_url = to_url(file_path)
-                motion_data["frames"][i]["file_path"] = file_url
-
-            json_motion_data = json.dumps(motion_data)
-            channel.basic_publish(
-                exchange="", routing_key="sfm-out", body=json_motion_data
-            )
-
-            # confirm to rabbitmq job is done
-            ch.basic_ack(delivery_tag=method.delivery_tag)
-            print("Job complete")
-
-        channel.basic_qos(prefetch_count=1)
-        channel.basic_consume(queue="sfm-in", on_message_callback=process_colmap_job)
-        channel.start_consuming()
-        print("should not get here")
-    else:
-        pass
-
+    channel.basic_qos(prefetch_count=1)
+    channel.basic_consume(queue="sfm-in", on_message_callback=process_colmap_job)
+    channel.start_consuming()
+    print("should not get here")
 
 if __name__ == "__main__":
     input_data_dir = "data/inputs/"
@@ -147,8 +144,6 @@ if __name__ == "__main__":
 
     # Local run behavior
     if args.local_run == True:
-        nerfProcess = Process(target=colmap_worker, args=())
-        nerfProcess.start()
         motion_data, imgs_folder = run_full_sfm_pipeline(
             "Local_Test", args.input_data_path, input_data_dir, output_data_dir
         )
@@ -157,8 +152,8 @@ if __name__ == "__main__":
 
     # Standard webserver run behavior
     else:
-        nerfProcess = Process(target=colmap_worker, args=())
-        flaskProcess = Process(target=start_flask, args=())
+        sfmProcess = Process(target=colmap_worker, args=())
+        sfmProcess = Process(target=start_flask, args=())
         flaskProcess.start()
         nerfProcess.start()
         flaskProcess.join()
