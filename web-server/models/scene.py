@@ -202,6 +202,39 @@ def scene_to_dict(x: Scene) -> Any:
     return to_class(Scene, x)
 
 
+@dataclass
+class User:
+    username: Optional[str] = None
+    password: Optional[str] = None
+    id: Optional[str] = None
+
+    @staticmethod
+    def from_dict(obj: Any) -> 'User':
+        assert isinstance(obj, dict)
+        username = from_union([from_str, from_none], obj.get("username"))
+        password = from_union([from_str, from_none], obj.get("password"))
+        id = from_union([from_str, from_none], obj.get("id"))
+        return User(username, password, id)
+
+    def to_dict(self) -> dict:
+        result: dict = {}
+        if self.username is not None:
+            result["username"] = from_union([from_str, from_none], self.username)
+        if self.password is not None:
+            result["password"] = from_union([from_str, from_none], self.password)
+        if self.id is not None:
+            result["id"] = from_union([from_str, from_none], self.id)
+        return result
+
+
+def user_from_dict(s: Any) -> User:
+    return User.from_dict(s)
+
+
+def user_to_dict(x: User) -> Any:
+    return to_class(User, x)
+
+
 class SceneManager:
     def __init__(self) -> None:
         client = MongoClient(host="mongodb",port=27017,username="admin",password="password123")
@@ -262,6 +295,8 @@ class SceneManager:
         key = {"_id":_id}
         doc = self.collection.find_one(key)
         if doc and "nerf" in doc:
-            return Sfm.from_dict(doc["nerf"])
+            return Nerf.from_dict(doc["nerf"])
         else:
             return None
+        
+
