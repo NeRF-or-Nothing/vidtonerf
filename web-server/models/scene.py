@@ -300,3 +300,32 @@ class SceneManager:
             return None
         
 
+class UserManager:
+    def __init__(self) -> None:
+        client = MongoClient(host="mongodb",port=27017,username="admin",password="password123")
+        self.db = client["nerfdb"]
+        self.collection = self.db["users"]
+        self.upsert=True
+
+
+    def set_user(self, _id: str, user:User):
+        key={"_id":_id}
+        value = {"$set": user.to_dict()}
+        self.collection.update_one(key,value,upsert=self.upsert)
+
+
+
+    def get_user(self, _id: str):
+        key = {"_id":_id}
+        doc = self.collection.find_one(key)
+        if doc and "user" in doc:
+            return User.from_dict(doc["user"])
+        else:
+            return None
+
+    #def get_user(self, username: str):
+    #TODO: Write an overloaded function for finding users by username
+         
+
+    #def user_exists(self):
+    #TODO: Write an overloaded function for finding if a user exists by username
