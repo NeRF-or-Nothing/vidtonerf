@@ -48,19 +48,22 @@ services:
     command: python3 main.py
 
   sfm-worker:
-      build: ./colmap
+      build: 
+        context: .
+        dockerfile: ./colmap/Dockerfile
+
       image: sfm-worker-img
       container_name: sfm-worker
       depends_on:
         - rabbitmq
       volumes: 
-        - ./colmap:/sfm-worker
+        - ./colmap:/colmap
 
       ports: 
         - 5100:5100
       networks:
         - backend 
-      command: python3.10 main.py
+      command: python3.10 main.py --config=configs/default.txt
 
 networks:
   backend:

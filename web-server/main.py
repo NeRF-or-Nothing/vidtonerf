@@ -14,7 +14,6 @@ from pymongo import MongoClient
 
 
 def main():
-    print("Bruh")
     print("Starting web-app...")
     
     parser = create_arguments()
