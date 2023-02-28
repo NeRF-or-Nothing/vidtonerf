@@ -28,7 +28,9 @@ services:
       - backend
     
   web-server:
-    build: ./web-server
+    build: 
+      context: .
+      dockerfile: ./web-server/Dockerfile
     image: web-server-img
     container_name: web-server
     depends_on:
@@ -51,8 +53,9 @@ services:
       container_name: sfm-worker
       depends_on:
         - rabbitmq
-      volumes:
+      volumes: 
         - ./colmap:/sfm-worker
+
       ports: 
         - 5100:5100
       networks:
