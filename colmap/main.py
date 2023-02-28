@@ -104,6 +104,7 @@ def colmap_worker():
         video = requests.get(job_data["file_path"], timeout=10)
         print("Web server pinged")
         video_file_path = f"{input_data_dir}{id}.mp4"
+        print("Saving video to: {video_file_path}")
         open(video_file_path, "wb").write(video.content)
         print("Video downloaded")
 
@@ -134,6 +135,7 @@ def colmap_worker():
     print("should not get here")
 
 if __name__ == "__main__":
+    print("~SFM WORKER~")
     input_data_dir = "data/inputs/"
     output_data_dir = "data/outputs/"
     Path(f"{input_data_dir}").mkdir(parents=True, exist_ok=True)
