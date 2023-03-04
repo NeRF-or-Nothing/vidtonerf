@@ -314,8 +314,8 @@ class UserManager:
         self.collection.update_one(key,value,upsert=self.upsert)
 
 
-
-    def get_user(self, _id: str):
+    #already outdated(?)
+    def get_user_by_id(self, _id: str) -> User:
         key = {"_id":_id}
         doc = self.collection.find_one(key)
         if doc and "user" in doc:
@@ -323,7 +323,13 @@ class UserManager:
         else:
             return None
 
-    #def get_user(self, username: str):
+    def get_user_by_username(self, username: str) -> User:
+        key = {"username":username}
+        doc = self.collection.find_one(key)
+        if doc and "user" in doc:
+            return User.from_dict(doc["user"])
+        else:
+            return None
     #TODO: Write an overloaded function for finding users by username
          
 
