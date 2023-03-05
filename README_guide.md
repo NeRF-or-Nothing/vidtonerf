@@ -84,3 +84,22 @@ Take time to read through [**SSH_SETUP.md**](https://github.com/NeRF-or-Nothing/
 ---
 
 <br><br>
+
+## Section 2: Docker Installation
+
+<br>
+
+The important part in the project is you know **how to use Docker**.<br>
+First, [<ins>**Install Docker desktop**</ins>](https://docs.docker.com/get-docker/ "Install Docker desktop") and make sure you can start it up and it says running.<br>If you are using Mac, make sure you know whether you have an intel chip inside or an Apple sillicon chip. There are two versions for Mac.<br><br>
+In the configuration screen within the Installer,<br>
+check `Use WSL 2 instead of Hyper-V (recommended)`, Click `OK`, `Install`<br>`Close` and log out to your computer.<br>
+Log in back to your computer and reboot the system (recommended)<br>Log in to your computer again, open Docker Desktop.<br>
+Click `Accept` to the agreement, and you will see it says 'Docker desktop is starting...' (click done installation).
+
+[[I have an isse with the installation](#installation-issue-keep-updated)] | [[done installation](#start-docker-desktop)]
+
+<br>
+
+---
+
+<br>
