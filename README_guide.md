@@ -163,3 +163,31 @@ These are installation issues we know of right now. Please reach out with any fu
 ---
 
 <br>
+
+### Start Docker Desktop
+
+<br>
+
+<p align="center">
+  <br>
+<img src="https://user-images.githubusercontent.com/113729242/222935005-7ce639b8-69b2-4185-9f9a-407eb17ce9bc.png" width="700" height="400" /></p>
+<p align="center">When you are done with the installation and open Docker, <br>you might see 'Docker Desktop Starting' for few seconds.<br></p>
+<br>
+
+<p align="center">
+  <br>
+<img src="https://user-images.githubusercontent.com/113729242/222935112-bb55b6ce-bce9-48f0-baf2-3a9c31548879.png" width="700" height="400" /></p>
+<p align="center">Next, it asks you to start the tutorial, but you can skip it. <br>Instead, click on 'sign in' and log in to your account or, <br>create a new Docker account and sign in.<br></p>
+<br>
+
+<p align="center">
+  <br>
+<img src="https://user-images.githubusercontent.com/113729242/222935221-df08e937-5f47-484a-b310-1248940b4648.png" width="700" height="400" /></p>
+<p align="center">After that, you will see this screen as mine.<br>Installation completed, Docker successfully started.</p>
+<br>
+
+<br><br>
+
+---
+
+<br><br>
