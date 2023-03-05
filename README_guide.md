@@ -259,6 +259,19 @@ check on these videos based on your preferences or time you have.<br>
 
 <br><br>
 
+<p align="center">First, open up the terminal, and make sure you are on your working directory.<br>
+  And do the command, `docker compose up`.
+  <br></p>
+
+<p align="center">
+  <br>
+<img src="https://user-images.githubusercontent.com/113729242/222943356-f19e223b-6acf-4a31-80df-e35f644a7023.png" width="700" height="600" />
+</p>
+<p align="center">Next, read through the following paragraph.</p>
+<br>
+
+<br><br>
+
 > **`Base Knowledge:`**<br><br>
 > With the command `docker compose up`,<br>
 > a container for each process: web-server, sfm-worker, rabbitmq, and mongodb was installed.<br>
