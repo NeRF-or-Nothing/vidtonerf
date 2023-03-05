@@ -217,3 +217,19 @@ These are installation issues we know of right now. Please reach out with any fu
 ---
 
 <br><br>
+
+## Section 4: Understanding Docker
+
+<br><br>
+Before working on the project, you might have wondered what it was all about<br>
+when you were following `Installing Docker`, `Starting Docker` or, `Downloading Docker Image`,<br>
+If it was your first time hearing Docker.
+<ins>[[I have enough knowledge on Docker, I can skip this part.](#section-5-start-working-with-docker)]</ins>
+<br><br>
+<ins>We recommend you to take time understanding Docker</ins><br>otherwise, it must be hard to understand why we run Docker everytime.<br>
+We have a <ins>[[Wiki Page](https://github.com/NeRF-or-Nothing/vidtonerf/wiki/Understanding-Docker)]</ins> in our project page for understanding Docker, that you can ask questions about Docker Desktop.<br>You can also read through other questions to understand what you might be missing as well.<br>Making this page active help other newcomers as well, please don't hesitate to put any questions on Docker.<br>
+
+<br>
+
+> <br>
+> 
