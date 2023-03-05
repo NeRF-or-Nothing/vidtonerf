@@ -51,3 +51,36 @@ Take time to read through [**SSH_SETUP.md**](https://github.com/NeRF-or-Nothing/
 ---
 
 <br>
+
+### Step 3: Create Local Work Directory
+
+<br><br>
+
+<p align="center">
+  <br>
+<img src="https://user-images.githubusercontent.com/113729242/222919692-09e669c2-cfd4-47fe-9b76-df4a38ee76d1.png" width="700" height="400" /></p>
+<p align="center">Create your local folder that you will be working on. <br>I created the folder 'Nerf' on my Desktop. <br>It doesn't have to be on the Desktop, but your choice of preference.</p>
+<br>
+
+<p align="center">
+  <br>
+<img src="https://user-images.githubusercontent.com/113729242/222921042-61bb2cc0-247a-4ed7-a51b-d7d9828bee87.png" width="700" height="400" /></p>
+<p align="center">Open your terminal, go to the directory you just created.<br>In my case, I am now in the Nerf folder.</p>
+<br>
+
+<p align="center">
+  <br>
+<img src="https://user-images.githubusercontent.com/113729242/222921259-2778d4c5-d991-48a3-8bc8-50c9c5fffa6f.png" width="700" height="170" /></p>
+<p align="center">Do git clone and paste the link you just copied in Step 2, in the fork page.<br></p>
+<br>
+
+<p align="center">
+  <br>
+<img src="https://user-images.githubusercontent.com/113729242/222922573-a9542703-cd95-4e5c-8d1b-c8daf1d15a94.png" width="700" height="270" /></p>
+<p align="center">Since in my case I cloned into vidtonerf, <br>I will now have 'vidtonerf' folder in the directory 'Nerf'.
+<br>If your fork repository name is different, you cloned into that repository name.<br>Go to that folder, in my case, vidtonerf.<br>And do the commands 'git fetch' and 'git pull'.</p>
+<br><br><br>
+
+---
+
+<br><br>
