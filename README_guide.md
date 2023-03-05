@@ -135,3 +135,31 @@ These are installation issues we know of right now. Please reach out with any fu
 ...
 
 <br><br><br><br><br>
+
+
+
+
+
+
+
+
+
+
+> <ins>Below is the quick overview of possible other cases for Windows.</ins> <br>
+> Docker can use either Windows Subsystem for Linux (WSL2) or Hyper-V as backend. (WSL2 recommended)<br>
+> The current version of a Docker Desktop only works on the 64-bit edition of Windows. Both Windows 10 and Windows 11 are supported.
+>
+>`requirements for Windows:`<br>
+>**Windows 10** - Home/Pro 21H1 (build19403) or higher, or Enterprise/Education 20H2 (build 19402) or higher<br>
+>**Windows 11** -Home/Pro 21H2 or higher, or Enterprise/Education 21H2 or higher WSL2 feature must be installed and enabled.<br>
+>Linux kernel update package for **WSL2** must be installed.<br>
+>You need **64-bit CPU** (with second-level adress translation - SLAT) enabled<br>
+>You need **4 GB of RAM**.<br>
+
+[[ready to install Docker again](#section-2-docker-installation) | [[done installation](#start-docker-desktop)]
+
+<br><br><br>
+
+---
+
+<br>
