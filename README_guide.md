@@ -253,3 +253,31 @@ check on these videos based on your preferences or time you have.<br>
 ---
 
 <br><br>
+
+## Section 5: Start Working with Docker
+
+<br><br>
+
+> **`Base Knowledge:`**<br><br>
+> With the command `docker compose up`,<br>
+> a container for each process: web-server, sfm-worker, rabbitmq, and mongodb was installed.<br>
+> One was for the web-server, <br>one was for the sfm-worker,<br> 
+> another was for the RabbitMQ our scheduling serice, <br>and the other was for MongoDB our database.<br><br>
+> **web-server and sfm-worker is our code** and the other two are dependencies we rely on.<br><br>
+> The directory of the web-server is the web-server <br>and the directory of the sfm worker is the colmap folder.<br>
+> Basically, sfm-worker is all the code in the colmap folder which is for figuring out where the user camera was.<br><br>
+> Each time when the web-server and sfm-worker are started (run),<br>
+> they copy their directories (source code) into the containers and run `python main.py`.<br>
+> Pretty much the containers with our code just auto run `main` every time they are started.<br><br>
+> Since we are commiting and pushing our work to Github, when each time these source codes are run,<br>
+> we get to run our application updated with the newly pushed work up to just before we started running.<br>
+> On top of this, the volumes are shared between the host machine and the docker container<br> 
+> meaning anything saved in the web-server container will also be saved in the web-server directory.<br>
+> These containers are built to just toally mirror the host machine.<br>
+> So, you can work on it as you did on your local machine not worrying about handling dependencies.
+
+<br><br><br>
+
+---
+
+<br>
