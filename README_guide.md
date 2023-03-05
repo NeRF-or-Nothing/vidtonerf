@@ -281,3 +281,23 @@ check on these videos based on your preferences or time you have.<br>
 ---
 
 <br>
+
+### Using `docker compose up`
+
+<br>
+
+Every time you type `docker compose up` into your terminal of choice, it starts up all of our projects services.
+<br><br>
+continue on ...
+<br><br>
+
+
+
+
+
+
+
+
+
+
+
