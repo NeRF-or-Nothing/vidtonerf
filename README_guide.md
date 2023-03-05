@@ -103,3 +103,35 @@ Click `Accept` to the agreement, and you will see it says 'Docker desktop is sta
 ---
 
 <br>
+
+### Installation Issue (keep updated)
+These are installation issues we know of right now. Please reach out with any further issues and let it documented.
+<br><br><br>
+
+
+#### Case 1: You have Windows and Docker is starting forever instead of actually booting up.
+> In this case, this is likely due to an out of date WSL (WSL and docker share the same hypervisor).<br>
+> First, you should make sure you are on WSL2 which can be checked in the command line by entering `wsl -l -v` on your terminal.<br>
+> If you don't have WSL, open up Powershell as an admininstrator and do `wsl --install`.<br>
+> If you see in the command line that you have the version 1, you can update from 1 to 2 by `wsl --update`.<br> 
+> Try the same if you are on version 2 and having this issue as well, as WSL could be out of date.<br>
+> If you are still having the issue, you should let us know.<br>
+> If you need more info about installing WSL, check out [installing](https://learn.microsoft.com/en-us/windows/wsl/install).
+
+[[ready to install Docker again](#section-2-docker-installation) | [[done installation](#start-docker-desktop)]
+
+<br>
+
+#### Case 2: next possible issue.
+> In this case,
+> <br>
+> <br>
+
+[[ready to install Docker again](#section-2-docker-installation) | [[done installation](#start-docker-desktop)]
+
+
+
+
+...
+
+<br><br><br><br><br>
