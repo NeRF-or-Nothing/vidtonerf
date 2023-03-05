@@ -191,3 +191,29 @@ These are installation issues we know of right now. Please reach out with any fu
 ---
 
 <br><br>
+
+## Section 3: Download Docker Image of Our Project
+
+<br><br>
+
+
+<p align="center">When the Docker is started, pull up the terminal again.<br>
+  Make sure you are on the same cloned (your working) directory.<br>
+  This time, do the command `docker compose build`.<br>
+  This will download all of the components and dependencies needed to work on our project.<br>
+  It will take some time, expect 10 minutes minimum for a comparably fast laptop.<br>
+  (Make sure you have enough time)<br>
+  <br></p>
+
+<p align="center">
+  <br>
+<img src="https://user-images.githubusercontent.com/113729242/222937542-d06f2067-aa10-462e-a61a-4de117ac47fa.png" width="700" height="400" />
+<img src="https://user-images.githubusercontent.com/113729242/222937569-49381587-6cba-41db-8155-f73766e34021.png" width="700" height="400" /><img src="https://user-images.githubusercontent.com/113729242/222937588-3db32124-a181-4958-a957-328ffe71eb5b.png" width="700" height="400" /></p>
+<p align="center">You have successfully done setting up Docker, and working on our project.</p>
+<br>
+
+<br><br>
+
+---
+
+<br><br>
