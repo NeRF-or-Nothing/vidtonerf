@@ -203,6 +203,7 @@ These are installation issues we know of right now. Please reach out with any fu
   This will download all of the components and dependencies needed to work on our project.<br>
   It will take some time, expect 10 minutes minimum for a comparably fast laptop.<br>
   (Make sure you have enough time)<br>
+  This will take a lot of time at first but, once the dependencies are installed it will boot quickly.<br>
   <br></p>
 
 <p align="center">
