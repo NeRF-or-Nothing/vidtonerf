@@ -233,3 +233,23 @@ We have a <ins>[[Wiki Page](https://github.com/NeRF-or-Nothing/vidtonerf/wiki/Un
 
 > <br>
 > 
+> **`Short introduction on What is Docker:`**
+> 
+> (Docker is a tool that lets you package your application and all of its dependencies,<br> including all the necessary components to run an  application, including code, libraries, and system tools,<br>into a single, portable container that you can develop and deploy easily ... )<br><br>  Think of it like a **shipping container** that you can easily move from one place to another. For us in this case, is our application.<br> See  that boxed application as an `image`. This a delivery package that can be shipped to anywhere<br>(that image can be shipped to any computer, whatever dependencies they might have).<br>If we had to download each of the dependencies separately getting issues within the installation process for each,<br>after Docker, now all of the dependencies are in the 'image' and Docker runs them for us. <br>That for us, Docker creates a unified devlopment environment that is consistent across all of our developer's machines.<br><br>
+> <ins>[[the official Docker guide](https://docs.docker.com/get-started/overview/)]</ins> | <ins>[[official Docker Manual](https://docs.docker.com/desktop/)]</ins><br>
+> <br>
+
+<br>
+
+If you prefer searching on Youtube over reading lengthy documents,<br>
+check on these videos based on your preferences or time you have.<br>
+> <ins>[[What is Docker? Easy way](https://www.youtube.com/watch?v=-LeV_c1zG-s)]</ins> | <ins>[[Image Guide on What is Docker](https://www.youtube.com/watch?v=wi-MGFhrad0)]</ins> | <ins>[[Beginner Course (1 hour)](https://www.youtube.com/watch?v=pg19Z8LL06w)}</ins> | <ins>[[Complete Course (3 hours)](https://www.youtube.com/watch?v=3c-iBn73dDE)]</ins>
+
+
+
+
+<br><br><br>
+
+---
+
+<br><br>
