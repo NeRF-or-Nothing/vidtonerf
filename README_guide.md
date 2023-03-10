@@ -296,14 +296,88 @@ check on these videos based on your preferences or time you have.<br>
 
 <br>
 
-### Using `docker compose up`
+### `docker compose up`
+
+<br>
+<ins>In summary: start.</ins><br><br>
+
+Every time you type `docker compose up` into your terminal of choice, it starts up all of our projects services and applications.<br>
+`docker compose up {image name}` will start a specific container.
+<br><br>
+
+---
 
 <br>
 
-Every time you type `docker compose up` into your terminal of choice, it starts up all of our projects services.
-<br><br>
-continue on ...
-<br><br>
+
+ 
+ 
+ 
+ 
+
+### `docker compose up -d`
+
+<br>
+<ins>In summary: start (in a detached mode).</ins><br><br>
+
+Detached mode is a running mode for Docker containers that allows them to run in the background and continue running even if the terminal session is closed or the user logs out, allowing you to continue using the terminal for other tasks. The container continues to run in the background, detached from the terminal session.<br>
+This means that the containers will be started in the background and you will not see the output of the containers on your terminal.<br><br>
+Detached mode is useful for running long-running containers, such as web servers or databases, that do not require user interaction or console input. Running containers in detached mode also allows you to manage them easily, since you can start, stop, and view their logs independently of the terminal session.<br>
+<br>
+However, you can still view the logs of the containers by running the `docker compose logs` command.<br>
+By default, it will show the logs of all containers defined in the docker-compose.yml file.<br>
+You can also specify the name of a specific service or container to view only its logs.<br>
+The `docker logs container_name` command is used to view the logs of a single container.<br>
+<br>
+You can also stop a container running in detached mode using the docker stop command followed by the container ID or name.<br> For example, the command `docker stop container_name` would stop the container named `container_name`.<br>
+<br>
+
+---
+
+<br>
+
+### `docker compose up --build -d`
+
+<br>
+<ins>In summary: update & start (in a detached mode).</ins><br><br>
+
+If other developers push updated code to the Github project and you want to incorporate those changes into your local Docker environment, you will need to rebuild the Docker images to ensure that the latest changes are included in the containers that you start.<br>
+<br>
+In this case, you should use the `docker compose up --build -d` command to rebuild the images and start the containers in detached mode. This will ensure that the latest changes from the Github project are included in your Docker environment.<br>
+<br>
+So, whenever you pull updated code from the Github project, you should rebuild the Docker images by running the `docker compose up --build -d` command. After that, you can use `docker-compose up -d` for subsequent runs as long as you have not made any changes to the configuration files.<br>
+<br>
+Additionally, you can use `docker compose build` and `docker compose up` commands separately instead of `docker compose up --build` to build the Docker images and start the containers.<br>
+<br>
+
+---
+
+<br>
+
+### `--no-deps`
+
+<br>
+
+<ins>In summary: no dependencies</ins><br><br>
+
+In a Docker Compose project, you can define multiple services in the docker-compose.yml file. These services can have dependencies on other services, meaning that these services rely on other containers being started before they can be started.<br>
+<br>
+When you use the `docker compose up` command to start the containers for the services, Docker Compose will automatically start all the dependencies for a service before starting the service itself. This ensures that all the required containers are running and ready to use when a service starts.<br>
+<br>
+However, there may be cases where you want to start a service without starting its dependencies. For example, the sfm-worker developers may want to start the sfm-worker service and its dependencies to test the worker's integration, or they may want to start only the sfm-worker service locally without starting its dependencies.<br>
+<br>
+To start a service without starting its dependencies, you can use the `--no-deps` flag with the `docker compose up` command. For example, to start only the sfm-worker service without starting its dependencies, you can use the following command:<br>
+`docker compose up sfm-worker --no-deps`<br>
+<br>
+This command will start only the sfm-worker container and not start any of its dependencies. This can be useful for testing or development purposes when you want to isolate a specific service and its functionality.<br>
+
+<br>
+
+---
+
+<br>
+
+
 
 
 
