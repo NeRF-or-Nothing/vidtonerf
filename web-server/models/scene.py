@@ -302,14 +302,15 @@ class SceneManager:
 
 class UserManager:
     def __init__(self) -> None:
-        client = MongoClient(host="mongodb",port=27017,username="admin",password="password123")
+        #TODO: Host variable has to be changed whether run inside or outside of a docker container
+        client = MongoClient(host="localhost",port=27017,username="admin",password="password123")
         self.db = client["nerfdb"]
         self.collection = self.db["users"]
         self.upsert=True
 
 
-    def set_user(self, _id: str, user:User):
-        key={"_id":_id}
+    def set_user(self, user:User):
+        key={"_id":user.id}
         value = {"$set": user.to_dict()}
         self.collection.update_one(key,value,upsert=self.upsert)
 
@@ -318,8 +319,8 @@ class UserManager:
     def get_user_by_id(self, _id: str) -> User:
         key = {"_id":_id}
         doc = self.collection.find_one(key)
-        if doc and "user" in doc:
-            return User.from_dict(doc["user"])
+        if doc:
+            return User.from_dict(doc)
         else:
             return None
 
