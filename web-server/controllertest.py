@@ -2,10 +2,8 @@ from flask import Flask, request, make_response, send_file, send_from_directory,
 
 app = Flask(__name__)
 
-@app.route("/testing")
+@app.route("/")
 def index():
     return "this is an html string!"
 
-
-#funny
-app.run(host= "0.0.0.0", port= 69)
+app.run(host="0.0.0.0", port = 69)
