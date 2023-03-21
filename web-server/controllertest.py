@@ -2,7 +2,7 @@ from flask import Flask, request, make_response, send_file, send_from_directory,
 
 app = Flask(__name__)
 
-@app.route("/testing")
+@app.route("/")
 def index():
     return "this is an html string!"
 
