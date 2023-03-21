@@ -202,6 +202,39 @@ def scene_to_dict(x: Scene) -> Any:
     return to_class(Scene, x)
 
 
+@dataclass
+class User:
+    username: Optional[str] = None
+    password: Optional[str] = None
+    id: Optional[str] = None
+
+    @staticmethod
+    def from_dict(obj: Any) -> 'User':
+        assert isinstance(obj, dict)
+        username = from_union([from_str, from_none], obj.get("username"))
+        password = from_union([from_str, from_none], obj.get("password"))
+        id = from_union([from_str, from_none], obj.get("id"))
+        return User(username, password, id)
+
+    def to_dict(self) -> dict:
+        result: dict = {}
+        if self.username is not None:
+            result["username"] = from_union([from_str, from_none], self.username)
+        if self.password is not None:
+            result["password"] = from_union([from_str, from_none], self.password)
+        if self.id is not None:
+            result["id"] = from_union([from_str, from_none], self.id)
+        return result
+
+
+def user_from_dict(s: Any) -> User:
+    return User.from_dict(s)
+
+
+def user_to_dict(x: User) -> Any:
+    return to_class(User, x)
+
+
 class SceneManager:
     def __init__(self) -> None:
         client = MongoClient(host="mongodb",port=27017,username="admin",password="password123")
@@ -262,6 +295,43 @@ class SceneManager:
         key = {"_id":_id}
         doc = self.collection.find_one(key)
         if doc and "nerf" in doc:
-            return Sfm.from_dict(doc["nerf"])
+            return Nerf.from_dict(doc["nerf"])
         else:
             return None
+        
+
+class UserManager:
+    def __init__(self) -> None:
+        client = MongoClient(host="mongodb",port=27017,username="admin",password="password123")
+        self.db = client["nerfdb"]
+        self.collection = self.db["users"]
+        self.upsert=True
+
+
+    def set_user(self, _id: str, user:User):
+        key={"_id":_id}
+        value = {"$set": user.to_dict()}
+        self.collection.update_one(key,value,upsert=self.upsert)
+
+
+    #already outdated(?)
+    def get_user_by_id(self, _id: str) -> User:
+        key = {"_id":_id}
+        doc = self.collection.find_one(key)
+        if doc and "user" in doc:
+            return User.from_dict(doc["user"])
+        else:
+            return None
+
+    def get_user_by_username(self, username: str) -> User:
+        key = {"username":username}
+        doc = self.collection.find_one(key)
+        if doc and "user" in doc:
+            return User.from_dict(doc["user"])
+        else:
+            return None
+    #TODO: Write an overloaded function for finding users by username
+         
+
+    #def user_exists(self):
+    #TODO: Write an overloaded function for finding if a user exists by username
