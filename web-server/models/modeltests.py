@@ -2,23 +2,56 @@ import unittest
 import scene
 
 class userManagerTest(unittest.TestCase):
-    def setUp(self):
+    def setUp(self):                            #fires before the test starts
         self.user_manager = scene.UserManager()
+        self.user_manager.collection.drop()
 
     def test_add_user(self):
-        id = "1234"
-        user = scene.User('me','pass123',id)
+        user = scene.User('me','pass123',"1234")
         self.user_manager.set_user(user)
 
+        user2 = scene.User('Jack Ryan','qwerty','12345')
+        self.user_manager.set_user(user2)
 
-        ret=self.user_manager.get_user_by_id(id)
+        user3 = scene.User('Jack Ryan','pass123','43279') #has same username as user2
 
-        print(user)
-        print(ret)
+        user4 = scene.User('Theodore K.','letmein','1234') #has same id as user1
+
+
+        ret=self.user_manager.get_user_by_id(user._id)
+
+        print("User == "+str(user))
+        print("User2 == "+str(user2))
+        print("User returned from mongodb == "+str(ret))
+
+        exceptionRaised1 = False
+        exceptionRaised2 = False
+
+        try:  #should raise an exception because it has the same username
+            self.user_manager.set_user(user3)
+        except:
+            exceptionRaised1=True
+
+        try:  #should raise an exception because it has the same id
+            self.user_manager.set_user(user4)
+        except:
+            exceptionRaised2=True
+
+        self.assertTrue(exceptionRaised1)
+        self.assertTrue(exceptionRaised2)
 
         self.assertTrue(ret.username==user.username)
         self.assertTrue(ret.password==user.password)
-        self.assertTrue(ret.id==user.id)
+        self.assertTrue(ret._id==user._id)
+
+        self.assertFalse(ret.username==user2.username)
+        self.assertFalse(ret.password==user2.password)
+        self.assertFalse(ret._id==user2._id)
+
+    #def tearDown(self):                    #fires after the test is completed
+        #self.user_manager.collection.drop()
+
+
 
 
 

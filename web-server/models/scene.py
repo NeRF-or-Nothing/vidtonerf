@@ -206,15 +206,15 @@ def scene_to_dict(x: Scene) -> Any:
 class User:
     username: Optional[str] = None
     password: Optional[str] = None
-    id: Optional[str] = None
+    _id: Optional[str] = None
 
     @staticmethod
     def from_dict(obj: Any) -> 'User':
         assert isinstance(obj, dict)
         username = from_union([from_str, from_none], obj.get("username"))
         password = from_union([from_str, from_none], obj.get("password"))
-        id = from_union([from_str, from_none], obj.get("id"))
-        return User(username, password, id)
+        _id = from_union([from_str, from_none], obj.get("_id"))
+        return User(username, password, _id)
 
     def to_dict(self) -> dict:
         result: dict = {}
@@ -222,8 +222,8 @@ class User:
             result["username"] = from_union([from_str, from_none], self.username)
         if self.password is not None:
             result["password"] = from_union([from_str, from_none], self.password)
-        if self.id is not None:
-            result["id"] = from_union([from_str, from_none], self.id)
+        if self._id is not None:
+            result["_id"] = from_union([from_str, from_none], self._id)
         return result
 
 
@@ -309,11 +309,18 @@ class UserManager:
         self.upsert=True
 
 
-    def set_user(self, user:User):
-        key={"_id":user.id}
+    def set_user(self, user:User):  #usernames and ids are forced to be unique, passwords are not
+        key={"username":user.username}
+        doc = self.collection.find_one(key)
+        if doc!=None:
+            raise Exception('Two users assigned with same username!')
+        key={"_id":user._id}
+        doc = self.collection.find_one(key)
+        if doc!=None:
+            raise Exception('Two users assigned with same ID!')
         value = {"$set": user.to_dict()}
         self.collection.update_one(key,value,upsert=self.upsert)
-
+            
 
     #already outdated(?)
     def get_user_by_id(self, _id: str) -> User:
