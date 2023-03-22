@@ -106,5 +106,9 @@ Note: There will be a delay the first time the services are started. RabbitMQ wi
 * Within your testing functions, use self.assertTrue or self.assertFalse for the best testing experience
 * For further information, read the unittest documentation here: https://docs.python.org/3/library/unittest.html
 
+### Running Unit Tests
+* To run a unit test python, enter the directory of the testing code and use -m unittest (nameoftestfile).py
+* Make sure you're running an instance of the database to connext to if it is used in your testing code
+
 ## Help
 * Currently there is an issue with Pika (RabbitMQ client) timing out, if this occurs restart the webserver to continue using the application.
