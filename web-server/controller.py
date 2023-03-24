@@ -8,12 +8,14 @@ from flask import Flask, request, make_response, send_file, send_from_directory,
 
 from services.scene_service import ClientService
 
+
 def is_valid_uuid(value):
     try:
         UUID(str(value))
         return True
     except ValueError:
         return False
+
 
 class WebServer:
     def __init__(self, args: argparse.Namespace, cserv: ClientService) -> None:
@@ -27,15 +29,29 @@ class WebServer:
         ) if self.args.log.isdecimal() else self.app.logger.setLevel(self.args.log)
 
         self.add_routes()
-        
+
         # TODO: Change this to work based on where Flask server starts. Also, use the actual ip address
         ### self.sserv.base_url = request.remote_addr
 
-        self.app.run(host='0.0.0.0',port=self.args.port)
+        self.app.run(host='0.0.0.0', port=self.args.port)
 
     def add_routes(self) -> None:
 
-        #TODO: Write error handling so the whole server doesn't crash when the user sends incorrect data.
+        @self.app.route("/video/publish", methods=["POST", "PUT"])
+        def pub_video():
+            video_file = request.files.get("file")
+            print("VIDEO_FILE", video_file)
+            # TODO: set uuid equal to a "handle_outcoming_video", aka if the video is already done rendering.
+            uuid = None  # placeholder
+            if (uuid is None):
+                response = make_response("ERROR")
+                response.headers['Access-Control-Allow-Origin'] = '*'
+                return response
+            response = make_response(uuid)
+            response.headers['Access-Control-Allow-Origin'] = '*'
+            return response
+
+        # TODO: Write error handling so the whole server doesn't crash when the user sends incorrect data.
         @self.app.route("/video", methods=["POST", "PUT"])
         def recv_video():
             """
@@ -53,10 +69,10 @@ class WebServer:
                 response = make_response("ERROR")
                 response.headers['Access-Control-Allow-Origin'] = '*'
                 return response
-            
+
             # TODO: now pass to nerf/tensorf/colmap/sfm, and decide if synchronous or asynchronous
             # will we use a db for cookies/ids?
-                
+
             response = make_response(uuid)
             response.headers['Access-Control-Allow-Origin'] = '*'
 
@@ -67,16 +83,18 @@ class WebServer:
             # TODO: Change routing to serve rendered videos
             try:
                 if(is_valid_uuid(vidid)):
-                    path = os.path.join(os.getcwd(), "data/raw/videos/" + vidid + ".mp4")
-                    response = make_response(send_file(path, as_attachment=True))
+                    path = os.path.join(
+                        os.getcwd(), "data/raw/videos/" + vidid + ".mp4")
+                    response = make_response(
+                        send_file(path, as_attachment=True))
                 else:
                     response = make_response("Error: invalid UUID")
             except Exception as e:
                 print(e)
                 response = make_response("Error: does not exist")
-           
+
             return response
-            
+
         @self.app.route("/nerfvideo/<vidid>", methods=["GET"])
         def send_nerf_video(vidid: str):
             ospath = None
@@ -89,7 +107,7 @@ class WebServer:
             else:
                 status_str = "Video ready"
                 response = make_response(send_file(ospath, as_attachment=True))
-                
+
             response.headers['Access-Control-Allow-Origin'] = '*'
             return response
 
@@ -97,6 +115,4 @@ class WebServer:
         def send_worker_data(path):
             # serves data directory for workers to pull any local data
             # TODO make this access secure
-            return send_from_directory('data',path[5:])
-            
-        
+            return send_from_directory('data', path[5:])
