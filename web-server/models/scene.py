@@ -3,6 +3,7 @@ import numpy.typing as npt
 from pymongo import MongoClient
 from dataclasses import dataclass
 from typing import List, Any, TypeVar, Callable, Type, cast
+from uuid import uuid4
 
 # dataclasses generated with Quicktype https://github.com/quicktype/quicktype
 # To use this code, make sure you
@@ -201,7 +202,7 @@ def scene_from_dict(s: Any) -> Scene:
 def scene_to_dict(x: Scene) -> Any:
     return to_class(Scene, x)
 
-
+# api_key owner _id type
 @dataclass
 class User:
     username: Optional[str] = None
@@ -313,16 +314,26 @@ class UserManager:
         key={"username":user.username}
         doc = self.collection.find_one(key)
         if doc!=None:
-            raise Exception('Two users assigned with same username!')
+            #Two users assigned with same username
+            return 1
         key={"_id":user._id}
         doc = self.collection.find_one(key)
         if doc!=None:
             raise Exception('Two users assigned with same ID!')
         value = {"$set": user.to_dict()}
         self.collection.update_one(key,value,upsert=self.upsert)
+        return 0
+
+    def generate_user(self, username:str, password:str):
+        _id = str(uuid4())
+        user=User(username,password,_id)
+        errorcode=self.set_user(user)
+        if(errorcode!=0):
+            return errorcode
+            
+        return user
             
 
-    #already outdated(?)
     def get_user_by_id(self, _id: str) -> User:
         key = {"_id":_id}
         doc = self.collection.find_one(key)

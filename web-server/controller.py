@@ -6,6 +6,7 @@ from uuid import uuid4, UUID
 
 from flask import Flask, request, make_response, send_file, send_from_directory, url_for
 
+from models.scene import UserManager
 from services.scene_service import ClientService
 
 def is_valid_uuid(value):
@@ -20,6 +21,7 @@ class WebServer:
         self.app = Flask(__name__)
         self.args = args
         self.cservice = cserv
+        self.user_manager=UserManager()
 
     def run(self) -> None:
         self.app.logger.setLevel(
@@ -99,4 +101,52 @@ class WebServer:
             # TODO make this access secure
             return send_from_directory('data',path[5:])
             
-        
+        @self.app.route("/login", methods=["GET"])
+        def login_user():
+            #get username and password from login 
+            #use get_user_by_username and compare the password retrieved from that to the password given by the login
+            #if they match allow the user to login, otherwise, fail
+
+            username=request.form["username"]
+            password=request.form["password"]
+
+            user=self.user_manager.get_user_by_username(username)
+            if user==None:
+                string=f"INCORRECT USERNAME|{user.id}"
+                response=make_response(string)
+                return response
+
+            if user.password == password:
+                string=f"SUCCESS|{user.id}"
+                response=make_response(string)
+                return response
+            else:
+                string=f"INCORRECT PASSWORD|{user.id}"
+                response=make_response(string)
+                return response
+
+
+
+        @self.app.route("/register", methods=["POST"])
+        def register_user():
+            #get username and password from register
+            #use set_user
+            #if it doesnt fail, youre all good, maybe tryexcept
+
+            username=request.form["username"]
+            password=request.form["password"]
+
+            user=self.user_manager.generate_user(username,password)
+
+            if user==1:
+                string=f"USERNAME CONFLICT|{user.id}"
+                response=make_response(string)
+                return response
+            if user==None:
+                raise Exception('Unknown error when generating user')
+
+
+
+            string=f"SUCCESS|{user.id}"
+            response=make_response(string)
+            return response
