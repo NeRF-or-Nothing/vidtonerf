@@ -11,8 +11,8 @@ import time
 
 class RabbitMQService:
     # TODO: Communicate with rabbitmq server on port defined in web-server arguments
-    def __init__(self):
-        rabbitmq_domain = "rabbitmq"
+    def __init__(self, rabbitip):
+        rabbitmq_domain = rabbitip
         credentials = pika.PlainCredentials('admin', 'password123')
         parameters = pika.ConnectionParameters(rabbitmq_domain, 5672, '/', credentials, heartbeat=300)
         

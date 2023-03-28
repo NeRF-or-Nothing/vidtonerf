@@ -34,7 +34,7 @@ def main():
     scene_man = SceneManager(mongoip)
 
     # Rabbitmq service to post new jobs to the workers <from services>
-    rmq_service = RabbitMQService()
+    rmq_service = RabbitMQService(rabbitip)
 
     # Starting async operations to pull finished jobs from rabbitmq <from services>
     sfm_output_thread = threading.Thread(target=digest_finished_sfms, args=(scene_man,))
