@@ -31,7 +31,7 @@ def main():
 
     # Shared Database manager <from models>
     # SceneManager shared across threads since it is thread safe
-    scene_man = SceneManager()
+    scene_man = SceneManager(mongoip)
 
     # Rabbitmq service to post new jobs to the workers <from services>
     rmq_service = RabbitMQService()
