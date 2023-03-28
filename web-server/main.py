@@ -38,7 +38,7 @@ def main():
 
     # Starting async operations to pull finished jobs from rabbitmq <from services>
     sfm_output_thread = threading.Thread(target=digest_finished_sfms, args=(rabbitip,scene_man,))
-    nerf_output_thread = threading.Thread(target=digest_finished_nerfs, args=(scene_man,))
+    nerf_output_thread = threading.Thread(target=digest_finished_nerfs, args=(rabbitip,scene_man,))
     sfm_output_thread.start()
     nerf_output_thread.start()
 
