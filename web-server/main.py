@@ -11,6 +11,7 @@ from services.queue_service import RabbitMQService, digest_finished_sfms, digest
 from services.scene_service import ClientService
 from services.clean_service import cleanup
 from pymongo import MongoClient
+import json
 
 
 def main():
@@ -18,7 +19,16 @@ def main():
     
     parser = create_arguments()
     args = parser.parse_args()
+
+    ipfile = open(args.configureip)
+    #docker_in.json inside docker container
+    #docker_out.json outside docker container
+    ipdata = json.load(ipfile)
     
+    mongoip = ipdata["mongodomain"]
+    rabbitip = ipdata["rabbitmqdomain"]
+    flaskip = ipdata["flaskdomain"]
+
     # Shared Database manager <from models>
     # SceneManager shared across threads since it is thread safe
     scene_man = SceneManager()
@@ -39,6 +49,8 @@ def main():
 
     # start listening to incoming requests on the controller <from controllers>
     server = WebServer(args, c_service)
+
+    ipfile.close()
     server.run()
 
 if __name__ == "__main__":

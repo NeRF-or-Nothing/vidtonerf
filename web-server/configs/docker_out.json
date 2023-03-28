@@ -1,3 +1,5 @@
 {
+    "mongodomain": "127.0.0.1",
+    "rabbitmqdomain": "127.0.0.1",
     "flaskdomain": "0.0.0.0"
 }
