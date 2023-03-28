@@ -16,7 +16,8 @@ def is_valid_uuid(value):
         return False
 
 class WebServer:
-    def __init__(self, args: argparse.Namespace, cserv: ClientService) -> None:
+    def __init__(self, flaskip, args: argparse.Namespace, cserv: ClientService) -> None:
+        self.flaskip = flaskip
         self.app = Flask(__name__)
         self.args = args
         self.cservice = cserv
@@ -31,7 +32,7 @@ class WebServer:
         # TODO: Change this to work based on where Flask server starts. Also, use the actual ip address
         ### self.sserv.base_url = request.remote_addr
 
-        self.app.run(host='0.0.0.0',port=self.args.port)
+        self.app.run(host=self.flaskip,port=self.args.port)
 
     def add_routes(self) -> None:
 
