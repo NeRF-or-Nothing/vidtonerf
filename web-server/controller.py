@@ -44,10 +44,10 @@ class WebServer:
             # TODO: set uuid equal to a "handle_outcoming_video", aka if the video is already done rendering.
             uuid = None  # placeholder
             if (uuid is None):
-                response = make_response("ERROR")
+                response = make_response("ERROR", 404)
                 response.headers['Access-Control-Allow-Origin'] = '*'
                 return response
-            response = make_response(uuid)
+            response = make_response(uuid, 200)
             response.headers['Access-Control-Allow-Origin'] = '*'
             return response
 
@@ -66,14 +66,14 @@ class WebServer:
             # TODO: Don't assume videos are in mp4 format
             uuid = self.cservice.handle_incoming_video(video_file)
             if(uuid is None):
-                response = make_response("ERROR")
+                response = make_response("ERROR", 404)
                 response.headers['Access-Control-Allow-Origin'] = '*'
                 return response
 
             # TODO: now pass to nerf/tensorf/colmap/sfm, and decide if synchronous or asynchronous
             # will we use a db for cookies/ids?
 
-            response = make_response(uuid)
+            response = make_response(uuid, 200)
             response.headers['Access-Control-Allow-Origin'] = '*'
 
             return response
@@ -86,12 +86,12 @@ class WebServer:
                     path = os.path.join(
                         os.getcwd(), "data/raw/videos/" + vidid + ".mp4")
                     response = make_response(
-                        send_file(path, as_attachment=True))
+                        send_file(path, as_attachment=True), 200)
                 else:
-                    response = make_response("Error: invalid UUID")
+                    response = make_response("Error: invalid UUID", 404)
             except Exception as e:
                 print(e)
-                response = make_response("Error: does not exist")
+                response = make_response("Error: does not exist", 403)
 
             return response
 
@@ -103,10 +103,10 @@ class WebServer:
                 ospath = self.cservice.get_nerf_video_path(vidid)
             # Could change this to return both
             if ospath == None or not os.path.exists(ospath):
-                response = make_response(status_str)
+                response = make_response(status_str, 404)
             else:
                 status_str = "Video ready"
-                response = make_response(send_file(ospath, as_attachment=True))
+                response = make_response(send_file(ospath, as_attachment=True), 200)
 
             response.headers['Access-Control-Allow-Origin'] = '*'
             return response
