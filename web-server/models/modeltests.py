@@ -24,21 +24,16 @@ class userManagerTest(unittest.TestCase):
         print("User2 == "+str(user2))
         print("User returned from mongodb == "+str(ret))
 
-        exceptionRaised1 = False
-        exceptionRaised2 = False
+        errorcode=self.set_user(user3)
 
-        try:  #should raise an exception because it has the same username
-            self.user_manager.set_user(user3)
-        except:
-            exceptionRaised1=True
+        exceptionRaised = False
 
         try:  #should raise an exception because it has the same id
             self.user_manager.set_user(user4)
         except:
-            exceptionRaised2=True
+            exceptionRaised=True
 
-        self.assertTrue(exceptionRaised1)
-        self.assertTrue(exceptionRaised2)
+        self.assertTrue(exceptionRaised)
 
         self.assertTrue(ret.username==user.username)
         self.assertTrue(ret.password==user.password)
