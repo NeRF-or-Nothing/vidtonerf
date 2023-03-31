@@ -66,6 +66,15 @@ Nerf:
 }
 ```
 
+User:
+```
+{
+    "username":str,
+    "password":str,
+    "_id":str
+}
+```
+
 ### RabbitMQ
 RabbitMQ is used to send job requests and final products to and from the web-server to seperate worker processes. This is achieved through 4 queues, nerf-in, nerf-out, sfm-in, sfm-out. Instead of serializing data and sending large files over RabbitMQ everything published to the que will provide URIs to access non text data like videos and images so the other end of the queue can pull the data when needed. On the web-server this happens on two asynchronous threads that listen on sfm-out and nerf-out respectively waiting for jobs to finish before accessing the final product through the URI's provided by the workers and saving it to the local database (MongoDb).
 
@@ -87,6 +96,19 @@ Note: There will be a delay the first time the services are started. RabbitMQ wi
 * Run `docker compose up -d` to start MongoDb and RabbitMQ
 * Run `python main.py` to start the webserver
 
+
+## Unit tests
+
+
+### Creating Unit Tests
+* Make a new class that inherits unittest.TestCase to test the desired class
+* Within the new class, create a setUp function to prepare your test and additional functions to test individual aspects
+* Within your testing functions, use self.assertTrue or self.assertFalse for the best testing experience
+* For further information, read the unittest documentation here: https://docs.python.org/3/library/unittest.html
+
+### Running Unit Tests
+* To run a unit test python, enter the directory of the testing code and use -m unittest (nameoftestfile).py
+* Make sure you're running an instance of the database to connext to if it is used in your testing code
 
 ## Help
 * Currently there is an issue with Pika (RabbitMQ client) timing out, if this occurs restart the webserver to continue using the application.
