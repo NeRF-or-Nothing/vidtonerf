@@ -12,39 +12,36 @@ def testAddRoutes():
 
     check = False
 
-    response = app.test_client.get('/video/publish')
-    if (response.status == 404):
+    response = app.test_client().get('/video/publish')
+    if (response.status != 200):
         check = True
     
     assert(check == True)
 
     check = False
 
-    response = app.test_client.get('/video')
-    if (response.status == 404):
+    response = app.test_client().get('/video')
+    if (response.status != 200):
         check = True
 
     assert(check == True)
 
     check = False
 
-    response = app.test_client.get('/video/<vidid>')
-    if (response.status == 404):
+    response = app.test_client().get('/video/<vidid>')
+    if (response.status != 200):
         check = True
 
     assert(check == True)
 
     check = False
 
-    response = app.test_client.get('/nerfvideo/<vidid>')
-    if (response.status == 404):
+    response = app.test_client().get('/nerfvideo/<vidid>')
+    if (response.status != 200):
         check = True
 
     assert(check == True)
 
     return "Test Completed!"
 
-
-
-
-
+print(testAddRoutes())
