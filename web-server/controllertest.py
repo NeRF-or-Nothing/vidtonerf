@@ -3,12 +3,18 @@ from controller import WebServer;
 from services.scene_service import ClientService;
 from models.scene import SceneManager
 from services.queue_service import RabbitMQService
+from argparser import create_arguments
 import argparse
 import pytest
+from controller import WebServer
 
 app = Flask(__name__)
+parser = create_arguments()
+args = parser.parse_args()
+w = WebServer(args, ClientService)
 
 def testAddRoutes():
+    w.run()
 
     check = False
 
