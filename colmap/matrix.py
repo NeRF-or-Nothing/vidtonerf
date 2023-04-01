@@ -298,6 +298,8 @@ def main():
         outfile.write(json_object)
 
 if __name__ == "__main__":
-    image_position_extractor.extract_position_data("images.txt", "parsed_data.csv")
-    main()
+    '''image_position_extractor.extract_position_data("images.txt", "parsed_data.csv")
+    main()'''
+
+    print(rotation_matrix_from_vectors(np.array([1/np.sqrt(2), 1/np.sqrt(2), 0]), np.array([-1/np.sqrt(2), 1/np.sqrt(2), 0])))
 
