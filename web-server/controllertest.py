@@ -14,7 +14,8 @@ def testAddRoutes():
     check = False
 
     response = app.test_client().get('/video/publish')
-    if (response.status != 200):
+    print(response.status)
+    if (response.status != "404 NOT FOUND"):
         check = True
 
     assert(check == True)
