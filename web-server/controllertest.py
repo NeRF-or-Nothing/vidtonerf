@@ -1,15 +1,20 @@
 from flask import Flask, request, make_response, send_file, send_from_directory, url_for
-from controller import WebServer
-from services.scene_service import ClientService
+from controller import WebServer;
+from services.scene_service import ClientService;
 from models.scene import SceneManager
 from services.queue_service import RabbitMQService
+from argparser import create_arguments
 import argparse
 import pytest
+from controller import WebServer
 
 app = Flask(__name__)
-
+parser = create_arguments()
+args = parser.parse_args()
+w = WebServer(args, ClientService)
 
 def testAddRoutes():
+    w.run()
 
     check = False
 
@@ -17,7 +22,7 @@ def testAddRoutes():
     print(response.status)
     if (response.status != "404 NOT FOUND"):
         check = True
-
+    
     assert(check == True)
 
     check = False

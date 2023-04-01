@@ -3,6 +3,7 @@ import os
 from pickle import TRUE
 #import magic
 from uuid import uuid4, UUID
+import json
 
 from flask import Flask, request, make_response, send_file, send_from_directory, url_for
 
@@ -42,6 +43,10 @@ class WebServer:
             video_file = request.files.get("file")
             print("VIDEO_FILE", video_file)
             # TODO: set uuid equal to a "handle_outcoming_video", aka if the video is already done rendering.
+            uuid = self.cservice.get_nerf_video_path(video_file)
+            f = open("publish_video.txt", "x")
+            data = json.load(f)
+            data["uuid"] = uuid
             uuid = None  # placeholder
             if (uuid is None):
                 response = make_response("ERROR", 404)
@@ -106,7 +111,8 @@ class WebServer:
                 response = make_response(status_str, 404)
             else:
                 status_str = "Video ready"
-                response = make_response(send_file(ospath, as_attachment=True), 200)
+                response = make_response(
+                    send_file(ospath, as_attachment=True), 200)
 
             response.headers['Access-Control-Allow-Origin'] = '*'
             return response
