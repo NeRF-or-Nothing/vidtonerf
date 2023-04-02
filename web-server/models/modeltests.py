@@ -24,7 +24,7 @@ class userManagerTest(unittest.TestCase):
         print("User2 == "+str(user2))
         print("User returned from mongodb == "+str(ret))
 
-        errorcode=self.set_user(user3)
+        errorcode=self.user_manager.set_user(user3)
 
         exceptionRaised = False
 
