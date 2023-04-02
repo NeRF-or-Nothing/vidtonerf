@@ -43,6 +43,8 @@ class userManagerTest(unittest.TestCase):
         self.assertFalse(ret.password==user2.password)
         self.assertFalse(ret._id==user2._id)
 
+        self.assertTrue(errorcode==1)
+
     #def tearDown(self):                    #fires after the test is completed
         #self.user_manager.collection.drop()
 

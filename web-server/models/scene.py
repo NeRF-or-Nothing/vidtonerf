@@ -202,12 +202,15 @@ def scene_from_dict(s: Any) -> Scene:
 def scene_to_dict(x: Scene) -> Any:
     return to_class(Scene, x)
 
-# api_key owner _id type
+# api_key owner
 @dataclass
 class User:
     username: Optional[str] = None
     password: Optional[str] = None
     _id: Optional[str] = None
+    api_key: Optional[str] = None
+    scenes: Optional[List[str]] = None
+    workers_owned: Optional[List[str]] = None
 
     @staticmethod
     def from_dict(obj: Any) -> 'User':
@@ -215,7 +218,10 @@ class User:
         username = from_union([from_str, from_none], obj.get("username"))
         password = from_union([from_str, from_none], obj.get("password"))
         _id = from_union([from_str, from_none], obj.get("_id"))
-        return User(username, password, _id)
+        api_key = from_union([from_str, from_none], obj.get("api_key"))
+        scenes = from_union([lambda x: from_list(from_str, x), from_none], obj.get("scenes"))
+        workers_owned = from_union([lambda x: from_list(from_str, x), from_none], obj.get("workers_owned"))
+        return User(username, password, _id, api_key, scenes, workers_owned)
 
     def to_dict(self) -> dict:
         result: dict = {}
@@ -225,6 +231,12 @@ class User:
             result["password"] = from_union([from_str, from_none], self.password)
         if self._id is not None:
             result["_id"] = from_union([from_str, from_none], self._id)
+        if self.api_key is not None:
+            result["api_key"] = from_union([from_str, from_none], self.api_key)
+        if self.scenes is not None:
+            result["scenes"] = from_union([lambda x: from_list(from_str, x), from_none], self.scenes)
+        if self.workers_owned is not None:
+            result["workers_owned"] = from_union([lambda x: from_list(from_str, x), from_none], self.workers_owned)
         return result
 
 
