@@ -8,6 +8,7 @@ import argparse
 import pytest
 from controller import WebServer
 
+app = Flask(__name__)
 parser = create_arguments()
 args = parser.parse_args()
 w = WebServer(args, ClientService)
