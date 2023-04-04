@@ -20,7 +20,7 @@ def main():
     parser = create_arguments()
     args = parser.parse_args()
 
-    ipfile = open(args.configureip)
+    ipfile = open(args.configip)
     #docker_in.json inside docker container
     #docker_out.json outside docker container
     ipdata = json.load(ipfile)

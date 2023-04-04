@@ -22,7 +22,7 @@ def create_arguments() -> argparse.ArgumentParser:
     )
 
     parser.add_argument(
-        "--configureip", type=str, default="configs/docker_out.json"
+        "--configip", type=str, default="configs/docker_out.json"
     )
     
     return parser

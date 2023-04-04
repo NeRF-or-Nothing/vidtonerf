@@ -10,10 +10,10 @@ The webserver is based on a model view controller architecture with an additiona
 
 ### Running the WebServer
 ```
-python main.py --configip docker_in.json
+python main.py --configip configs/docker_in.json
 ```
 ```
-python main.pu --configip docker_out.json
+python main.pu --configip configs/docker_out.json
 ```
 The config file used is based on where you running the code:
     docker_in.json - if you want to run inside a docker container
