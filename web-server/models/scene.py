@@ -3,6 +3,7 @@ import numpy.typing as npt
 from pymongo import MongoClient
 from dataclasses import dataclass
 from typing import List, Any, TypeVar, Callable, Type, cast
+from uuid import uuid4
 
 # dataclasses generated with Quicktype https://github.com/quicktype/quicktype
 # To use this code, make sure you
@@ -201,20 +202,20 @@ def scene_from_dict(s: Any) -> Scene:
 def scene_to_dict(x: Scene) -> Any:
     return to_class(Scene, x)
 
-
+# api_key owner _id type
 @dataclass
 class User:
     username: Optional[str] = None
     password: Optional[str] = None
-    id: Optional[str] = None
+    _id: Optional[str] = None
 
     @staticmethod
     def from_dict(obj: Any) -> 'User':
         assert isinstance(obj, dict)
         username = from_union([from_str, from_none], obj.get("username"))
         password = from_union([from_str, from_none], obj.get("password"))
-        id = from_union([from_str, from_none], obj.get("id"))
-        return User(username, password, id)
+        _id = from_union([from_str, from_none], obj.get("_id"))
+        return User(username, password, _id)
 
     def to_dict(self) -> dict:
         result: dict = {}
@@ -222,8 +223,8 @@ class User:
             result["username"] = from_union([from_str, from_none], self.username)
         if self.password is not None:
             result["password"] = from_union([from_str, from_none], self.password)
-        if self.id is not None:
-            result["id"] = from_union([from_str, from_none], self.id)
+        if self._id is not None:
+            result["_id"] = from_union([from_str, from_none], self._id)
         return result
 
 
@@ -302,24 +303,42 @@ class SceneManager:
 
 class UserManager:
     def __init__(self) -> None:
-        client = MongoClient(host="mongodb",port=27017,username="admin",password="password123")
+        #TODO: Host variable has to be changed whether run inside or outside of a docker container
+        client = MongoClient(host="localhost",port=27017,username="admin",password="password123")
         self.db = client["nerfdb"]
         self.collection = self.db["users"]
         self.upsert=True
 
 
-    def set_user(self, _id: str, user:User):
-        key={"_id":_id}
+    def set_user(self, user:User):  #usernames and ids are forced to be unique, passwords are not
+        key={"username":user.username}
+        doc = self.collection.find_one(key)
+        if doc!=None:
+            #Two users assigned with same username
+            return 1
+        key={"_id":user._id}
+        doc = self.collection.find_one(key)
+        if doc!=None:
+            raise Exception('Two users assigned with same ID!')
         value = {"$set": user.to_dict()}
         self.collection.update_one(key,value,upsert=self.upsert)
+        return 0
 
+    def generate_user(self, username:str, password:str):
+        _id = str(uuid4())
+        user=User(username,password,_id)
+        errorcode=self.set_user(user)
+        if(errorcode!=0):
+            return errorcode
+            
+        return user
+            
 
-    #already outdated(?)
     def get_user_by_id(self, _id: str) -> User:
         key = {"_id":_id}
         doc = self.collection.find_one(key)
-        if doc and "user" in doc:
-            return User.from_dict(doc["user"])
+        if doc:
+            return User.from_dict(doc)
         else:
             return None
 
