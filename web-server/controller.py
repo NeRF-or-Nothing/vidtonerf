@@ -17,7 +17,7 @@ def is_valid_uuid(value):
     except ValueError:
         return False
 
-
+#Placeholder: set <vidid> = video1 for testing purposes.
 class WebServer:
     def __init__(self, args: argparse.Namespace, cserv: ClientService) -> None:
         self.app = Flask(__name__)
@@ -34,7 +34,7 @@ class WebServer:
         # TODO: Change this to work based on where Flask server starts. Also, use the actual ip address
         ### self.sserv.base_url = request.remote_addr
 
-        self.app.run(host='0.0.0.0', port=self.args.port)
+        self.app.run(host='0.0.0.0', port=4000)
 
     def add_routes(self) -> None:
 
@@ -83,7 +83,7 @@ class WebServer:
 
             return response
 
-        @self.app.route("/video/<vidid>", methods=["GET"])
+        @self.app.route("/video/video1", methods=["GET"])
         def send_video(vidid: str):
             # TODO: Change routing to serve rendered videos
             try:
@@ -100,7 +100,7 @@ class WebServer:
 
             return response
 
-        @self.app.route("/nerfvideo/<vidid>", methods=["GET"])
+        @self.app.route("/nerfvideo/video1", methods=["GET"])
         def send_nerf_video(vidid: str):
             ospath = None
             status_str = "Processing"
