@@ -8,18 +8,17 @@ import argparse
 import pytest
 from controller import WebServer
 
+app = Flask(__name__)
 parser = create_arguments()
 args = parser.parse_args()
 w = WebServer(args, ClientService)
 
 def testAddRoutes():
-    w.run()
-
     check = False
 
     response = app.test_client().get('/video/publish')
-    print(response.status)
-    if (not response.ok):
+    print(response.status_code)
+    if (response.status_code == 200):
         check = True
     
     assert(check == True)
@@ -27,7 +26,7 @@ def testAddRoutes():
     check = False
 
     response = app.test_client().get('/video')
-    if (not response.ok):
+    if (response.status_code == 200):
         check = True
 
     assert(check == True)
@@ -35,7 +34,7 @@ def testAddRoutes():
     check = False
 
     response = app.test_client().get('/video/<vidid>')
-    if (not response.ok):
+    if (response.status_code == 200):
         check = True
 
     assert(check == True)
@@ -43,7 +42,7 @@ def testAddRoutes():
     check = False
 
     response = app.test_client().get('/nerfvideo/<vidid>')
-    if (not response.ok):
+    if (response.status_code == 200):
         check = True
 
     assert(check == True)
