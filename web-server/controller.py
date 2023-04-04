@@ -47,7 +47,6 @@ class WebServer:
             f = open("publish_video.txt", "x")
             data = json.load(f)
             data["uuid"] = uuid
-            uuid = "placeholder"  # placeholder
             if (uuid is None):
                 response = make_response("ERROR", 404)
                 response.headers['Access-Control-Allow-Origin'] = '*'
