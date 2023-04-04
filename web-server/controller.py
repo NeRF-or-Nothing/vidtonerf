@@ -9,6 +9,7 @@ from flask import Flask, request, make_response, send_file, send_from_directory,
 
 from services.scene_service import ClientService
 
+app = Flask(__name__)
 
 def is_valid_uuid(value):
     try:
