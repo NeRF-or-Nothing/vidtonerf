@@ -83,7 +83,7 @@ class WebServer:
 
             return response
 
-        @self.app.route("/video/video1", methods=["GET"])
+        @self.app.route("/video/<vidid>", methods=["GET"])
         def send_video(vidid: str):
             # TODO: Change routing to serve rendered videos
             try:
@@ -100,7 +100,7 @@ class WebServer:
 
             return response
 
-        @self.app.route("/nerfvideo/video1", methods=["GET"])
+        @self.app.route("/nerfvideo/<vidid>", methods=["GET"])
         def send_nerf_video(vidid: str):
             ospath = None
             status_str = "Processing"

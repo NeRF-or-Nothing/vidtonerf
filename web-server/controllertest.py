@@ -11,6 +11,7 @@ from controller import WebServer
 parser = create_arguments()
 args = parser.parse_args()
 w = WebServer(args, ClientService)
+w.run()
 app.testing = True
 
 def testAddRoutes():
@@ -24,12 +25,12 @@ def testAddRoutes():
     print(app.test_client())
     print(response.status_code)
 
-    response = app.test_client().get('/video/<vidid>')
+    response = app.test_client().get('/video/video1')
     #assert(response.status_code == 200)
     print(app.test_client())
     print(response.status_code)
 
-    response = app.test_client().get('/nerfvideo/<vidid>')
+    response = app.test_client().get('/nerfvideo/video1')
     #assert(response.status_code == 200)
     print(app.test_client())
     print(response.status_code)
