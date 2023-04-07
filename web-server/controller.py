@@ -18,7 +18,7 @@ def is_valid_uuid(value):
     except ValueError:
         return False
 
-#Placeholder: set <vidid> = video1 for testing purposes.
+#Placeholder: set <vidid> = video 1 for testing purposes.
 class WebServer:
     def __init__(self, args: argparse.Namespace, cserv: ClientService) -> None:
         self.app = Flask(__name__)
@@ -86,7 +86,7 @@ class WebServer:
 
             return response
 
-        @self.app.route("/video/video1", methods=["GET"])
+        @self.app.route("/video/<vidid>", methods=["GET"])
         def send_video(vidid: str):
             # TODO: Change routing to serve rendered videos
             try:
@@ -103,7 +103,7 @@ class WebServer:
 
             return response
 
-        @self.app.route("/nerfvideo/video1", methods=["GET"])
+        @self.app.route("/nerfvideo/<vidid>", methods=["GET"])
         def send_nerf_video(vidid: str):
             ospath = None
             status_str = "Processing"
@@ -125,3 +125,7 @@ class WebServer:
             # serves data directory for workers to pull any local data
             # TODO make this access secure
             return send_from_directory('data', path[5:])
+
+        @self.app.route("/test")
+        def get_webServer():
+            return "hello"

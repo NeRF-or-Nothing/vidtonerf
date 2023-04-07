@@ -7,34 +7,67 @@ from argparser import create_arguments
 import argparse
 import pytest
 from controller import WebServer
+import unittest
+
+app = Flask(__name__)
+
+app.run(host='0.0.0.0', port=3000)
 
 parser = create_arguments()
 args = parser.parse_args()
-w = WebServer(args, ClientService)
 app.testing = True
 
+
+class ControllerTest(unittest.TestCase):
+    def setUp(self):
+      app = app.test_client()
+      response = app.get('/test')
+      self.assertEqual(response, "hello")
+    
+    def test_pubVideo(self):
+        response = app.post('/video/publish', data={'uuid': 'testuuid'})
+        self.assertEqual(response.status_code, 200)
+    
+    def test_recvVideo(self):
+        response = app.post('/video', data={'uuid': 'testuuid'})
+        self.assertEqual(response.status_code, 200)
+
+    def test_sendVideo(self):
+        response = app.test_client().get('/video/video1')
+        self.assertEqual(response.status_code, 200)
+
+    def test_sendNerfVideo(self):
+        response = app.test_client().get('/nerfvideo/video1')
+        self.assertEqual(response.status_code, 200)
+        
+
+"""
 def testAddRoutes():
-    response = app.test_client().post('/video/publish', data={'uuid': 'testuuid'})
-    #assert(response.status_code==200)
+    response = w.app.test_client().post('/video/publish', data={'uuid': 'testuuid'})
+    assert(response.status_code==200)
     print(app.test_client())
     #note, do not need if statements, test assert response.status_code == 200
     print(response.status_code)
 
     response = app.test_client().post('/video', data={'uuid': 'testuuid'})
-    #assert(response.status_code == 200)
+    assert(response.status_code == 200)
     print(app.test_client())
     print(response.status_code)
 
     response = app.test_client().get('/video/<vidid>')
-    #assert(response.status_code == 200)
+    assert(response.status_code == 200)
     print(app.test_client())
     print(response.status_code)
 
     response = app.test_client().get('/nerfvideo/<vidid>')
-    #assert(response.status_code == 200)
+    assert(response.status_code == 200)
     print(app.test_client())
     print(response.status_code)
 
     return "Test Completed!"
 
-print(testAddRoutes())
+    print(testAddRoutes())
+"""
+
+if __name__ == "__main__":
+    unittest.main()
