@@ -47,8 +47,7 @@ class WebServer:
             # uuid = self.cservice.get_nerf_video_path(video_file)
             f = open("publish_video.txt", "x")
             data = json.load(f)
-            data["uuid"] = "testuuid"
-            # uuid = "placeholder"  # placeholder
+            data["uuid"] = uuid
             if (uuid is None):
                 response = make_response("ERROR", 404)
                 response.headers['Access-Control-Allow-Origin'] = '*'
