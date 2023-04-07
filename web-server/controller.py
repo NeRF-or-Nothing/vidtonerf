@@ -18,7 +18,7 @@ def is_valid_uuid(value):
     except ValueError:
         return False
 
-#Placeholder: set <vidid> = video1 for testing purposes.
+#Placeholder: set <vidid> = video 1 for testing purposes.
 class WebServer:
     def __init__(self, args: argparse.Namespace, cserv: ClientService) -> None:
         self.app = Flask(__name__)
@@ -44,7 +44,7 @@ class WebServer:
             video_file = request.files.get("file")
             print("VIDEO_FILE", video_file)
             # TODO: set uuid equal to a "handle_outcoming_video", aka if the video is already done rendering.
-            uuid = self.cservice.get_nerf_video_path(video_file)
+            # uuid = self.cservice.get_nerf_video_path(video_file)
             f = open("publish_video.txt", "x")
             data = json.load(f)
             data["uuid"] = uuid
@@ -70,6 +70,9 @@ class WebServer:
             # Might want to change this.
             # TODO: Don't assume videos are in mp4 format
             uuid = self.cservice.handle_incoming_video(video_file)
+            f = open("publish_video.txt", "x")
+            data = json.load(f)
+            data["uuid"] = "testuuid"
             if(uuid is None):
                 response = make_response("ERROR", 404)
                 response.headers['Access-Control-Allow-Origin'] = '*'
@@ -122,3 +125,7 @@ class WebServer:
             # serves data directory for workers to pull any local data
             # TODO make this access secure
             return send_from_directory('data', path[5:])
+
+        @self.app.route("/test")
+        def get_webServer():
+            return "hello"
