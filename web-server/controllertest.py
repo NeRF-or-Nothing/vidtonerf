@@ -17,6 +17,7 @@ def testAddRoutes():
     response = app.test_client().post('/video/publish', data={'uuid': 'testuuid'})
     assert(response.status_code==200)
     print(app.test_client())
+    #note, do not need if statements, test assert response.status_code == 200
     print(response.status_code)
     if (response.status_code == 200):
         check = True
@@ -25,7 +26,9 @@ def testAddRoutes():
 
     check = False
 
-    response = app.test_client().post('/video')
+    response = app.test_client().post('/video', data={'uuid': 'testuuid'})
+    assert(response.status_code==200)
+    print(app.test_client())
     if (response.status_code == 200):
         check = True
 

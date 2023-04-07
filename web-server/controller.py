@@ -44,11 +44,11 @@ class WebServer:
             video_file = request.files.get("file")
             print("VIDEO_FILE", video_file)
             # TODO: set uuid equal to a "handle_outcoming_video", aka if the video is already done rendering.
-            uuid = self.cservice.get_nerf_video_path(video_file)
+            # uuid = self.cservice.get_nerf_video_path(video_file)
             f = open("publish_video.txt", "x")
             data = json.load(f)
-            data["uuid"] = uuid
-            uuid = "placeholder"  # placeholder
+            data["uuid"] = "testuuid"
+            # uuid = "placeholder"  # placeholder
             if (uuid is None):
                 response = make_response("ERROR", 404)
                 response.headers['Access-Control-Allow-Origin'] = '*'
@@ -71,6 +71,9 @@ class WebServer:
             # Might want to change this.
             # TODO: Don't assume videos are in mp4 format
             uuid = self.cservice.handle_incoming_video(video_file)
+            f = open("publish_video.txt", "x")
+            data = json.load(f)
+            data["uuid"] = "testuuid"
             if(uuid is None):
                 response = make_response("ERROR", 404)
                 response.headers['Access-Control-Allow-Origin'] = '*'
