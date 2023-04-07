@@ -332,6 +332,7 @@ class UserManager:
         doc = self.collection.find_one(key)
         if doc!=None:
             raise Exception('Two users assigned with same ID!')
+        user.password=str(hash(user.password))
         value = {"$set": user.to_dict()}
         self.collection.update_one(key,value,upsert=self.upsert)
         return 0
@@ -357,8 +358,8 @@ class UserManager:
     def get_user_by_username(self, username: str) -> User:
         key = {"username":username}
         doc = self.collection.find_one(key)
-        if doc and "user" in doc:
-            return User.from_dict(doc["user"])
+        if doc:
+            return User.from_dict(doc)
         else:
             return None
     #TODO: Write an overloaded function for finding users by username
