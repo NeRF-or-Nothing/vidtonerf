@@ -26,6 +26,7 @@ class userManagerTest(unittest.TestCase):
 
         errorcode=self.user_manager.set_user(user3)
 
+
         exceptionRaised = False
 
         try:  #should raise an exception because it has the same id
@@ -64,7 +65,6 @@ class userManagerTest(unittest.TestCase):
         self.assertTrue(user2==1)
 
 
-        
 
 
 

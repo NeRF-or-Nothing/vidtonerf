@@ -202,6 +202,7 @@ def scene_from_dict(s: Any) -> Scene:
 def scene_to_dict(x: Scene) -> Any:
     return to_class(Scene, x)
 
+
 # api_key owner
 @dataclass
 class User:
@@ -237,6 +238,7 @@ class User:
             result["scenes"] = from_union([lambda x: from_list(from_str, x), from_none], self.scenes)
         if self.workers_owned is not None:
             result["workers_owned"] = from_union([lambda x: from_list(from_str, x), from_none], self.workers_owned)
+
         return result
 
 
@@ -333,6 +335,7 @@ class UserManager:
         if doc!=None:
             raise Exception('Two users assigned with same ID!')
         user.password=str(hash(user.password))
+
         value = {"$set": user.to_dict()}
         self.collection.update_one(key,value,upsert=self.upsert)
         return 0
