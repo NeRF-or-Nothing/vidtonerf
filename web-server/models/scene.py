@@ -202,12 +202,16 @@ def scene_from_dict(s: Any) -> Scene:
 def scene_to_dict(x: Scene) -> Any:
     return to_class(Scene, x)
 
-# api_key owner _id type
+
+# api_key owner
 @dataclass
 class User:
     username: Optional[str] = None
     password: Optional[str] = None
     _id: Optional[str] = None
+    api_key: Optional[str] = None
+    scenes: Optional[List[str]] = None
+    workers_owned: Optional[List[str]] = None
 
     @staticmethod
     def from_dict(obj: Any) -> 'User':
@@ -215,7 +219,10 @@ class User:
         username = from_union([from_str, from_none], obj.get("username"))
         password = from_union([from_str, from_none], obj.get("password"))
         _id = from_union([from_str, from_none], obj.get("_id"))
-        return User(username, password, _id)
+        api_key = from_union([from_str, from_none], obj.get("api_key"))
+        scenes = from_union([lambda x: from_list(from_str, x), from_none], obj.get("scenes"))
+        workers_owned = from_union([lambda x: from_list(from_str, x), from_none], obj.get("workers_owned"))
+        return User(username, password, _id, api_key, scenes, workers_owned)
 
     def to_dict(self) -> dict:
         result: dict = {}
@@ -225,6 +232,13 @@ class User:
             result["password"] = from_union([from_str, from_none], self.password)
         if self._id is not None:
             result["_id"] = from_union([from_str, from_none], self._id)
+        if self.api_key is not None:
+            result["api_key"] = from_union([from_str, from_none], self.api_key)
+        if self.scenes is not None:
+            result["scenes"] = from_union([lambda x: from_list(from_str, x), from_none], self.scenes)
+        if self.workers_owned is not None:
+            result["workers_owned"] = from_union([lambda x: from_list(from_str, x), from_none], self.workers_owned)
+
         return result
 
 
@@ -320,6 +334,8 @@ class UserManager:
         doc = self.collection.find_one(key)
         if doc!=None:
             raise Exception('Two users assigned with same ID!')
+        user.password=str(hash(user.password))
+
         value = {"$set": user.to_dict()}
         self.collection.update_one(key,value,upsert=self.upsert)
         return 0
@@ -345,8 +361,8 @@ class UserManager:
     def get_user_by_username(self, username: str) -> User:
         key = {"username":username}
         doc = self.collection.find_one(key)
-        if doc and "user" in doc:
-            return User.from_dict(doc["user"])
+        if doc:
+            return User.from_dict(doc)
         else:
             return None
     #TODO: Write an overloaded function for finding users by username
