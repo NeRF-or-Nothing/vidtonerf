@@ -132,7 +132,8 @@ class WebServer:
         def register_user():
             #get username and password from register
             #use set_user
-            #if it doesnt fail, youre all good, maybe tryexcept
+            #if it doesnt fail, youre all good
+
 
             username=request.form["username"]
             password=request.form["password"]
@@ -151,3 +152,9 @@ class WebServer:
             string=f"SUCCESS|{user.id}"
             response=make_response(string)
             return response
+
+        @self.app.route("/test")
+        def test_endpoint():
+            
+            return "Success!"
+

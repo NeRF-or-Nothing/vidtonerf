@@ -6,7 +6,7 @@ class userManagerTest(unittest.TestCase):
         self.user_manager = scene.UserManager()
         self.user_manager.collection.drop()
 
-    def test_add_user(self):
+    def test_set_user(self):
         user = scene.User('me','pass123',"1234")
         self.user_manager.set_user(user)
 
@@ -24,7 +24,8 @@ class userManagerTest(unittest.TestCase):
         print("User2 == "+str(user2))
         print("User returned from mongodb == "+str(ret))
 
-        errorcode=self.set_user(user3)
+        errorcode=self.user_manager.set_user(user3)
+
 
         exceptionRaised = False
 
@@ -43,9 +44,25 @@ class userManagerTest(unittest.TestCase):
         self.assertFalse(ret.password==user2.password)
         self.assertFalse(ret._id==user2._id)
 
+        self.assertTrue(errorcode==1)
+
     #def tearDown(self):                    #fires after the test is completed
         #self.user_manager.collection.drop()
 
+
+    def test_generate_user(self):
+        user1=self.user_manager.generate_user("Jill Stingray","password456")
+        print(user1)
+
+        ret=self.user_manager.get_user_by_username("Jill Stingray")
+
+        self.assertTrue(user1._id==ret._id)
+        self.assertTrue("Jill Stingray"==ret.username)
+
+        user2=self.user_manager.generate_user("Jill Stingray","doggy") #this should return 1 because the username already exists
+
+        self.assertTrue(type(user2)==int)
+        self.assertTrue(user2==1)
 
 
 

@@ -93,9 +93,13 @@ Nerf:
 User:
 ```
 {
-    "username":str,
-    "password":str,
-    "_id":str
+  "username":"str",
+  "password" : "str",
+  "_id":"str",
+  "api_key":"str",
+  "scenes":["str"],
+  "workers_owned": ["str"]
+
 }
 ```
 
