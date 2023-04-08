@@ -291,8 +291,8 @@ def user_to_dict(x: User) -> Any:
 
 
 class SceneManager:
-    def __init__(self) -> None:
-        client = MongoClient(host="mongodb",port=27017,username="admin",password="password123")
+    def __init__(self, mongoip) -> None:
+        client = MongoClient(host=mongoip,port=27017,username="admin",password="password123")
         self.db = client["nerfdb"]
         self.collection = self.db["scenes"]
         self.upsert=True

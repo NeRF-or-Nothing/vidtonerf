@@ -45,7 +45,7 @@ services:
       - "5000:5000"
     networks:
       - backend
-    command: python3 main.py
+    command: python3 main.py --configip configs/docker_in.json
 
   sfm-worker:
       build: 

@@ -21,4 +21,8 @@ def create_arguments() -> argparse.ArgumentParser:
         "-p", "--port", help="set port to listen on", type=int, default=5000
     )
 
+    parser.add_argument(
+        "--configip", type=str, default="configs/docker_out.json"
+    )
+    
     return parser

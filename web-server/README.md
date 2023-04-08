@@ -8,6 +8,30 @@ The webserver is based on a model view controller architecture with an additiona
 
 ![](../pics/Webserver.png)
 
+### Running the WebServer
+```
+python main.py --configip configs/docker_in.json
+```
+```
+python main.pu --configip configs/docker_out.json
+```
+The config file used is based on where you running the code:
+    docker_in.json - if you want to run inside a docker container
+    docker_out.json - if you want to run locally
+
+### Config Files Structure
+```
+{
+    webserver: IP1,
+    mongodb: IP2,
+    rabbitmq: IP3
+}
+```
+The config files are json files and are structured almost like a dictionary. 
+They have keys and values. The key and values for our purposes would be strings:
+    keys - Identifier for the IP
+    values - IP 
+
 ### Local File structure
 When running the web-server a local file structure should be created to match the following layout. This is where the server will store all images, videos, and non text based data.
 ```

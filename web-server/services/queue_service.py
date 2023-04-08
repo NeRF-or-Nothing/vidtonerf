@@ -11,8 +11,8 @@ import time
 
 class RabbitMQService:
     # TODO: Communicate with rabbitmq server on port defined in web-server arguments
-    def __init__(self):
-        rabbitmq_domain = "rabbitmq"
+    def __init__(self, rabbitip):
+        rabbitmq_domain = rabbitip
         credentials = pika.PlainCredentials('admin', 'password123')
         parameters = pika.ConnectionParameters(rabbitmq_domain, 5672, '/', credentials, heartbeat=300)
         
@@ -86,7 +86,7 @@ class RabbitMQService:
 
 
 
-def digest_finished_sfms(scene_manager: SceneManager):
+def digest_finished_sfms(rabbitip, scene_manager: SceneManager):
 
     def process_sfm_job(ch,method,properties,body):
         #load queue object
@@ -122,7 +122,7 @@ def digest_finished_sfms(scene_manager: SceneManager):
         ch.basic_ack(delivery_tag=method.delivery_tag)
 
     # create unique connection to rabbitmq since pika is NOT thread safe
-    rabbitmq_domain = "rabbitmq"
+    rabbitmq_domain = rabbitip
     credentials = pika.PlainCredentials('admin', 'password123')
     parameters = pika.ConnectionParameters(rabbitmq_domain, 5672, '/', credentials, heartbeat=300)
 
@@ -151,7 +151,7 @@ def digest_finished_sfms(scene_manager: SceneManager):
             continue
 
 
-def digest_finished_nerfs(scene_manager: SceneManager):
+def digest_finished_nerfs(rabbitip,scene_manager: SceneManager):
 
     def process_nerf_job(ch,method,properties,body):
         nerf_data = json.loads(body.decode())
@@ -169,7 +169,7 @@ def digest_finished_nerfs(scene_manager: SceneManager):
         #ch.basic_ack(delivery_tag=method.delivery_tag)
     
     # create unique connection to rabbitmq since pika is NOT thread safe
-    rabbitmq_domain = "rabbitmq"
+    rabbitmq_domain = rabbitip
     credentials = pika.PlainCredentials('admin', 'password123')
     parameters = pika.ConnectionParameters(rabbitmq_domain, 5672, '/', credentials,heartbeat=300)
 
