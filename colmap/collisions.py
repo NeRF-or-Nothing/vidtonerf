@@ -3,6 +3,36 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 import json
 
+def counter(matrices, lims):
+
+    xlim = lims[0]
+    ylim = lims[1]
+    zlim = lims[2]
+
+    n = np.array([
+        [xlim[0], 0, 0],
+        [xlim[1], 0, 0],
+        [0, ylim[0], 0],
+        [0, ylim[1], 0],
+        [0, 0, zlim[0]],
+        [0, 0, zlim[1]]
+    ])
+
+    p_0 = np.array([
+        [-1, 0, 0],
+        [1, 0, 0],
+        [0, -1, 0],
+        [0, 1, 0],
+        [0, 0, -1],
+        [0, 0, 1]
+    ])    
+
+    for matrix in matrices:
+
+        l_0 = matrix[:, :, 3]
+        l = np.array([0, 0, -1, 1]) @ matrix.T
+
+
 if __name__ == '__main__':
 
     transforms_data = json.load(open('./data/outputs/Local_Test/transforms_data.json'))
@@ -49,11 +79,14 @@ if __name__ == '__main__':
     zlim = [-1, 1]
 
     box = np.array([
-    [[xlim[0], ylim[0], zlim[0]], [xlim[1], ylim[0], zlim[0]], [xlim[1], ylim[0], zlim[1]], [xlim[0], ylim[0], zlim[1]]], 
-    [[xlim[0], ylim[0], zlim[0]], [xlim[0], ylim[1], zlim[0]], [zlim[0], ylim[1], zlim[1]], [zlim[0], ylim[0], zlim[1]]],
-    [[xlim[0], ylim[1], zlim[0]], [xlim[0], ylim[1], zlim[1]], [xlim[1], ylim[1], zlim[1]], [xlim[1], ylim[1], zlim[0]]]
-    ])
-    ax.add_collection3d(Poly3DCollection(box))
+        [[xlim[0], ylim[0], zlim[0]], [xlim[1], ylim[0], zlim[0]], [xlim[1], ylim[0], zlim[1]], [xlim[0], ylim[0], zlim[1]]], 
+        [[xlim[0], ylim[0], zlim[0]], [xlim[0], ylim[1], zlim[0]], [zlim[0], ylim[1], zlim[1]], [zlim[0], ylim[0], zlim[1]]],
+        [[xlim[0], ylim[1], zlim[0]], [xlim[0], ylim[1], zlim[1]], [xlim[1], ylim[1], zlim[1]], [xlim[1], ylim[1], zlim[0]]],
+        [[xlim[1], ylim[0], ylim[0]], [xlim[1], ylim[1], zlim[0]], [xlim[1], ylim[1], zlim[1]], [xlim[1], ylim[0], zlim[1]]],
+        [[xlim[0], ylim[0], zlim[0]], [xlim[1], ylim[0], zlim[0]], [xlim[1], ylim[1], zlim[0]], [xlim[0], ylim[1], zlim[0]]],
+        [[xlim[0], ylim[0], zlim[1]], [xlim[1], ylim[0], zlim[1]], [xlim[1], ylim[1], zlim[1]], [xlim[0], ylim[1], zlim[1]]]
+        ])
+    ax.add_collection3d(Poly3DCollection(box, alpha = 0.5))
 
     C = extrinsics[:, :, 3]
     C = np.moveaxis(C, 0, 1)
