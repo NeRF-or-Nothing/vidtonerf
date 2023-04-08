@@ -3,6 +3,7 @@ import numpy.typing as npt
 from pymongo import MongoClient
 from dataclasses import dataclass
 from typing import List, Any, TypeVar, Callable, Type, cast
+from uuid import uuid4
 
 # dataclasses generated with Quicktype https://github.com/quicktype/quicktype
 # To use this code, make sure you
@@ -203,32 +204,6 @@ def scene_to_dict(x: Scene) -> Any:
 
 
 
-
-
-def from_str(x: Any) -> str:
-    assert isinstance(x, str)
-    return x
-
-
-def from_none(x: Any) -> Any:
-    assert x is None
-    return x
-
-
-def from_union(fs, x):
-    for f in fs:
-        try:
-            return f(x)
-        except:
-            pass
-    assert False
-
-
-def to_class(c: Type[T], x: Any) -> dict:
-    assert isinstance(x, c)
-    return cast(Any, x).to_dict()
-
-
 @dataclass
 class Worker:
     id: Optional[str] = None
@@ -268,6 +243,51 @@ def worker_to_dict(x: Worker) -> Any:
 
 
 
+# api_key owner
+@dataclass
+class User:
+    username: Optional[str] = None
+    password: Optional[str] = None
+    _id: Optional[str] = None
+    api_key: Optional[str] = None
+    scenes: Optional[List[str]] = None
+    workers_owned: Optional[List[str]] = None
+
+    @staticmethod
+    def from_dict(obj: Any) -> 'User':
+        assert isinstance(obj, dict)
+        username = from_union([from_str, from_none], obj.get("username"))
+        password = from_union([from_str, from_none], obj.get("password"))
+        _id = from_union([from_str, from_none], obj.get("_id"))
+        api_key = from_union([from_str, from_none], obj.get("api_key"))
+        scenes = from_union([lambda x: from_list(from_str, x), from_none], obj.get("scenes"))
+        workers_owned = from_union([lambda x: from_list(from_str, x), from_none], obj.get("workers_owned"))
+        return User(username, password, _id, api_key, scenes, workers_owned)
+
+    def to_dict(self) -> dict:
+        result: dict = {}
+        if self.username is not None:
+            result["username"] = from_union([from_str, from_none], self.username)
+        if self.password is not None:
+            result["password"] = from_union([from_str, from_none], self.password)
+        if self._id is not None:
+            result["_id"] = from_union([from_str, from_none], self._id)
+        if self.api_key is not None:
+            result["api_key"] = from_union([from_str, from_none], self.api_key)
+        if self.scenes is not None:
+            result["scenes"] = from_union([lambda x: from_list(from_str, x), from_none], self.scenes)
+        if self.workers_owned is not None:
+            result["workers_owned"] = from_union([lambda x: from_list(from_str, x), from_none], self.workers_owned)
+
+        return result
+
+
+def user_from_dict(s: Any) -> User:
+    return User.from_dict(s)
+
+
+def user_to_dict(x: User) -> Any:
+    return to_class(User, x)
 
 
 class SceneManager:
@@ -330,6 +350,63 @@ class SceneManager:
         key = {"_id":_id}
         doc = self.collection.find_one(key)
         if doc and "nerf" in doc:
-            return Sfm.from_dict(doc["nerf"])
+            return Nerf.from_dict(doc["nerf"])
         else:
             return None
+        
+
+class UserManager:
+    def __init__(self) -> None:
+        #TODO: Host variable has to be changed whether run inside or outside of a docker container
+        client = MongoClient(host="localhost",port=27017,username="admin",password="password123")
+        self.db = client["nerfdb"]
+        self.collection = self.db["users"]
+        self.upsert=True
+
+
+    def set_user(self, user:User):  #usernames and ids are forced to be unique, passwords are not
+        key={"username":user.username}
+        doc = self.collection.find_one(key)
+        if doc!=None:
+            #Two users assigned with same username
+            return 1
+        key={"_id":user._id}
+        doc = self.collection.find_one(key)
+        if doc!=None:
+            raise Exception('Two users assigned with same ID!')
+        user.password=str(hash(user.password))
+
+        value = {"$set": user.to_dict()}
+        self.collection.update_one(key,value,upsert=self.upsert)
+        return 0
+
+    def generate_user(self, username:str, password:str):
+        _id = str(uuid4())
+        user=User(username,password,_id)
+        errorcode=self.set_user(user)
+        if(errorcode!=0):
+            return errorcode
+            
+        return user
+            
+
+    def get_user_by_id(self, _id: str) -> User:
+        key = {"_id":_id}
+        doc = self.collection.find_one(key)
+        if doc:
+            return User.from_dict(doc)
+        else:
+            return None
+
+    def get_user_by_username(self, username: str) -> User:
+        key = {"username":username}
+        doc = self.collection.find_one(key)
+        if doc:
+            return User.from_dict(doc)
+        else:
+            return None
+    #TODO: Write an overloaded function for finding users by username
+         
+
+    #def user_exists(self):
+    #TODO: Write an overloaded function for finding if a user exists by username
