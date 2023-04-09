@@ -414,3 +414,60 @@ class UserManager:
 
     #def user_exists(self):
     #TODO: Write an overloaded function for finding if a user exists by username
+
+
+class WorkerManager:
+    def __init__(self):
+        client = MongoClient(host="localhost", port=27017, username="admin", password="password123")
+        self.db = client["nerfdb"]
+        self.collection = self.db["workers"]
+        self.upsert=True
+
+    def set_worker(self, worker:Worker):
+        key={"id":worker.id}
+        doc = self.collection.find_one(key)
+        if doc!=None:
+            raise Exception('Two workers assigned with same ID!')
+        worker.api_key=str(hash(worker.api_key))
+        key={"owner_id":worker.owner_id}
+        doc = self.collection.find_one(key)
+        if doc!=None:
+            return 1
+        key={"type":worker.type}
+        doc = self.collection.find_one(key)
+        if doc!=None:
+            return 1
+        key={"scenes_assigned":worker.scenes_assigned}
+        doc = self.collection.find_one(key)
+        if doc!=None:
+            return 1
+
+        value = {"$set": worker.to_dict()}
+        self.collection.update_one(key,value,upsert=self.upsert)
+        return 0
+
+    def generate_worker(self, owner_id:str, worker_type:str):
+        _id = str(uuid4())
+        api_key = str(uuid4())
+        worker=Worker(_id, api_key, owner_id, worker_type)
+        errorcode=self.set_worker(worker)
+        if(errorcode!=0):
+            return errorcode
+        return worker
+
+    def get_worker_by_id(self, id:str) -> Worker:
+        key = {"id":id}
+        doc = self.collection.find_one(key)
+        if doc:
+            return Worker.from_dict(doc)
+        else:
+            return None
+
+    def get_workers_by_owner(self, owner_id:str) -> Worker:
+        key = {"owner_id": owner_id}
+        doc = self.collection.find_one(key)
+        if doc:
+            return Worker.from_dict(doc)
+        else:
+            return None
+        
