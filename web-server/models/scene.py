@@ -203,46 +203,6 @@ def scene_to_dict(x: Scene) -> Any:
     return to_class(Scene, x)
 
 
-
-@dataclass
-class Worker:
-    id: Optional[str] = None
-    api_key: Optional[str] = None
-    owner_id: Optional[str] = None
-    type: Optional[str] = None
-
-    @staticmethod
-    def from_dict(obj: Any) -> 'Worker':
-        assert isinstance(obj, dict)
-        id = from_union([from_str, from_none], obj.get("_id"))
-        api_key = from_union([from_str, from_none], obj.get("api_key"))
-        owner_id = from_union([from_str, from_none], obj.get("owner_id"))
-        type = from_union([from_str, from_none], obj.get("type"))
-        return Worker(id, api_key, owner_id, type)
-
-    def to_dict(self) -> dict:
-        result: dict = {}
-        if self.id is not None:
-            result["_id"] = from_union([from_str, from_none], self.id)
-        if self.api_key is not None:
-            result["api_key"] = from_union([from_str, from_none], self.api_key)
-        if self.owner_id is not None:
-            result["owner_id"] = from_union([from_str, from_none], self.owner_id)
-        if self.type is not None:
-            result["type"] = from_union([from_str, from_none], self.type)
-        return result
-
-
-def worker_from_dict(s: Any) -> Worker:
-    return Worker.from_dict(s)
-
-
-def worker_to_dict(x: Worker) -> Any:
-    return to_class(Worker, x)
-
-
-
-
 # api_key owner
 @dataclass
 class User:
@@ -288,6 +248,50 @@ def user_from_dict(s: Any) -> User:
 
 def user_to_dict(x: User) -> Any:
     return to_class(User, x)
+
+
+
+@dataclass
+class Worker:
+    id: Optional[str] = None
+    api_key: Optional[str] = None
+    owner_id: Optional[str] = None
+    type: Optional[str] = None
+    scenes_assigned: Optional[List[str]] = None
+
+    @staticmethod
+    def from_dict(obj: Any) -> 'Worker':
+        assert isinstance(obj, dict)
+        id = from_union([from_str, from_none], obj.get("id"))
+        api_key = from_union([from_str, from_none], obj.get("api_key"))
+        owner_id = from_union([from_str, from_none], obj.get("owner_id"))
+        type = from_union([from_str, from_none], obj.get("type"))
+        scenes_assigned = from_union([lambda x: from_list(from_str, x), from_none], obj.get("scenes_assigned"))
+        return Worker(id, api_key, owner_id, type, scenes_assigned)
+
+    def to_dict(self) -> dict:
+        result: dict = {}
+        if self.id is not None:
+            result["id"] = from_union([from_str, from_none], self.id)
+        if self.api_key is not None:
+            result["api_key"] = from_union([from_str, from_none], self.api_key)
+        if self.owner_id is not None:
+            result["owner_id"] = from_union([from_str, from_none], self.owner_id)
+        if self.type is not None:
+            result["type"] = from_union([from_str, from_none], self.type)
+        if self.scenes_assigned is not None:
+            result["scenes_assigned"] = from_union([lambda x: from_list(from_str, x), from_none], self.scenes_assigned)
+        return result
+
+
+def worker_from_dict(s: Any) -> Worker:
+    return Worker.from_dict(s)
+
+
+def worker_to_dict(x: Worker) -> Any:
+    return to_class(Worker, x)
+
+
 
 
 class SceneManager:
