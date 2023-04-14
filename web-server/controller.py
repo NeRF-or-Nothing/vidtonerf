@@ -41,7 +41,7 @@ class WebServer:
 
     def add_routes(self) -> None:
 
-        @app.route("/video/publish", methods=["POST", "PUT"])
+        @self.app.route("/video/publish", methods=["POST", "PUT"])
         def pub_video():
             video_file = request.files.get("file")
             print("VIDEO_FILE", video_file)
@@ -59,7 +59,7 @@ class WebServer:
             return response
 
         # TODO: Write error handling so the whole server doesn't crash when the user sends incorrect data.
-        @app.route("/video", methods=["POST", "PUT"])
+        @self.app.route("/video", methods=["POST", "PUT"])
         def recv_video():
             """
             Must decide if we want to hang here until video is done,
@@ -88,7 +88,7 @@ class WebServer:
 
             return response
 
-        @app.route("/video/<vidid>", methods=["GET"])
+        @self.app.route("/video/<vidid>", methods=["GET"])
         def send_video(vidid: str):
             # TODO: Change routing to serve rendered videos
             try:
@@ -105,7 +105,7 @@ class WebServer:
 
             return response
 
-        @app.route("/nerfvideo/<vidid>", methods=["GET"])
+        @self.app.route("/nerfvideo/<vidid>", methods=["GET"])
         def send_nerf_video(vidid: str):
             ospath = None
             status_str = "Processing"
@@ -122,7 +122,7 @@ class WebServer:
             response.headers['Access-Control-Allow-Origin'] = '*'
             return response
 
-        @app.route("/worker-data/<path:path>")
+        @self.app.route("/worker-data/<path:path>")
         def send_worker_data(path):
             # serves data directory for workers to pull any local data
             # TODO make this access secure
