@@ -1,6 +1,6 @@
 from flask import Flask, request, make_response, send_file, send_from_directory, url_for
-from controller import WebServer,app;
-from services.scene_service import ClientService;
+from controller import WebServer, app
+from services.scene_service import ClientService
 from models.scene import SceneManager
 from services.queue_service import RabbitMQService
 from argparser import create_arguments
@@ -20,14 +20,14 @@ app.testing = True
 
 class ControllerTest(unittest.TestCase):
     def setUp(self):
-      app = app.test_client()
-      response = app.get('/test')
-      self.assertEqual(response, "hello")
-    
+        app = app.test_client()
+        response = app.get('/test')
+        self.assertEqual(response, "hello")
+
     def test_pubVideo(self):
         response = app.post('/video/publish', data={'uuid': 'testuuid'})
         self.assertEqual(response.status_code, 200)
-    
+
     def test_recvVideo(self):
         response = app.post('/video', data={'uuid': 'testuuid'})
         self.assertEqual(response.status_code, 200)
@@ -39,35 +39,6 @@ class ControllerTest(unittest.TestCase):
     def test_sendNerfVideo(self):
         response = app.test_client().get('/nerfvideo/video1')
         self.assertEqual(response.status_code, 200)
-        
-
-"""
-def testAddRoutes():
-    response = w.app.test_client().post('/video/publish', data={'uuid': 'testuuid'})
-    assert(response.status_code==200)
-    print(app.test_client())
-    #note, do not need if statements, test assert response.status_code == 200
-    print(response.status_code)
-
-    response = app.test_client().post('/video', data={'uuid': 'testuuid'})
-    assert(response.status_code == 200)
-    print(app.test_client())
-    print(response.status_code)
-
-    response = app.test_client().get('/video/<vidid>')
-    assert(response.status_code == 200)
-    print(app.test_client())
-    print(response.status_code)
-
-    response = app.test_client().get('/nerfvideo/<vidid>')
-    assert(response.status_code == 200)
-    print(app.test_client())
-    print(response.status_code)
-
-    return "Test Completed!"
-
-    print(testAddRoutes())
-"""
 
 if __name__ == "__main__":
     unittest.main()
