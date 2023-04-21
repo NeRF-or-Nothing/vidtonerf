@@ -4,11 +4,12 @@ from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 import json
 
 def counter(extrinsics, intrinsic, lims):
-
+    #function takes an input of extrinsic matrices, the intrinsic matrice (not used currently), and the limits of the bounding box as a numpy array size 3 x 2.
     xlim = lims[0]
     ylim = lims[1]
     zlim = lims[2]
 
+    #points on each side of bounding box
     p_0 = np.array([
         [xlim[0], 0, 0],
         [xlim[1], 0, 0],
@@ -18,6 +19,7 @@ def counter(extrinsics, intrinsic, lims):
         [0, 0, zlim[1]]
     ])
 
+    #normal vectors to each side of bounding box
     n = np.array([
         [-1, 0, 0],
         [1, 0, 0],
@@ -28,47 +30,56 @@ def counter(extrinsics, intrinsic, lims):
     ])    
 
     count_tot = 0
+    points = []
     for matrix in extrinsics:
 
-        l_0 = matrix[:, 3][:3]
-        l = np.linalg.inv(intrinsic) @ np.array([0, 0, 1])
-        l = np.append(l, 1)
-        l = matrix @ l
+        #compute direction of each camera using a centered vector
+        l = matrix @ np.array([0, 0, 1, 1])
         l = l[:3]
+        l_0 = matrix[:, 3][:3]
         
+        #finding intersection with each side of bounding box
         count_int = 0
         for i in range(0, 6):
 
             d = ((p_0[i] - l_0).T @ n[i])/(l.T @ n[i])
             p = l_0 + l*d
 
+            #plane fixed in x 
             if i == 1 or i == 2:
 
                 if (p[1] > ylim[0] and p[1] < ylim[1]) and (p[2] > zlim[0] and p[2] < zlim[1]):
 
                     count_int += 1
+                    points.append(p)
 
+            #plane fixed in y
             if i == 3 or i == 4:
 
                 if (p[0] > xlim[0] and p[0] < xlim[1]) and (p[2] > zlim[0] and p[2] < zlim[1]):
                     
                     count_int += 1
+                    points.append(p)
 
+            #plane fixed in z
             if i == 5 or i == 6:
 
                 if (p[0] > xlim[0] and p[0] < xlim[1]) and (p[1] > ylim[0] and p[1] < ylim[1]):
 
                     count_int += 1
+                    points.append(p)
         
+        #Require at least one intersection (this should be 2...)
         if count_int > 0:
 
             count_tot += 1
 
-    return count_tot
+    #return percentage of intersections along with intersection points
+    return [count_tot/len(extrinsics), np.array(points)]
 
 if __name__ == '__main__':
 
-    transforms_data = json.load(open('./data/outputs/Local_Test/transforms_data.json'))
+    transforms_data = json.load(open('./data/outputs/Local_Test/transforms_honey.json'))
     extrinsics = np.array([np.array(frame['extrinsic_matrix']) for frame in transforms_data['frames']])
     intrinsic = transforms_data['intrinsic_matrix']
 
@@ -78,7 +89,8 @@ if __name__ == '__main__':
 
     lims = np.array([xlim, ylim, zlim])
 
-    print(counter(extrinsics, intrinsic, lims)/len(extrinsics))
+    out = counter(extrinsics, intrinsic, lims)
+    print(out[0])
 
     #Plotting camera path
     fig = plt.figure(figsize=(10, 10))
@@ -110,11 +122,6 @@ if __name__ == '__main__':
                                 [vertex_transformed[1, :-1], vertex_transformed[2, :-1], vertex_transformed[3, :-1], vertex_transformed[4, :-1]]]
         ax.add_collection3d(Poly3DCollection(meshes, linewidths=0.3, alpha=0.15, color = 'red'))
 
-        camera_loc = np.array([0, 0, 0, 1])
-        vertex_transformed = camera_loc @ matrix.T
-
-        ax.plot([vertex_transformed[0], 0.5*vertex_transformed[0]], [vertex_transformed[1], 0.5*vertex_transformed[1]], [vertex_transformed[2], 0.5*vertex_transformed[2]], c = 'black', alpha = 0.1)
-
     box = np.array([
         [[xlim[0], ylim[0], zlim[0]], [xlim[1], ylim[0], zlim[0]], [xlim[1], ylim[0], zlim[1]], [xlim[0], ylim[0], zlim[1]]], 
         [[xlim[0], ylim[0], zlim[0]], [xlim[0], ylim[1], zlim[0]], [zlim[0], ylim[1], zlim[1]], [zlim[0], ylim[0], zlim[1]]],
@@ -127,7 +134,11 @@ if __name__ == '__main__':
 
     C = extrinsics[:, :, 3]
     C = np.moveaxis(C, 0, 1)
-    ax.scatter(0, 0, 0, c = 'black', marker = '+', )
+
+    ax.scatter(0, 0, 0, color = 'black', marker = '+', )
     ax.scatter(C[0], C[1], C[2], c = np.arange(len(C[0])))
+
+    for point in out[1]:
+        ax.scatter(point[0], point[1], point[2], color = 'black', marker = '.')
 
     plt.show()
