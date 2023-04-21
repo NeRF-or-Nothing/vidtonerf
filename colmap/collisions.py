@@ -34,7 +34,7 @@ def counter(extrinsics, intrinsic, lims):
     for matrix in extrinsics:
 
         #compute direction of each camera using a centered vector
-        l = matrix @ np.array([0, 0, 1, 1])
+        l = matrix @ np.array([0, 0, -1, 1])
         l = l[:3]
         l_0 = matrix[:, 3][:3]
         
@@ -45,32 +45,32 @@ def counter(extrinsics, intrinsic, lims):
             d = ((p_0[i] - l_0).T @ n[i])/(l.T @ n[i])
             p = l_0 + l*d
 
-            #plane fixed in x 
-            if i == 1 or i == 2:
+            #planes fixed in x 
+            if (i == 0) or (i == 1):
 
                 if (p[1] > ylim[0] and p[1] < ylim[1]) and (p[2] > zlim[0] and p[2] < zlim[1]):
 
                     count_int += 1
                     points.append(p)
 
-            #plane fixed in y
-            if i == 3 or i == 4:
+            #planes fixed in y
+            if (i == 2) or (i == 3):
 
                 if (p[0] > xlim[0] and p[0] < xlim[1]) and (p[2] > zlim[0] and p[2] < zlim[1]):
                     
                     count_int += 1
                     points.append(p)
 
-            #plane fixed in z
-            if i == 5 or i == 6:
+            #planes fixed in z
+            if (i == 4) or (i == 5):
 
                 if (p[0] > xlim[0] and p[0] < xlim[1]) and (p[1] > ylim[0] and p[1] < ylim[1]):
 
                     count_int += 1
                     points.append(p)
         
-        #Require at least one intersection (this should be 2...)
-        if count_int > 0:
+        #Require at least two intersections
+        if count_int == 2:
 
             count_tot += 1
 
@@ -79,7 +79,7 @@ def counter(extrinsics, intrinsic, lims):
 
 if __name__ == '__main__':
 
-    transforms_data = json.load(open('./data/outputs/Local_Test/transforms_honey.json'))
+    transforms_data = json.load(open('./data/outputs/Local_Test/transforms_data.json'))
     extrinsics = np.array([np.array(frame['extrinsic_matrix']) for frame in transforms_data['frames']])
     intrinsic = transforms_data['intrinsic_matrix']
 
@@ -122,6 +122,13 @@ if __name__ == '__main__':
                                 [vertex_transformed[1, :-1], vertex_transformed[2, :-1], vertex_transformed[3, :-1], vertex_transformed[4, :-1]]]
         ax.add_collection3d(Poly3DCollection(meshes, linewidths=0.3, alpha=0.15, color = 'red'))
 
+        l = matrix @ np.array([0, 0, -1, 1], )
+        l = l[:3]
+        l_0 = matrix[:, 3][:3]
+
+        #uncomment this to plot direction vectors
+        #ax.plot([l_0[0], l[0]], [l_0[1], l[1]], [l_0[2], l[2]], color = 'black', alpha = 0.1)
+
     box = np.array([
         [[xlim[0], ylim[0], zlim[0]], [xlim[1], ylim[0], zlim[0]], [xlim[1], ylim[0], zlim[1]], [xlim[0], ylim[0], zlim[1]]], 
         [[xlim[0], ylim[0], zlim[0]], [xlim[0], ylim[1], zlim[0]], [zlim[0], ylim[1], zlim[1]], [zlim[0], ylim[0], zlim[1]]],
@@ -139,6 +146,8 @@ if __name__ == '__main__':
     ax.scatter(C[0], C[1], C[2], c = np.arange(len(C[0])))
 
     for point in out[1]:
-        ax.scatter(point[0], point[1], point[2], color = 'black', marker = '.')
+        ax.scatter(point[0], point[1], point[2], color = 'black', marker = ',')
+
+
 
     plt.show()
