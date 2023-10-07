@@ -58,6 +58,11 @@ Quaternion can also be used to calculate the Euler angles which contains the rol
 - matrix.py → outputs json object of intrinsic and extrinsic matrix
 - main.py → starts worker to process requests automatically from the web-server (start the web-server before running)
 
+### Running COLMAP Locally
+- Update default config in 'colmap/configs/default.txt' with data from 'colmap/configs/local.txt' 
+- Update the input_data_path parameter in colmap/configs/local.txt to point to the mp4 file
+- run: docker compose up sfm-worker
+  
 ### Reference for Additional Research
 - COLMAP Installation\
 https://colmap.github.io/install.html
