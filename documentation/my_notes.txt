@@ -1,0 +1,36 @@
+Alvaro O        Last updated: 10/10/23
+ 
+Datagen Article: 
+
+•	Rendering is the process of creating an image from a 3D model.	
+o	3 types of rendering: 1.Rasterization 2.Ray Casting 3. Ray tracing
+	1.Rasterizaiton: projects based on info on the model, no optical effects
+	2.Ray Casting: Calculates image from a specific point of view
+	3.Ray Tracing: uses Monte Carlo(repeated random sampling algo.) to achieve a realistic image in short time. Used in NVIDIA GPUs.
+•	Volume Rendering: create a 2D projection of a 3D dataset. The opposite of what we want to do. It converts RGBa to RGB. Voxel is for 3d images, and converts it to pixel
+•	View Synthesis: Opposite of Volume Rendering.
+Nerf uses input 	views to optimize a scene function.
+
+
+
+
+What is Nerf?
+A static scene is a 5d Vector valued function : which is defined for any continuous 5d coordinate,  that outputs ray(radiance)
+ which has orientation with starting point. We also have a density at each point which measures how much radiance passes through
+  the ray(measuring the radiance). This creates a neural radiance field.  We parameterize this scene representation as a fully
+   connected deep network takes each point. The MLP regresses the 5d point to an RGB color. The fully deep connected network 
+   doesn’t have layers so would be considered an MLP (multi layer perceptron). We can then use the values along a camera array 
+   to render(create) any pixel. So we can make the scene representation better by minimizing the error of rendering all camera 
+   rates from  collection of RGB image(all 2D images are RGB). Comparisons: We first show comparisons to top perfoming methods on
+    synthetic data. Scene representation networks implicitly represent a scene using a fully connected neural network, because some
+     runs have issues of Multiview consistency and are unable to represent high frequency details. Local light field fusion uses a
+      pretrained network to promote each input view to a high resolution 3d volume. Inconsistencies between adjacent volumes causes
+       flickering artifacts.
+
+What is synthetic data? Synthetic data is any information manufactured artificially which does not represent events or objects
+ in the real world. Algorithms create synthetic data used in model datasets for testing or training purposes.[In other words 
+ fake artifacts, created by algorithms. It makes the data more robust, features that a real dataset doesn’t add]
+
+ WHat is TensorRF?
+ 
+ What is Gaussian Splatting?
