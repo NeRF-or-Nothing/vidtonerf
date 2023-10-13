@@ -40,7 +40,7 @@ from random import sample
 #    2 = FileExistsError; happens when you try to create data in an already existing folder
 #    3 = FileNotFoundError; happens when you try to use an output folder that does not exist
 
-def split_video_into_frames(video_path, output_path, max_frames=200):
+def split_video_into_frames(video_path, output_path, max_frames=200, log):
   ## determines whether image is blurry or not.
   # uses the variance of a laplacian transform to check for edges and returns true
   # if the variance is less than the threshold and the video is determined to be blurry
@@ -71,7 +71,8 @@ def split_video_into_frames(video_path, output_path, max_frames=200):
 
   ## sample up to max frame count
   sample_count = min(frame_count,max_frames)
-  print("SAMPLE COUNT:", sample_count)
+  #print("SAMPLE COUNT:", sample_count)
+  log.info("SAMPLE COUNT: {}".format(sample_count))
 
   #print(f"frames = {frame_count}")
 

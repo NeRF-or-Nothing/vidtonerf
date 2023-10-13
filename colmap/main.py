@@ -15,6 +15,8 @@ import os
 import argparse
 import sys
 
+import logging
+
 
 app = Flask(__name__)
 # base_url = "http://host.docker.internal:5000/"
@@ -35,7 +37,7 @@ def to_url(local_file_path: str):
     return base_url + local_file_path
 
 
-def run_full_sfm_pipeline(id, video_file_path, input_data_dir, output_data_dir):
+def run_full_sfm_pipeline(id, video_file_path, input_data_dir, output_data_dir, log):
     # run colmap and save data to custom directory
     # Create output directory under data/output_data_dir/id
     # TODO: use library to fix filepath joining
@@ -46,9 +48,11 @@ def run_full_sfm_pipeline(id, video_file_path, input_data_dir, output_data_dir):
 
     # (1) vid_to_images.py
     imgs_folder = os.path.join(output_path, "imgs")
-    print(video_file_path)
+    #print(video_file_path)
+    log.info("Video file path:{}".format(video_file_path))
 
-    split_video_into_frames(video_file_path, imgs_folder, 100)
+
+    split_video_into_frames(video_file_path, imgs_folder, 100, log)
     # imgs are now in output_data_dir/id
 
     # (2) colmap_runner.py
@@ -94,19 +98,25 @@ def colmap_worker():
     channel.queue_declare(queue="sfm-out")
 
     def process_colmap_job(ch, method, properties, body):
-        print("Starting New Job")
+        #print("Starting New Job")
+        logging.info("Starting New Job")
         print(body.decode())
         job_data = json.loads(body.decode())
         id = job_data["id"]
-        print(f"Running New Job With ID: {id}")
+        #print(f"Running New Job With ID: {id}")
+        logging.info(f"Running New Job With ID: {id}")
+
 
         # TODO: Handle exceptions and enable steaming to make safer
         video = requests.get(job_data["file_path"], timeout=10)
-        print("Web server pinged")
+        #print("Web server pinged")
+        logging.info("Web server pinged")
         video_file_path = f"{input_data_dir}{id}.mp4"
-        print("Saving video to: {video_file_path}")
+        #print("Saving video to: {video_file_path}")
+        logging.info("Saving video to: {video_file_path}")
         open(video_file_path, "wb").write(video.content)
-        print("Video downloaded")
+        #print("Video downloaded")
+        logging.info("Video downloaded")
 
         # RUNS COLMAP AND CONVERSION CODE
         motion_data, imgs_folder = run_full_sfm_pipeline(
@@ -127,12 +137,14 @@ def colmap_worker():
 
         # confirm to rabbitmq job is done
         ch.basic_ack(delivery_tag=method.delivery_tag)
-        print("Job complete")
+        #print("Job complete")
+        logging.info("Job complete")
 
     channel.basic_qos(prefetch_count=1)
     channel.basic_consume(queue="sfm-in", on_message_callback=process_colmap_job)
     channel.start_consuming()
-    print("should not get here")
+    #print("should not get here")
+    logging.critical("should not get here")
 
 if __name__ == "__main__":
     print("~SFM WORKER~")
@@ -141,15 +153,18 @@ if __name__ == "__main__":
     Path(f"{input_data_dir}").mkdir(parents=True, exist_ok=True)
     Path(f"{output_data_dir}").mkdir(parents=True, exist_ok=True)
 
+    logging.basicConfig(level=logging.DEBUG,filename="sfm-worker.log",format='%(asctime)s %(message)s',filemode='w')
+
     # Load args from config file
     args = config_parser()
 
     # Local run behavior
     if args.local_run == True:
         motion_data, imgs_folder = run_full_sfm_pipeline(
-            "Local_Test", args.input_data_path, input_data_dir, output_data_dir
+            "Local_Test", args.input_data_path, input_data_dir, output_data_dir, logging.getLogger()
         )
-        print(motion_data)
+        #print(motion_data)
+        logging.info(motion_data)
         json_motion_data = json.dumps(motion_data)
 
     # Standard webserver run behavior
