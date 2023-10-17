@@ -52,9 +52,8 @@ def run_full_sfm_pipeline(id, video_file_path, input_data_dir, output_data_dir):
 
     # (1) vid_to_images.py
     imgs_folder = os.path.join(output_path, "imgs")
-    #print(video_file_path)
-    logger.info("Video file path:{}".format(video_file_path))
 
+    logger.info("Video file path:{}".format(video_file_path))
 
     split_video_into_frames(video_file_path, imgs_folder,100)
     # imgs are now in output_data_dir/id
@@ -63,10 +62,8 @@ def run_full_sfm_pipeline(id, video_file_path, input_data_dir, output_data_dir):
     colmap_path = "/usr/local/bin/colmap"
     status = run_colmap(colmap_path, imgs_folder, output_path)
     if status == 0:
-        #print("COLMAP ran successfully.")
         logger.info("COLMAP ran successfully.")
     elif status == 1:
-        #print("ERROR: There was an unknown error running COLMAP")
         logger.info("ERROR: There was an unknown error running COLMAP")
 
     # (3) matrix.py
@@ -91,7 +88,7 @@ def colmap_worker():
     Path(f"{input_data_dir}").mkdir(parents=True, exist_ok=True)
     Path(f"{output_data_dir}").mkdir(parents=True, exist_ok=True)
 
-    logger = logging.getLogger('sfm-worker')
+    logger = sfm_worker_logger('sfm-worker')
     
     rabbitmq_domain = "rabbitmq"
     credentials = pika.PlainCredentials("admin", "password123")
@@ -106,25 +103,24 @@ def colmap_worker():
 
     def process_colmap_job(ch, method, properties, body):
         logger = logging.getLogger('sfm-worker')
-        #print("Starting New Job")
+
         logger.info("Starting New Job")
-        #print(body.decode())
         logger.info(body.decode())
         job_data = json.loads(body.decode())
         id = job_data["id"]
-        #print(f"Running New Job With ID: {id}")
+
         logger.info(f"Running New Job With ID: {id}")
 
 
         # TODO: Handle exceptions and enable steaming to make safer
         video = requests.get(job_data["file_path"], timeout=10)
-        #print("Web server pinged")
+
         logger.info("Web server pinged")
         video_file_path = f"{input_data_dir}{id}.mp4"
-        #print("Saving video to: {video_file_path}")
+
         logger.info("Saving video to: {video_file_path}")
         open(video_file_path, "wb").write(video.content)
-        #print("Video downloaded")
+
         logger.info("Video downloaded")
 
         # RUNS COLMAP AND CONVERSION CODE
@@ -146,16 +142,19 @@ def colmap_worker():
 
         # confirm to rabbitmq job is done
         ch.basic_ack(delivery_tag=method.delivery_tag)
-        #print("Job complete")
+
         logger.info("Job complete")
 
     channel.basic_qos(prefetch_count=1)
     channel.basic_consume(queue="sfm-in", on_message_callback=process_colmap_job)
     channel.start_consuming()
-    #print("should not get here")
+
     logger.critical("should not get here")
 
 if __name__ == "__main__":
+    """
+        LOGGER IS ASSUMED TO BE RUN LOCALLY!!!
+    """
     logger = sfm_worker_logger('sfm-worker')
     logger.info("~SFM WORKER~")
 
@@ -172,7 +171,6 @@ if __name__ == "__main__":
     if args.local_run == True:
         motion_data, imgs_folder = run_full_sfm_pipeline(
             "Local_Test", args.input_data_path, input_data_dir, output_data_dir)
-        #print(motion_data)
         logger.info(motion_data)
         json_motion_data = json.dumps(motion_data)
 

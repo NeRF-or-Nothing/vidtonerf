@@ -76,10 +76,8 @@ def split_video_into_frames(video_path, output_path, max_frames=200):
 
   ## sample up to max frame count
   sample_count = min(frame_count,max_frames)
-  #print("SAMPLE COUNT:", sample_count)
   logger.info("SAMPLE COUNT {}".format(sample_count))
 
-  #print(f"frames = {frame_count}")
 
   success, image = vidcap.read()
   img_height = image.shape[0]
@@ -124,9 +122,6 @@ def split_video_into_frames(video_path, output_path, max_frames=200):
 
   needs_adjust = False ## determines if we need to adjust
   aspect_ratio = img_height / img_width
-  #print (f"aspect ratio: {aspect_ratio}")
-  #print (f"img_width: {img_width}")
-  #print (f"img_height: {img_height}")
   ## adjust as necessaryx 
   MAX_WIDTH = 200 
   MAX_HEIGHT = 200
@@ -148,8 +143,6 @@ def split_video_into_frames(video_path, output_path, max_frames=200):
   else:
     img_height = (int) (img_height * aspect_ratio)
 
-  #print(f"new img height: {img_height}")
-  #print(f"new img width: {img_width}")
   dimensions = (img_width, img_height)
 
 
@@ -163,7 +156,6 @@ def split_video_into_frames(video_path, output_path, max_frames=200):
       if (needs_adjust == True):
         image = cv2.resize(image, dimensions, interpolation=cv2.INTER_LANCZOS4)
       cv2.imwrite(f"{output_path}/img_{count}.png", image)  
-      #print("Saved image {}".format(count))
       logger.info("Saved image {}".format(count))
     success, image = vidcap.read()
     

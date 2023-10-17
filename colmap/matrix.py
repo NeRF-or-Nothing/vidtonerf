@@ -176,12 +176,11 @@ def get_extrinsic(center_point, fp: str = "parsed_data.csv"):
 
     # stack all extrinsic to perform faster transformations to the whole stack
     extrinsic_matrices = np.stack(extrinsic_matrices,axis=0)
-    #print(extrinsic_matrices.shape)
+
     logger.info(extrinsic_matrices.shape)
     avg_y_axis = np.sum(extrinsic_matrices[:,0:3,1], axis=0)
     avg_y_axis = avg_y_axis/np.linalg.norm(avg_y_axis)
-    #print("Consensus Y axis: ",avg_y_axis)
-    #logger.info("Consensus Y axis: ",avg_y_axis)
+
 
     # Find a matrix to rotate the average y axis with the y-axis unit vector thus aligning every extrinsic to point in the same direction
     Rot = np.zeros((4,4))
@@ -194,9 +193,7 @@ def get_extrinsic(center_point, fp: str = "parsed_data.csv"):
 
     # Adjust extrinsic to center around the central point
     #center_point = np.average(extrinsic_matrices[:,0:3,3],axis=0)
-    #print(center_point.shape)
     logger.info(center_point.shape)
-    #print("center point ",center_point)
     logger.info("center point {}".format(center_point))
     extrinsic_matrices[:,0:3,3] -= center_point
 
@@ -206,16 +203,11 @@ def get_extrinsic(center_point, fp: str = "parsed_data.csv"):
     # Normalize extrinsic transformation to remain within bounding box
     translation_magnitudes = np.linalg.norm(extrinsic_matrices[:,0:3,3],axis=1)
     avg_translation_magnitude = np.average(translation_magnitudes)
-    #print("Translation mag: ",avg_translation_magnitude)
     logger.info("Translation mag: {}".format(avg_translation_magnitude))
     extrinsic_matrices[:,0:3,3] /= avg_translation_magnitude
 
     # scale back up TODO: make dynamic
     extrinsic_matrices[:,0:3,3] *= 4
-
-    #print("Max ",extrinsic_matrices[:,0:3,3].max())
-    #print("Min ",extrinsic_matrices[:,0:3,3].min())
-    #print("avg ",np.average(extrinsic_matrices[:,0:3,3]))
 
     logger.info("Max {}".format(extrinsic_matrices[:,0:3,3].max()))
     logger.info("Min {}".format(extrinsic_matrices[:,0:3,3].min()))
@@ -283,7 +275,6 @@ def get_extrinsics_center(fp: str = "points3D.txt"):
             point_count+=1
 
     central_point /= point_count
-    #print("Central point: ", central_point)
     logger.info("Central point: {}".format(central_point))
     return central_point
 

@@ -3,6 +3,7 @@ import logging
 def sfm_worker_logger(name='root'):
     """
         Initializer for a global sfm-worker logger.
+            -> 
         To initialize use: 'logger = log.sfm_worker_logger(name)'
         To retrieve in different context: 'logger = logging.getLogger(name)'
     """
