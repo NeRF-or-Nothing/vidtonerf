@@ -1,6 +1,7 @@
 import subprocess
 import os
 import sys
+import logging
 from pathlib import Path
 
 #Usage: python colmap_runner.py --flags
@@ -39,11 +40,15 @@ def run_colmap(colmap_path, images_path, output_path):
     use_gpu = "false"
     Path(f"{output_path}").mkdir(parents=True, exist_ok=True)
 
+    # sfm-worker logger
+    logger = logging.getLogger('sfm-worker')
+
     #Creating a new database for colmap
     try:
         database_path = output_path + "/database.db"
         subprocess.call([colmap_path, "database_creator", "--database_path", database_path])
-        print("Created DB")
+        #print("Created DB")
+        logger.info("Created DB")
     except:
         return 1
 
@@ -52,13 +57,15 @@ def run_colmap(colmap_path, images_path, output_path):
         # --SiftExtraction.use_gpu=false for docker
         # TODO: make gpu use dynamic
         subprocess.call([colmap_path, "feature_extractor","--ImageReader.camera_model","PINHOLE",f"--SiftExtraction.use_gpu={use_gpu}","--ImageReader.single_camera=1", "--database_path", database_path, "--image_path", images_path])
-        print("Features Extracted")
+        #print("Features Extracted")
+        logger.info("Features Extracted")
     except:
         return 1
 
     #Feature matching
     try:
-        print("Feature Matching")
+        #print("Feature Matching")
+        logger.info("Feature Matching")
         subprocess.call([colmap_path, "exhaustive_matcher",f"--SiftMatching.use_gpu={use_gpu}", "--database_path", database_path])
     except:
         return 1
