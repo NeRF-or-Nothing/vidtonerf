@@ -51,7 +51,9 @@ class WebServer:
             # TODO: UUID4 is cryptographically secure on CPython, but this is not guaranteed in the specifications.
             # Might want to change this.
             # TODO: Don't assume videos are in mp4 format
+            print(video_file)
             uuid = self.cservice.handle_incoming_video(video_file)
+            print("made it past here")
             if(uuid is None):
                 response = make_response("ERROR")
                 response.headers['Access-Control-Allow-Origin'] = '*'
