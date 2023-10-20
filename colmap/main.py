@@ -14,6 +14,7 @@ from multiprocessing import Process
 import os
 import argparse
 import sys
+import gabe_test_images
 
 
 app = Flask(__name__)
@@ -118,17 +119,28 @@ def colmap_worker():
             file_name = frame["file_path"]
             file_path = os.path.join(imgs_folder, file_name)
             file_url = to_url(file_path)
+            is_blurry_image = gabe_test_images.is_blurry(file_path, 100)
+            # Add a new field "is_blurry" to the motion data to indicate whether the image is blurry
+            motion_data["frames"][i]["is_blurry"] = is_blurry_image
             motion_data["frames"][i]["file_path"] = file_url
+            
 
         json_motion_data = json.dumps(motion_data)
+        #Calculate what percentage of the images are blurry
+        num_blurry_images = sum(frame["is_blurry"] for frame in motion_data["frames"])
+        percentage_blurry = num_blurry_images / len(motion_data["frames"])
+        
         channel.basic_publish(
             exchange="", routing_key="sfm-out", body=json_motion_data
         )
 
         # confirm to rabbitmq job is done
         ch.basic_ack(delivery_tag=method.delivery_tag)
-        print("Job complete")
-
+        if percentage_blurry > 0.2:  # If more than 20% of the images are blurry
+            message = "Too blurry"
+        else:
+            message = "Job complete"
+        print(message)
     channel.basic_qos(prefetch_count=1)
     channel.basic_consume(queue="sfm-in", on_message_callback=process_colmap_job)
     channel.start_consuming()
