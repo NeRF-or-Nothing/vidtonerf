@@ -1,5 +1,27 @@
-Alvaro O        Last updated: 10/10/23
+Alvaro O        Last updated: 10/20/23
  
+
+
+Recently I mainly worked on obtaining AIMOS form and specifying the job for the proposal. We are expecting it to be accepted
+easily since its very low resource dependednt project. Here is the project description for the form:
+       
+       NeRF or Nothing is a project to turn short videos into 3D objects using neural radiance fields and machine learning.
+       Previously we used a AMD Ryzen 3070ti with 8gb and 6,144 cores. We are initially requesting 1 node with 1 GPU. With
+       plans to scale up with 1 node with 6x NVIDIA Tesla V100 GPUs with 32 GiB of memory each. 
+
+This next week, I will hopefully start to code. I've found some good resources on Gaussian splatting.
+
+
+
+
+
+
+
+
+
+
+
+
 Datagen Article: 
 
 •	Rendering is the process of creating an image from a 3D model.	
@@ -34,3 +56,7 @@ What is synthetic data? Synthetic data is any information manufactured artificia
  WHat is TensorRF?
  
  What is Gaussian Splatting?
+
+
+
+
