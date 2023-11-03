@@ -1,7 +1,8 @@
 import os
 import requests
 import json
-from models.scene import SceneManager, Video
+from ..models.dataclasses.video import Video
+from ..models.managers.scenemanager import SceneManager
 from services.queue_service import RabbitMQService
 from uuid import uuid4, UUID
 from werkzeug.utils import secure_filename
@@ -39,7 +40,7 @@ class ClientService:
             os.makedirs(video_file_path)
         video_file_path = os.path.join(video_file_path, video_name)
         video_file.save(video_file_path)
-
+        
         video = Video(video_file_path)
         self.manager.set_video(uuid, video)
 

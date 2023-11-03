@@ -1,6 +1,9 @@
 
 import pika, os, logging
-from models.scene import Video, Sfm, Nerf, SceneManager
+from ..models.dataclasses.video import Video
+from ..models.dataclasses.sfm import Sfm
+from ..models.dataclasses.nerf import Nerf
+from ..models.managers.scenemanager import SceneManager
 import json
 from urllib.parse import urlparse
 import requests
