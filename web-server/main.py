@@ -6,7 +6,7 @@ Afterwards, the Web Server is started.
 from argparser import create_arguments
 from controller import WebServer
 import threading
-from models.scene import SceneManager
+from models.managers.scenemanager import SceneManager
 from services.queue_service import RabbitMQService, digest_finished_sfms, digest_finished_nerfs
 from services.scene_service import ClientService
 from services.clean_service import cleanup

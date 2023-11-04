@@ -1,8 +1,8 @@
 import os
 import requests
 import json
-from ..models.dataclasses.video import Video
-from ..models.managers.scenemanager import SceneManager
+from models.dataclasses.video import Video
+from models.managers.scenemanager import SceneManager
 from services.queue_service import RabbitMQService
 from uuid import uuid4, UUID
 from werkzeug.utils import secure_filename

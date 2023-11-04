@@ -6,7 +6,7 @@ from uuid import uuid4, UUID
 
 from flask import Flask, request, make_response, send_file, send_from_directory, url_for
 
-from models.scene import UserManager
+from models.managers.usermanager import UserManager
 from services.scene_service import ClientService
 
 def is_valid_uuid(value):
