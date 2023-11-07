@@ -2,7 +2,7 @@ import numpy as np
 import numpy.typing as npt
 from dataclasses import dataclass
 from typing import Optional, Any, List, TypeVar, Callable, Type, cast
-from frame import Frame
+from models.dataclasses.frame import Frame
 # dataclasses generated with Quicktype https://github.com/quicktype/quicktype
 # To use this code, make sure you
 #

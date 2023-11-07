@@ -1,8 +1,8 @@
 from dataclasses import dataclass
 from typing import Optional, Any, List, TypeVar, Callable, Type, cast
-from video import Video
-from sfm import Sfm
-from nerf import Nerf
+from models.dataclasses.video import Video
+from models.dataclasses.sfm import Sfm
+from models.dataclasses.nerf import Nerf
 # dataclasses generated with Quicktype https://github.com/quicktype/quicktype
 # To use this code, make sure you
 #
