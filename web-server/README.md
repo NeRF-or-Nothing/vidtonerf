@@ -140,3 +140,13 @@ Note: There will be a delay the first time the services are started. RabbitMQ wi
 
 ## Help
 * Currently there is an issue with Pika (RabbitMQ client) timing out, if this occurs restart the webserver to continue using the application.
+
+
+## Web-Server Structure
+* One of the things that is very important is to understand how the server works.
+* We start with main.py which just starts the WebServer and ClientService.
+* The WebServer is in charge of listening to incoming requests 
+* The ClientService is in charge of handling the client requests
+* The ClientService is able to take the sent video from the webpage and process it to be stored in our database for mp4 to nerf processing.
+* Currently the services are in the services folder
+* As of right now there are models that are split within the managers and dataclass folders which all have different automated classes for functionality of the backend.
