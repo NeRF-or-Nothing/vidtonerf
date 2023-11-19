@@ -30,15 +30,13 @@ class ClientService:
 
         # generate new id and save to file with db record
         uuid = str(uuid4())
-        video_name = uuid + ".mp4"
+        video_file_name = uuid + ".mp4"
         videos_folder = "data/raw/videos"
-        current_directory = os.getcwd()
-
-        video_file_path = os.path.join(current_directory, videos_folder)
-        if not os.path.exists(video_file_path):
+        if not os.path.exists(videos_folder):
             # If the path does not exist, create it
-            os.makedirs(video_file_path)
-        video_file_path = os.path.join(video_file_path, video_name)
+            os.makedirs(videos_folder)
+
+        video_file_path = os.path.join(videos_folder, video_file_name)
         video_file.save(video_file_path)
         
         video = Video(video_file_path)
