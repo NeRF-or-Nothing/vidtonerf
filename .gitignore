@@ -2,5 +2,5 @@ package-lock.json
 Pipfile
 *.img
 *.png
-vnev
-.idea
+venv
+.idea 
