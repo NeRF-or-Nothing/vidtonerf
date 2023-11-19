@@ -3,3 +3,4 @@ Pipfile
 *.img
 *.png
 vnev
+.idea
