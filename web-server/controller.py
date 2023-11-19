@@ -85,7 +85,9 @@ class WebServer:
             ospath = None
             status_str = "Processing"
             if is_valid_uuid(vidid):
-                ospath = self.cservice.get_nerf_video_path(vidid)
+                # ospath = self.cservice.get_nerf_video_path(vidid)
+                ospath = os.path.join(os.getcwd(), "data/raw/videos/" + vidid + ".mp4")
+
             # Could change this to return both
             if ospath == None or not os.path.exists(ospath):
                 response = make_response(status_str)
