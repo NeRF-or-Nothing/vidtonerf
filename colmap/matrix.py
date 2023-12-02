@@ -22,6 +22,7 @@ import numpy as np
 import image_position_extractor
 import json
 import os
+import logging
 
 
 # https://en.wikipedia.org/wiki/Conversion_between_quaternions_and_Euler_angles
@@ -61,6 +62,59 @@ def euler_from_quaternion(x, y, z, w):
     yaw_z = math.atan2(siny_cosp, cosy_cosp)
 
     return roll_x, pitch_y, yaw_z  # in radians
+
+def q2R(q):
+    """
+    Converts a quaternion into a 3 x 3 rotation matrix according to the
+    Euler-Rodrigues formula.
+    :type    q: numpy.array
+    :param   q: 4 x 1 vector representation of a quaternion q = [q0;qv]
+    :rtype:  numpy.array
+    :return: the 3x3 rotation matrix    
+    """
+    
+    I = np.identity(3)
+    qhat = hat(q[1:4])
+    qhat2 = qhat.dot(qhat)
+    return I + 2*q[0]*qhat + 2*qhat2
+
+def hat(k):
+    """
+    Returns a 3 x 3 cross product matrix for a 3 x 1 vector
+    
+             [  0 -k3  k2]
+     khat =  [ k3   0 -k1]
+             [-k2  k1   0]
+    
+    :type    k: numpy.array
+    :param   k: 3 x 1 vector
+    :rtype:  numpy.array
+    :return: the 3 x 3 cross product matrix    
+    """
+    khat=np.zeros((3,3))
+    khat[0,1]=-k[2]
+    khat[0,2]=k[1]
+    khat[1,0]=k[2]
+    khat[1,2]=-k[0]
+    khat[2,0]=-k[1]
+    khat[2,1]=k[0]    
+    return khat
+
+def invhat(khat):
+    return np.array([(-khat[1,2] + khat[2,1]),(khat[0,2] - khat[2,0]),(-khat[0,1]+khat[1,0])])/2
+
+def quatcomplement(q):
+    """
+    Generates the quaternion complement
+    in:  q  = [q0;qv];
+    out: qc = [q0;-qv];
+    :type     q: numpy.array
+    :param    q: 4 x 1 vector representation of a quaternion q = [q0;qv]
+    :rtype:   numpy.array
+    :returns: the quaternion complement as a 4 x 1 vector q = [q0;-qv]
+    
+    """
+    return np.array([q[0],-1*q[1],-1*q[2],-1*q[3]])
 
 
 # https://www.euclideanspace.com/maths/geometry/rotations/conversions/quaternionToMatrix/index.htm
@@ -122,6 +176,8 @@ def rotation_matrix_from_vectors(vec1, vec2):
 
 def get_extrinsic(center_point, fp: str = "parsed_data.csv"):
 
+    # sfm-worker logger
+    logger = logging.getLogger('sfm-worker')
     
     # contrains filepath and extrinsic matrix
     filepaths = []
@@ -173,10 +229,11 @@ def get_extrinsic(center_point, fp: str = "parsed_data.csv"):
 
     # stack all extrinsic to perform faster transformations to the whole stack
     extrinsic_matrices = np.stack(extrinsic_matrices,axis=0)
-    print(extrinsic_matrices.shape)
+
+    logger.info(extrinsic_matrices.shape)
     avg_y_axis = np.sum(extrinsic_matrices[:,0:3,1], axis=0)
     avg_y_axis = avg_y_axis/np.linalg.norm(avg_y_axis)
-    print("Consensus Y axis: ",avg_y_axis)
+
 
     # Find a matrix to rotate the average y axis with the y-axis unit vector thus aligning every extrinsic to point in the same direction
     Rot = np.zeros((4,4))
@@ -189,8 +246,8 @@ def get_extrinsic(center_point, fp: str = "parsed_data.csv"):
 
     # Adjust extrinsic to center around the central point
     #center_point = np.average(extrinsic_matrices[:,0:3,3],axis=0)
-    print(center_point.shape)
-    print("center point ",center_point)
+    logger.info(center_point.shape)
+    logger.info("center point {}".format(center_point))
     extrinsic_matrices[:,0:3,3] -= center_point
 
     # Z offset assuming cameras are never below the object
@@ -199,15 +256,16 @@ def get_extrinsic(center_point, fp: str = "parsed_data.csv"):
     # Normalize extrinsic transformation to remain within bounding box
     translation_magnitudes = np.linalg.norm(extrinsic_matrices[:,0:3,3],axis=1)
     avg_translation_magnitude = np.average(translation_magnitudes)
-    print("Translation mag: ",avg_translation_magnitude)
+    logger.info("Translation mag: {}".format(avg_translation_magnitude))
     extrinsic_matrices[:,0:3,3] /= avg_translation_magnitude
 
     # scale back up TODO: make dynamic
     extrinsic_matrices[:,0:3,3] *= 4
 
-    print("Max ",extrinsic_matrices[:,0:3,3].max())
-    print("Min ",extrinsic_matrices[:,0:3,3].min())
-    print("avg ",np.average(extrinsic_matrices[:,0:3,3]))
+    logger.info("Max {}".format(extrinsic_matrices[:,0:3,3].max()))
+    logger.info("Min {}".format(extrinsic_matrices[:,0:3,3].min()))
+    logger.info("avg {}".format(np.average(extrinsic_matrices[:,0:3,3])))
+
 
     # Convert to json
     frames = []
@@ -251,6 +309,9 @@ def get_intrinsic(fp: str = "cameras.txt"):
 
 # COLMAP TO NDC
 def get_extrinsics_center(fp: str = "points3D.txt"):
+    # sfm-worker logger
+    logger = logging.getLogger('sfm-worker')
+
     infile = open(fp, "r")
     lines = infile.readlines()
     point_count = 0
@@ -267,7 +328,7 @@ def get_extrinsics_center(fp: str = "points3D.txt"):
             point_count+=1
 
     central_point /= point_count
-    print("Central point: ", central_point)
+    logger.info("Central point: {}".format(central_point))
     return central_point
 
 
@@ -279,6 +340,67 @@ def get_json_matrices(camera_file, motion_data ):
     intrinsic["frames"] = extrinsic
 
     return intrinsic
+
+def rot(k, theta):
+    """
+    Generates a 3 x 3 rotation matrix from a unit 3 x 1 unit vector axis
+    and an angle in radians using the Euler-Rodrigues formula
+    
+        R = I + sin(theta)*hat(k) + (1 - cos(theta))*hat(k)^2
+        
+    :type    k: numpy.array
+    :param   k: 3 x 1 unit vector axis
+    :type    theta: number
+    :param   theta: rotation about k in radians
+    :rtype:  numpy.array
+    :return: the 3 x 3 rotation matrix 
+        
+    """
+    I = np.identity(3)
+    khat = hat(k)
+    khat2 = khat.dot(khat)
+    return I + math.sin(theta)*khat + (1.0 - math.cos(theta))*khat2
+
+def R2rot(R):
+    """
+    Recover k and theta from a 3 x 3 rotation matrix
+        sin(theta) = | R-R^T |/2
+        cos(theta) = (tr(R)-1)/2
+        k = invhat(R-R^T)/(2*sin(theta))
+        theta = atan2(sin(theta),cos(theta)
+    :type    R: numpy.array
+    :param   R: 3 x 3 rotation matrix    
+    :rtype:  (numpy.array, number)
+    :return: ( 3 x 1 k unit vector, rotation about k in radians)   
+    
+    """
+    
+    R1 = R-R.transpose()
+    
+    sin_theta = np.linalg.norm(R1)/np.sqrt(8)
+    
+    cos_theta = (np.trace(R) - 1.0)/2.0
+    theta = np.arctan2(sin_theta, cos_theta)
+    
+    #Avoid numerical singularity
+    if sin_theta < 1e-6:
+               
+        if (cos_theta > 0):
+            return [0,0,1], 0
+        else:
+            B = (1.0/2.0) *(R + np.eye(3))
+            k = np.sqrt([B[0,0], B[1,1], B[2,2]])
+            if np.abs(k[0]) > 1e-6:
+                k[1] = k[1] * np.sign(B[0,1] / k[0])
+                k[2] = k[2] * np.sign(B[0,2] / k[0])
+            elif np.abs(k[1]) > 1e-6:
+                k[2] = k[2] * np.sign(B[0,2] / k[1])
+            return k, np.pi
+    
+    k = invhat(R1)/(2.0*sin_theta)    
+    return k, theta
+
+
 
 def main():
     # check for input argument
