@@ -4,6 +4,8 @@ from pymongo import MongoClient
 from dataclasses import dataclass
 from typing import List, Any, TypeVar, Callable, Type, cast
 from uuid import uuid4
+import os
+from dotenv import load_dotenv
 
 # dataclasses generated with Quicktype https://github.com/quicktype/quicktype
 # To use this code, make sure you
@@ -20,6 +22,8 @@ from typing import Optional, Any, List, TypeVar, Callable, Type, cast
 
 T = TypeVar("T")
 
+# Load environment variables from .env file at the root of the project
+load_dotenv()
 
 def from_str(x: Any) -> str:
     assert isinstance(x, str)
@@ -291,8 +295,9 @@ def user_to_dict(x: User) -> Any:
 
 
 class SceneManager:
-    def __init__(self, mongoip) -> None:
-        client = MongoClient(host=mongoip,port=27017,username="admin",password="password123")
+    def __init__(self) -> None:
+        client = MongoClient(host=os.getenv("MONGO_IP"),port=27017,username=os.getenv("MONGO_INITDB_ROOT_USERNAME"),\
+                             password=os.getenv("MONGO_INITDB_ROOT_PASSWORD"))
         self.db = client["nerfdb"]
         self.collection = self.db["scenes"]
         self.upsert=True
@@ -357,8 +362,8 @@ class SceneManager:
 
 class UserManager:
     def __init__(self) -> None:
-        #TODO: Host variable has to be changed whether run inside or outside of a docker container
-        client = MongoClient(host="localhost",port=27017,username="admin",password="password123")
+        client = MongoClient(host=os.getenv("MONGO_IP"),port=27017,username=os.getenv("MONGO_INITDB_ROOT_USERNAME"),\
+                             password=os.getenv("MONGO_INITDB_ROOT_PASSWORD"))
         self.db = client["nerfdb"]
         self.collection = self.db["users"]
         self.upsert=True
@@ -408,5 +413,3 @@ class UserManager:
     #TODO: Write an overloaded function for finding users by username
          
 
-    #def user_exists(self):
-    #TODO: Write an overloaded function for finding if a user exists by username

@@ -12,6 +12,8 @@ from services.scene_service import ClientService
 from services.clean_service import cleanup
 from pymongo import MongoClient
 import json
+import os
+from dotenv import load_dotenv
 
 
 def main():
@@ -25,13 +27,15 @@ def main():
     #docker_out.json outside docker container
     ipdata = json.load(ipfile)
     
-    mongoip = ipdata["mongodomain"]
-    rabbitip = ipdata["rabbitmqdomain"]
+    # Load environmental 
+    load_dotenv()
+
+    rabbitip = os.getenv("RABBITMQ_IP")
     flaskip = ipdata["flaskdomain"]
 
     # Shared Database manager <from models>
     # SceneManager shared across threads since it is thread safe
-    scene_man = SceneManager(mongoip)
+    scene_man = SceneManager()
 
     # Rabbitmq service to post new jobs to the workers <from services>
     rmq_service = RabbitMQService(rabbitip)
