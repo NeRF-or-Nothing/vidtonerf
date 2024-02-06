@@ -289,7 +289,66 @@ def user_from_dict(s: Any) -> User:
 def user_to_dict(x: User) -> Any:
     return to_class(User, x)
 
+# TODO: Queue list of IDs for indexing
+@dataclass
+class QueueList:
+    queue_list: Optional[list] = None
 
+    @staticmethod
+    def from_dict(obj: Any) -> 'QueueList':
+        assert isinstance(obj, dict)
+        queue_list = from_union([lambda x:from_list(from_str,x),from_none],obj.get("queue_list"))
+        return QueueList(queue_list)
+
+    def to_dict(self) -> dict:
+        result: dict = {}
+        result["queue_list"] = from_union([lambda x: from_list(from_str, x), from_none], self.queue_list)
+        return result
+
+# QueueListManager keeps track of SCENE IDS IN QUEUE, and is INDEPENDENT from RabbitMQ
+class QueueListManager:
+    def __init__(self, mongoip) -> None:
+        client = MongoClient(host=mongoip,port=27017,username="admin",password="password123")
+        self.db = client["nerfdb"]
+        self.collection = self.db["queues"]
+        self.upsert=True
+        # Create the list if not present
+        if not self.collection.find_one("queue_list"):
+            self.collection.update_one("queue_list", [], upert=self.upsert)
+    
+    # TODO: Set a queue
+    def __set_queue(queue: QueueList):
+        key = {"_id":"queue_list"}
+        fields = {"queue_list."+k:v for k,v in queue.to_dict().items()}
+        value = {"$set": fields}
+        self.collection.update_one(key, value, upsert=self.upsert)
+    
+    # TODO: Append a uuid to the queue list
+    def append_queue(self, uuid: str):
+        doc = self.collection.find_one("queue_list")
+        queue_list = QueueList.from_dict(doc)
+        queue_list.append(uuid)
+        self.__set_queue(queue_list)
+
+    # TODO: Get a position in the queue list
+    def get_queue_position(self,uuid: str) -> int:
+        doc = self.collection.find_one("queue_list")
+        queue_list = QueueList.from_dict(doc)
+        x = [x for x in range(0,len(queue_list)) if queue_list[x] == uuid]
+        if len(x) > 1:
+            raise Exception("Same ID found multiple times in queue!")
+        elif len(x) == 0:
+            raise Exception("ID not found in queue!")
+        else:
+            return (x, len(queue_list))
+    
+    # TODO: Pop a uuid of the queue list
+    def pop_queue(self, uuid: str):
+        doc = self.collection.find_one("queue_list")
+        queue_list = QueueList.from_dict(doc)
+        queue_list.remove(uuid)
+        self.__set_queue(queue_list)
+            
 class SceneManager:
     def __init__(self, mongoip) -> None:
         client = MongoClient(host=mongoip,port=27017,username="admin",password="password123")
