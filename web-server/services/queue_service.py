@@ -1,6 +1,6 @@
 
 import pika, os, logging
-from models.scene import Video, Sfm, Nerf, SceneManager
+from models.scene import Video, Sfm, Nerf, SceneManager, QueueListManager
 import json
 from urllib.parse import urlparse
 import requests
@@ -36,6 +36,8 @@ class RabbitMQService:
         self.base_url = "http://localhost:5000/"
         # for docker
         self.base_url = "http://host.docker.internal:5000/"
+        # for queue list positions
+        self.queue_manager = QueueListManager()
 
     def to_url(self,file_path):
         return self.base_url+"/worker-data/"+file_path
@@ -51,6 +53,8 @@ class RabbitMQService:
         }
         json_job = json.dumps(job)
         self.channel.basic_publish(exchange='', routing_key='sfm-in', body=json_job)
+        # add to sfm in queue list to monitor queue size and position
+        self.queue_manager.append_queue("sfm_in",id)
            
     def publish_nerf_job(self, id: str, vid: Video, sfm: Sfm):
         """
@@ -73,6 +77,8 @@ class RabbitMQService:
         combined_job = {**job, **sfm_data}
         json_job = json.dumps(combined_job)
         self.channel.basic_publish(exchange='', routing_key='nerf-in', body=json_job)
+        # add to nerf in queue list to monitor queue size and position
+        self.queue_manager.append_queue("nerf_in",id)
 
 
     #call
@@ -116,6 +122,10 @@ def digest_finished_sfms(rabbitip, scene_manager: SceneManager):
         sfm = Sfm.from_dict(sfm_data)
         scene_manager.set_sfm(id,sfm)
         scene_manager.set_video(id,vid)
+
+        #create a QueueListManager to remove from queue
+        queue_manager = QueueListManager()
+        queue_manager.append_queue("sfm_in",id)
 
         print("saved finished sfm job")
         new_data = json.dumps(sfm_data)
@@ -167,6 +177,10 @@ def digest_finished_nerfs(rabbitip,scene_manager: SceneManager):
         nerf.from_dict(nerf_data)
         scene_manager.set_nerf(id, nerf)
         #ch.basic_ack(delivery_tag=method.delivery_tag)
+
+        #create a QueueListManager to remove from queue
+        queue_manager = QueueListManager()
+        queue_manager.append_queue("nerf_in",id)
     
     # create unique connection to rabbitmq since pika is NOT thread safe
     rabbitmq_domain = rabbitip

@@ -292,61 +292,73 @@ def user_to_dict(x: User) -> Any:
 # TODO: Queue list of IDs for indexing
 @dataclass
 class QueueList:
-    queue_list: Optional[list] = None
+    queue: Optional[List[str]] = None
 
     @staticmethod
     def from_dict(obj: Any) -> 'QueueList':
         assert isinstance(obj, dict)
-        queue_list = from_union([lambda x:from_list(from_str,x),from_none],obj.get("queue_list"))
-        return QueueList(queue_list)
+        queue = from_union([lambda x:from_list(from_str,x),from_none],obj.get("queue"))
+        return QueueList(queue)
 
     def to_dict(self) -> dict:
         result: dict = {}
-        result["queue_list"] = from_union([lambda x: from_list(from_str, x), from_none], self.queue_list)
+        result["queue"] = from_union([lambda x: from_list(from_str, x), from_none], self.queue)
         return result
 
-# QueueListManager keeps track of SCENE IDS IN QUEUE, and is INDEPENDENT from RabbitMQ
+# QueueListManager keeps track of lists (queues) in parallel with RabbitMQ to report queue status
+# VALID QUEUE IDS: sfm_list nerf_list queue_lit (queue_list is the overarching process)
 class QueueListManager:
     def __init__(self, mongoip) -> None:
         client = MongoClient(host=mongoip,port=27017,username="admin",password="password123")
         self.db = client["nerfdb"]
         self.collection = self.db["queues"]
         self.upsert=True
-        # Create the list if not present
-        if not self.collection.find_one("queue_list"):
-            self.collection.update_one("queue_list", [], upert=self.upsert)
-    
-    # TODO: Set a queue
-    def __set_queue(queue: QueueList):
-        key = {"_id":"queue_list"}
-        fields = {"queue_list."+k:v for k,v in queue.to_dict().items()}
+        # Valid queue ids:
+        self.queue_names = ["sfm_list","nerf_list","queue_list"]
+        # Ensure all above lists are in database
+        for n in self.queue_names:
+            if not self.collection.find_one(n):
+                self.__set_queue(n,QueueList([]))
+
+    # Set a queue list
+    def __set_queue(self, _id: str, queue_list: QueueList):
+        if _id not in self.queue_names:
+            raise Exception("Not a valid queue ID. Valid queue IDs: {}".format(self.queue_names))
+        key = {"_id":_id}
+        fields = {"queue."+k:v for k,v in queue_list.to_dict().items()}
         value = {"$set": fields}
         self.collection.update_one(key, value, upsert=self.upsert)
     
-    # TODO: Append a uuid to the queue list
-    def append_queue(self, uuid: str):
-        doc = self.collection.find_one("queue_list")
+    # Append a uuid to the queue list
+    def append_queue(self, queueid: str, uuid: str):
+        if queueid not in self.queue_names:
+            raise Exception("Not a valid queue ID. Valid queue IDs: {}".format(self.queue_names))
+        doc = self.collection.find_one(queueid)
         queue_list = QueueList.from_dict(doc)
-        queue_list.append(uuid)
+        queue_list.queue.append(uuid)
         self.__set_queue(queue_list)
 
-    # TODO: Get a position in the queue list
-    def get_queue_position(self,uuid: str) -> int:
-        doc = self.collection.find_one("queue_list")
+    # Get a position in the queue list
+    def get_queue_position(self, queueid: str, uuid: str) -> int:
+        if queueid not in self.queue_names:
+            raise Exception("Not a valid queue ID. Valid queue IDs: {}".format(self.queue_names))
+        doc = self.collection.find_one(queueid)
         queue_list = QueueList.from_dict(doc)
-        x = [x for x in range(0,len(queue_list)) if queue_list[x] == uuid]
+        x = [x for x in range(0,len(queue_list.queue)) if queue_list.queue[x] == uuid]
         if len(x) > 1:
             raise Exception("Same ID found multiple times in queue!")
         elif len(x) == 0:
             raise Exception("ID not found in queue!")
         else:
-            return (x, len(queue_list))
+            return (x, len(queue_list.queue))
     
-    # TODO: Pop a uuid of the queue list
-    def pop_queue(self, uuid: str):
-        doc = self.collection.find_one("queue_list")
+    # Pop a uuid of the queue list
+    def pop_queue(self, queueid: str, uuid: str):
+        if queueid not in self.queue_names:
+            raise Exception("Not a valid queue ID. Valid queue IDs: {}".format(self.queue_names))
+        doc = self.collection.find_one(queueid)
         queue_list = QueueList.from_dict(doc)
-        queue_list.remove(uuid)
+        queue_list.queue.remove(uuid)
         self.__set_queue(queue_list)
             
 class SceneManager:

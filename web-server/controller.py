@@ -6,7 +6,7 @@ from uuid import uuid4, UUID
 
 from flask import Flask, request, make_response, send_file, send_from_directory, url_for
 
-from models.scene import UserManager
+from models.scene import UserManager, QueueListManager
 from services.scene_service import ClientService
 
 def is_valid_uuid(value):
@@ -23,6 +23,7 @@ class WebServer:
         self.args = args
         self.cservice = cserv
         self.user_manager=UserManager()
+        self.queue_manager=QueueListManager()
 
     def run(self) -> None:
         self.app.logger.setLevel(
@@ -152,6 +153,12 @@ class WebServer:
             string=f"SUCCESS|{user.id}"
             response=make_response(string)
             return response
+
+        # Queueid is either sfm_in nerf_in or queue_in
+        # id is the uuid of the video/job
+        @self.app.route("/queues",methods=["GET"])
+        def send_queue_position(queueid: str, id: str):
+            return self.queue_manager.get_queue_position(queueid,id)
 
         @self.app.route("/test")
         def test_endpoint():
