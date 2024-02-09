@@ -2,3 +2,8 @@ package-lock.json
 Pipfile
 *.img
 *.png
+
+# local env files
+# Do not commit any .env files to git, except for the .env.example file.
+.env
+.env*.local
