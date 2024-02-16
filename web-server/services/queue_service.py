@@ -93,63 +93,60 @@ class RabbitMQService:
         # "frames" = array of urls and extrinsic_matrix[float]
     #   channel.basic.consume(on_message_callback = callback_sfm_job, queue = sfm_out)
 
+def k_mean_sampling(frames, size=100):
+    #TODO Make this input passed in, with default value 100
+    CLUSTERS = size
 
+    extrins = []
+    angles = []
+    for f in frames["frames"]:
+        extrinsic = np.array(f["extrinsic_matrix"])
+        extrins+=[ extrinsic ]
+    for i,e in enumerate(extrins):
+
+        # t == rectangular coordinates
+        t = e[0:3,3]
+
+        # s == spherical coordinates
+
+        # r = sqrt(x^2 + y^2 + z^2)
+        r = math.sqrt((t[0]*t[0])+(t[1]*t[1])+(t[2]*t[2]))
+        theta = math.acos(t[2]/r)
+        phi = math.atan(t[1]/t[0])
+
+        #convert radian to degrees
+
+        theta = (theta * 180) / math.pi
+        phi = (phi * 180) / math.pi
+
+        s = [theta,phi]
+
+        angles.append(s)
+
+    km = sklearn.cluster.k_means(X=angles, n_clusters=CLUSTERS, n_init=10)
+
+    seen_numbers=[]
+    for i in km[1]:
+        if (i not in seen_numbers):
+            seen_numbers.append(i)
+
+    #TODO account for this
+    if (len(seen_numbers) != CLUSTERS):
+        print("TOO FEW CLUSTERS")
+
+    cluster_array = [ [] for _ in range(CLUSTERS) ]
+    return_array = []
+
+    for i in range(len(angles)):
+        cluster_array[km[1][i]].append(i)
+
+    #TODO instead of being completely random, take the point closest to the centroid
+    for i in range(len(cluster_array)):
+        return_array.append(cluster_array[i][random.randint(0,len(cluster_array[i])-1)])
+
+    return return_array
 
 def digest_finished_sfms(rabbitip, scene_manager: SceneManager):
-
-    def k_mean_sampling(frames, size=100):
-        #TODO Make this input passed in, with default value 100
-        CLUSTERS = size
-
-        extrins = []
-        angles = []
-        for f in frames["frames"]:
-            extrinsic = np.array(f["extrinsic_matrix"])
-            extrins+=[ extrinsic ]
-        for i,e in enumerate(extrins):
-
-            # t == rectangular coordinates
-            t = e[0:3,3]
-
-            # s == spherical coordinates
-
-            # r = sqrt(x^2 + y^2 + z^2)
-            r = math.sqrt((t[0]*t[0])+(t[1]*t[1])+(t[2]*t[2]))
-            theta = math.acos(t[2]/r)
-            phi = math.atan(t[1]/t[0])
-
-            #convert radian to degrees
-
-            theta = (theta * 180) / math.pi
-            phi = (phi * 180) / math.pi
-
-            s = [theta,phi]
-
-            angles.append(s)
-
-        km = sklearn.cluster.k_means(X=angles, n_clusters=CLUSTERS, n_init=10)
-
-        seen_numbers=[]
-        for i in km[1]:
-            if (i not in seen_numbers):
-                seen_numbers.append(i)
-
-        #TODO account for this
-        if (len(seen_numbers) != CLUSTERS):
-            print("TOO FEW CLUSTERS")
-
-        cluster_array = [ [] for _ in range(CLUSTERS) ]
-        return_array = []
-
-        for i in range(len(angles)):
-            cluster_array[km[1][i]].append(i)
-
-        #TODO instead of being completely random, take the point closest to the centroid
-        for i in range(len(cluster_array)):
-            return_array.append(cluster_array[i][random.randint(0,len(cluster_array[i])-1)])
-
-        return return_array
-
     def process_sfm_job(ch,method,properties,body):
         #load queue object
         sfm_data = json.loads(body.decode())
@@ -171,10 +168,14 @@ def digest_finished_sfms(rabbitip, scene_manager: SceneManager):
 
             path = os.path.join(os.getcwd(), file_path)
             sfm_data['frames'][i]["file_path"] = file_path
-
+        
+        # Test output for type classification
+        print("WORKING!!!!")
+        print(sfm_data["frames"])
+        
         # Get indexes of k mean grouped frames
         k_sampled = k_mean_sampling(sfm_data)
-        
+
         # Use those frames to revise list of frames used in sfm generation
         sfm_data['frames'] = [sfm_data['frames'][i] for i in k_sampled]
 
