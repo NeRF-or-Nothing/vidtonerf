@@ -169,10 +169,6 @@ def digest_finished_sfms(rabbitip, scene_manager: SceneManager):
             path = os.path.join(os.getcwd(), file_path)
             sfm_data['frames'][i]["file_path"] = file_path
         
-        # Test output for type classification
-        print("WORKING!!!!")
-        print(sfm_data["frames"])
-        
         # Get indexes of k mean grouped frames
         k_sampled = k_mean_sampling(sfm_data)
 
