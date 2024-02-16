@@ -22,7 +22,7 @@ class RabbitMQService:
     # TODO: Communicate with rabbitmq server on port defined in web-server arguments
     def __init__(self, rabbitip):
         rabbitmq_domain = rabbitip
-        credentials = pika.PlainCredentials(os.getenv("RABBITMQ_DEFAULT_USER"), os.getenv("RABBITMQ_DEFAULT_PASS"))
+        credentials = pika.PlainCredentials(str(os.getenv("RABBITMQ_DEFAULT_USER")), str(os.getenv("RABBITMQ_DEFAULT_PASS")))
         parameters = pika.ConnectionParameters(rabbitmq_domain, 5672, '/', credentials, heartbeat=300)
         
         #2 minute timer
@@ -191,7 +191,7 @@ def digest_finished_sfms(rabbitip, scene_manager: SceneManager):
 
     # create unique connection to rabbitmq since pika is NOT thread safe
     rabbitmq_domain = rabbitip
-    credentials = pika.PlainCredentials(os.getenv("RABBITMQ_DEFAULT_USER"), os.getenv("RABBITMQ_DEFAULT_PASS"))
+    credentials = pika.PlainCredentials(str(os.getenv("RABBITMQ_DEFAULT_USER")), str(os.getenv("RABBITMQ_DEFAULT_PASS")))
     parameters = pika.ConnectionParameters(rabbitmq_domain, 5672, '/', credentials, heartbeat=300)
 
     #2 minute timer
@@ -238,7 +238,7 @@ def digest_finished_nerfs(rabbitip,scene_manager: SceneManager):
     
     # create unique connection to rabbitmq since pika is NOT thread safe
     rabbitmq_domain = rabbitip
-    credentials = pika.PlainCredentials(os.getenv("RABBITMQ_DEFAULT_USER"), os.getenv("RABBITMQ_DEFAULT_PASS"))
+    credentials = pika.PlainCredentials(str(os.getenv("RABBITMQ_DEFAULT_USER")), str(os.getenv("RABBITMQ_DEFAULT_PASS")))
     parameters = pika.ConnectionParameters(rabbitmq_domain, 5672, '/', credentials,heartbeat=300)
 
     #2 minute timer

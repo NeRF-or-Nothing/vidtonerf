@@ -83,7 +83,7 @@ def colmap_worker():
 
     
     rabbitmq_domain = "rabbitmq"
-    credentials = pika.PlainCredentials(os.getenv("RABBITMQ_DEFAULT_USER"), os.getenv("RABBITMQ_DEFAULT_PASS"))
+    credentials = pika.PlainCredentials(str(os.getenv("RABBITMQ_DEFAULT_USER")), str(os.getenv("RABBITMQ_DEFAULT_PASS")))
     parameters = pika.ConnectionParameters(
         rabbitmq_domain, 5672, "/", credentials, heartbeat=300
     )
