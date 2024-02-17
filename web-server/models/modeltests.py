@@ -64,9 +64,71 @@ class userManagerTest(unittest.TestCase):
         self.assertTrue(type(user2)==int)
         self.assertTrue(user2==1)
 
+class queueListManagerTest(unittest.TestCase):
+    def setUp(self):                            #fires before the test starts
+        self.queue_manager = scene.QueueListManager("localhost")
+        self.queue_manager.collection.drop()
 
+    def test_queues(self):
+        self.queue_manager.append_queue("sfm_list","uuid1")
+        self.queue_manager.append_queue("sfm_list","uuid2")
+        self.queue_manager.append_queue("sfm_list","uuid5")
+        self.queue_manager.append_queue("sfm_list","uuid6")
 
+        self.queue_manager.append_queue("nerf_list","uuid3")
 
+        self.queue_manager.append_queue("queue_list","uuid4")
+        
+        ret=self.queue_manager.get_queue_position("sfm_list","uuid2")
+        print("uuid2 is in sfm_list position {} out of {}.".format(ret[0],ret[1]))
+        self.assertTrue(ret[0] == 1 and ret[1] == 4)
+        
+        # Popping queue positions
+        self.queue_manager.pop_queue("sfm_list")
+        self.queue_manager.pop_queue("sfm_list","uuid6")
+        self.queue_manager.pop_queue("queue_list")
+
+        ret=self.queue_manager.get_queue_position("sfm_list","uuid5")
+        print("uuid5 is in sfm_list position {} out of {}.".format(ret[0],ret[1]))
+        self.assertTrue(ret[0] == 1 and ret[1] == 2)
+        # Item not found in list
+        exceptionRaised = False
+        try:
+            self.queue_manager.get_queue_position("sfm_list","uuid6")
+        except:
+            exceptionRaised = True
+        self.assertTrue(exceptionRaised)
+        # Empty list
+        exceptionRaised = False
+        try:
+            self.queue_manager.get_queue_position("queue_list","uuid4")
+        except:
+            exceptionRaised = True
+        self.assertTrue(exceptionRaised)
+        # Popping item not in list
+        exceptionRaised = False
+        try:
+            self.queue_manager.pop_queue("sfm_list","uuid1")
+        except:
+            exceptionRaised = True
+        self.assertTrue(exceptionRaised)
+
+        # Testing queue length
+        ret=self.queue_manager.get_queue_size("sfm_list")
+        self.assertTrue(ret == 2)
+        ret=self.queue_manager.get_queue_size("queue_list")
+        self.assertTrue(ret == 0)
+        
+        # Clearing queues
+        self.queue_manager.pop_queue("sfm_list")
+        self.queue_manager.pop_queue("sfm_list")
+        self.queue_manager.pop_queue("nerf_list")
+        ret=self.queue_manager.get_queue_size("sfm_list")
+        self.assertTrue(ret == 0)
+        ret=self.queue_manager.get_queue_size("queue_list")
+        self.assertTrue(ret == 0)
+        ret=self.queue_manager.get_queue_size("nerf_list")
+        self.assertTrue(ret == 0)
 
 if __name__=='__main__':
     unittest.main()

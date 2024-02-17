@@ -154,11 +154,12 @@ class WebServer:
             response=make_response(string)
             return response
 
-        # Queueid is either sfm_in nerf_in or queue_in
-        # id is the uuid of the video/job
-        @self.app.route("/queues",methods=["GET"])
+        # Returns the queue position of a task in a queue
+        # queueid: sfm_list, nerf_list, queue_list
+        # id: uuid of task
+        @self.app.route("/queue",methods=["GET"])
         def send_queue_position(queueid: str, id: str):
-            return self.queue_manager.get_queue_position(queueid,id)
+            return make_response(self.queue_manager.get_queue_position(queueid,id))
 
         @self.app.route("/test")
         def test_endpoint():
