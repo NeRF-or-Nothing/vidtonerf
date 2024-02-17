@@ -51,9 +51,9 @@ def main():
     c_service = ClientService(scene_man, rmq_service)
 
     # start listening to incoming requests on the controller <from controllers>
-    server = WebServer(flaskip, args, c_service)
+    server = WebServer(flaskip, args, c_service, queue_man)
 
-    ipfile.close()
+    ipfile.close() 
     server.run()
 
 if __name__ == "__main__":

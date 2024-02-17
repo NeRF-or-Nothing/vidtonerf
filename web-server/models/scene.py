@@ -391,7 +391,7 @@ class QueueListManager:
 
 class SceneManager:
     def __init__(self, mongoip) -> None:
-        client = MongoClient(host="localhost",port=27017,username="admin",password="password123")
+        client = MongoClient(host=mongoip,port=27017,username="admin",password="password123")
         self.db = client["nerfdb"]
         self.collection = self.db["scenes"]
         self.upsert=True

@@ -54,7 +54,8 @@ class RabbitMQService:
         json_job = json.dumps(job)
         self.channel.basic_publish(exchange='', routing_key='sfm-in', body=json_job)
         # add to sfm in queue list to monitor queue size and position
-        self.queue_manager.append_queue("sfm_in",id)
+        self.queue_manager.append_queue("sfm_list",id)
+        self.queue_manager.append_queue("queue_list",id)
            
     def publish_nerf_job(self, id: str, vid: Video, sfm: Sfm):
         """
@@ -78,7 +79,7 @@ class RabbitMQService:
         json_job = json.dumps(combined_job)
         self.channel.basic_publish(exchange='', routing_key='nerf-in', body=json_job)
         # add to nerf in queue list to monitor queue size and position
-        self.queue_manager.append_queue("nerf_in",id)
+        self.queue_manager.append_queue("nerf_list",id)
 
 
     #call
@@ -124,7 +125,7 @@ def digest_finished_sfms(rabbitip, scene_manager: SceneManager, queue_manager: Q
         scene_manager.set_video(id,vid)
 
         #create a QueueListManager to remove from queue
-        queue_manager.pop_queue("sfm_in",id)
+        queue_manager.pop_queue("sfm_list",id)
 
         print("saved finished sfm job")
         new_data = json.dumps(sfm_data)
@@ -178,7 +179,8 @@ def digest_finished_nerfs(rabbitip,scene_manager: SceneManager, queue_manager: Q
         #ch.basic_ack(delivery_tag=method.delivery_tag)
 
         #create a QueueListManager to remove from queue
-        queue_manager.pop_queue("nerf_in",id)
+        queue_manager.pop_queue("nerf_list",id)
+        queue_manager.pop_queue("queue_list",id)
     
     # create unique connection to rabbitmq since pika is NOT thread safe
     rabbitmq_domain = rabbitip

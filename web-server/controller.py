@@ -17,13 +17,13 @@ def is_valid_uuid(value):
         return False
 
 class WebServer:
-    def __init__(self, flaskip, args: argparse.Namespace, cserv: ClientService) -> None:
+    def __init__(self, flaskip, args: argparse.Namespace, cserv: ClientService, queue_man: QueueListManager) -> None:
         self.flaskip = flaskip
         self.app = Flask(__name__)
         self.args = args
         self.cservice = cserv
         self.user_manager=UserManager()
-        self.queue_manager=QueueListManager()
+        self.queue_manager=queue_man
 
     def run(self) -> None:
         self.app.logger.setLevel(
