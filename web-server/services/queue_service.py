@@ -6,6 +6,11 @@ from urllib.parse import urlparse
 import requests
 from flask import url_for
 import time
+import os
+from dotenv import load_dotenv
+
+# Load environment variables from .env file at the root of the project
+load_dotenv()
 
 #TODO: make rabbitmq resistent to failed worker jobs
 
@@ -13,7 +18,7 @@ class RabbitMQService:
     # TODO: Communicate with rabbitmq server on port defined in web-server arguments
     def __init__(self, rabbitip, manager):
         rabbitmq_domain = rabbitip
-        credentials = pika.PlainCredentials('admin', 'password123')
+        credentials = pika.PlainCredentials(os.getenv("RABBITMQ_DEFAULT_USER"), os.getenv("RABBITMQ_DEFAULT_PASS"))
         parameters = pika.ConnectionParameters(rabbitmq_domain, 5672, '/', credentials, heartbeat=300)
         self.queue_manager = manager
         

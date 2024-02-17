@@ -4,8 +4,8 @@ services:
     image: mongo:latest
     container_name: mongodb
     environment:
-      MONGO_INITDB_ROOT_USERNAME: admin
-      MONGO_INITDB_ROOT_PASSWORD: password123
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME} 
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
     ports:
       - 27017:27017
     volumes:
@@ -17,8 +17,8 @@ services:
     container_name: rabbitmq
     image: rabbitmq:3.8-management-alpine
     environment:
-       RABBITMQ_DEFAULT_USER: admin
-       RABBITMQ_DEFAULT_PASS: password123
+       RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER}
+       RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS}
     ports:
        # AMQP protocol port
        - '5672:5672'
