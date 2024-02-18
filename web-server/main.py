@@ -30,7 +30,7 @@ def main():
     # Load environmental 
     load_dotenv()
 
-    rabbitip = os.getenv("RABBITMQ_IP")
+    rabbitip = str(os.getenv("RABBITMQ_IP"))
     flaskip = ipdata["flaskdomain"]
 
     # Shared Database manager <from models>
