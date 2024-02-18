@@ -1,5 +1,8 @@
 import unittest
 import scene
+#from services.queue_service import k_mean_sampling
+import os
+from dotenv import load_dotenv
 
 class userManagerTest(unittest.TestCase):
     def setUp(self):                            #fires before the test starts
@@ -64,9 +67,24 @@ class userManagerTest(unittest.TestCase):
         self.assertTrue(type(user2)==int)
         self.assertTrue(user2==1)
 
+
+
+    def test_k_sampling(self):
+        test1 = {"Frames": [] }
+
+class environmentTest(unittest.TestCase):
+    def setUp(self):                            #fires before the test starts
+        load_dotenv()
+
+    def test_environment(self):
+        assert("admin" == os.getenv("RABBITMQ_DEFAULT_USER") == os.getenv("MONGO_INITDB_ROOT_USERNAME"))
+        assert("password123" == os.getenv("RABBITMQ_DEFAULT_PASS") == os.getenv("MONGO_INITDB_ROOT_PASSWORD"))
+        assert("127.0.0.1" == os.getenv("MONGO_IP") ==  os.getenv("RABBITMQ_IP"))
+
+
 class queueListManagerTest(unittest.TestCase):
     def setUp(self):                            #fires before the test starts
-        self.queue_manager = scene.QueueListManager("localhost")
+        self.queue_manager = scene.QueueListManager()
         self.queue_manager.collection.drop()
 
     def test_queues(self):

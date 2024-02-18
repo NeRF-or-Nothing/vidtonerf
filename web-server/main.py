@@ -30,7 +30,7 @@ def main():
     # Load environmental 
     load_dotenv()
 
-    rabbitip = os.getenv("RABBITMQ_IP")
+    rabbitip = str(os.getenv("RABBITMQ_IP"))
     flaskip = ipdata["flaskdomain"]
 
     # Shared Database manager <from models>
@@ -38,7 +38,7 @@ def main():
     scene_man = SceneManager()
 
     # QueueListManager to manage list positions,shared
-    queue_man = QueueListManager(mongoip)
+    queue_man = QueueListManager()
     
     # Rabbitmq service to post new jobs to the workers <from services>
     rmq_service = RabbitMQService(rabbitip, queue_man)
