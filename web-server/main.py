@@ -6,7 +6,7 @@ Afterwards, the Web Server is started.
 from argparser import create_arguments
 from controller import WebServer
 import threading
-from models.scene import SceneManager
+from models.scene import SceneManager, QueueListManager
 from services.queue_service import RabbitMQService, digest_finished_sfms, digest_finished_nerfs
 from services.scene_service import ClientService
 from services.clean_service import cleanup
@@ -37,12 +37,15 @@ def main():
     # SceneManager shared across threads since it is thread safe
     scene_man = SceneManager()
 
+    # QueueListManager to manage list positions,shared
+    queue_man = QueueListManager()
+    
     # Rabbitmq service to post new jobs to the workers <from services>
-    rmq_service = RabbitMQService(rabbitip)
+    rmq_service = RabbitMQService(rabbitip, queue_man)
 
     # Starting async operations to pull finished jobs from rabbitmq <from services>
-    sfm_output_thread = threading.Thread(target=digest_finished_sfms, args=(rabbitip,scene_man,))
-    nerf_output_thread = threading.Thread(target=digest_finished_nerfs, args=(rabbitip,scene_man,))
+    sfm_output_thread = threading.Thread(target=digest_finished_sfms, args=(rabbitip,scene_man,queue_man))
+    nerf_output_thread = threading.Thread(target=digest_finished_nerfs, args=(rabbitip,scene_man,queue_man))
     sfm_output_thread.start()
     nerf_output_thread.start()
 
@@ -52,9 +55,9 @@ def main():
     c_service = ClientService(scene_man, rmq_service)
 
     # start listening to incoming requests on the controller <from controllers>
-    server = WebServer(flaskip, args, c_service)
+    server = WebServer(flaskip, args, c_service, queue_man)
 
-    ipfile.close()
+    ipfile.close() 
     server.run()
 
 if __name__ == "__main__":

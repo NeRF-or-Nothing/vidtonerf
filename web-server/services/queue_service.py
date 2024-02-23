@@ -1,6 +1,6 @@
 
 import pika, os, logging
-from models.scene import Video, Sfm, Nerf, SceneManager
+from models.scene import Video, Sfm, Nerf, SceneManager, QueueListManager
 import json
 from urllib.parse import urlparse
 import requests
@@ -20,10 +20,11 @@ load_dotenv()
 
 class RabbitMQService:
     # TODO: Communicate with rabbitmq server on port defined in web-server arguments
-    def __init__(self, rabbitip):
+    def __init__(self, rabbitip, manager):
         rabbitmq_domain = rabbitip
         credentials = pika.PlainCredentials(str(os.getenv("RABBITMQ_DEFAULT_USER")), str(os.getenv("RABBITMQ_DEFAULT_PASS")))
         parameters = pika.ConnectionParameters(rabbitmq_domain, 5672, '/', credentials, heartbeat=300)
+        self.queue_manager = manager
         
         #2 minute timer
         timeout = time.time() + 60 * 2
@@ -45,6 +46,7 @@ class RabbitMQService:
         self.base_url = "http://localhost:5000/"
         # for docker
         self.base_url = "http://host.docker.internal:5000/"
+        # for queue list positions
 
     def to_url(self,file_path):
         return self.base_url+"/worker-data/"+file_path
@@ -60,6 +62,9 @@ class RabbitMQService:
         }
         json_job = json.dumps(job)
         self.channel.basic_publish(exchange='', routing_key='sfm-in', body=json_job)
+        # add to sfm_list and queue_list (first received, goes into overarching queue) queue manager
+        self.queue_manager.append_queue("sfm_list",id)
+        self.queue_manager.append_queue("queue_list",id)
            
     def publish_nerf_job(self, id: str, vid: Video, sfm: Sfm):
         """
@@ -82,6 +87,8 @@ class RabbitMQService:
         combined_job = {**job, **sfm_data}
         json_job = json.dumps(combined_job)
         self.channel.basic_publish(exchange='', routing_key='nerf-in', body=json_job)
+        # add to nerf_list queue manager
+        self.queue_manager.append_queue("nerf_list",id)
 
 
     #call
@@ -146,7 +153,8 @@ def k_mean_sampling(frames, size=100):
 
     return return_array
 
-def digest_finished_sfms(rabbitip, scene_manager: SceneManager):
+def digest_finished_sfms(rabbitip, scene_manager: SceneManager, queue_manager: QueueListManager):
+
     def process_sfm_job(ch,method,properties,body):
         #load queue object
         sfm_data = json.loads(body.decode())
@@ -180,6 +188,9 @@ def digest_finished_sfms(rabbitip, scene_manager: SceneManager):
         sfm = Sfm.from_dict(sfm_data)
         scene_manager.set_sfm(id,sfm)
         scene_manager.set_video(id,vid)
+
+        #remove video from sfm_list queue manager
+        queue_manager.pop_queue("sfm_list",id)
 
         print("saved finished sfm job")
         new_data = json.dumps(sfm_data)
@@ -215,7 +226,7 @@ def digest_finished_sfms(rabbitip, scene_manager: SceneManager):
             continue
 
 
-def digest_finished_nerfs(rabbitip,scene_manager: SceneManager):
+def digest_finished_nerfs(rabbitip,scene_manager: SceneManager, queue_manager: QueueListManager):
 
     def process_nerf_job(ch,method,properties,body):
         nerf_data = json.loads(body.decode())
@@ -231,6 +242,10 @@ def digest_finished_nerfs(rabbitip,scene_manager: SceneManager):
         nerf.from_dict(nerf_data)
         scene_manager.set_nerf(id, nerf)
         #ch.basic_ack(delivery_tag=method.delivery_tag)
+
+        #remove video from nerf_list and queue_list (end of full process) queue manager
+        queue_manager.pop_queue("nerf_list",id)
+        queue_manager.pop_queue("queue_list",id)
     
     # create unique connection to rabbitmq since pika is NOT thread safe
     rabbitmq_domain = rabbitip
