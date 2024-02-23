@@ -97,6 +97,7 @@ def k_mean_sampling(frames, size=100):
     #TODO Make this input passed in, with default value 100
     CLUSTERS = size
 
+<<<<<<< Updated upstream
     extrins = []
     angles = []
     for f in frames["frames"]:
@@ -124,6 +125,9 @@ def k_mean_sampling(frames, size=100):
         angles.append(s)
 
     km = sklearn.cluster.k_means(X=angles, n_clusters=CLUSTERS, n_init=10)
+=======
+def digest_finished_sfms(rabbitip, rmqservice: RabbitMQService, scene_manager: SceneManager):
+>>>>>>> Stashed changes
 
     seen_numbers=[]
     for i in km[1]:
@@ -184,6 +188,9 @@ def digest_finished_sfms(rabbitip, scene_manager: SceneManager):
         print("saved finished sfm job")
         new_data = json.dumps(sfm_data)
         ch.basic_ack(delivery_tag=method.delivery_tag)
+        
+        # Publish new job to nerf-in
+        rmqservice.publish_nerf_job(id, vid, sfm)
 
     # create unique connection to rabbitmq since pika is NOT thread safe
     rabbitmq_domain = rabbitip
@@ -215,7 +222,7 @@ def digest_finished_sfms(rabbitip, scene_manager: SceneManager):
             continue
 
 
-def digest_finished_nerfs(rabbitip,scene_manager: SceneManager):
+def digest_finished_nerfs(rabbitip, rmqservice: RabbitMQService, scene_manager: SceneManager):
 
     def process_nerf_job(ch,method,properties,body):
         nerf_data = json.loads(body.decode())

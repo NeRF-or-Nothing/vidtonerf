@@ -1,6 +1,7 @@
 import argparse
 import os
 from pickle import TRUE
+import time
 #import magic
 from uuid import uuid4, UUID
 

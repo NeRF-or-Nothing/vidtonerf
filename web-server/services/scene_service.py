@@ -33,7 +33,9 @@ class ClientService:
         videos_folder = "data/raw/videos"
         current_directory = os.getcwd()
 
-        video_file_path = os.path.join(current_directory, videos_folder)
+        #video_file_path = os.path.join(current_directory, videos_folder)
+        video_file_path = videos_folder
+        
         if not os.path.exists(video_file_path):
             # If the path does not exist, create it
             os.makedirs(video_file_path)

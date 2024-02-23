@@ -41,8 +41,9 @@ def main():
     rmq_service = RabbitMQService(rabbitip)
 
     # Starting async operations to pull finished jobs from rabbitmq <from services>
-    sfm_output_thread = threading.Thread(target=digest_finished_sfms, args=(rabbitip,scene_man,))
-    nerf_output_thread = threading.Thread(target=digest_finished_nerfs, args=(rabbitip,scene_man,))
+    # Pass rmq service to the threads to allow them to publish new jobs (thread safe)
+    sfm_output_thread = threading.Thread(target=digest_finished_sfms, args=(rabbitip, rmq_service, scene_man,))
+    nerf_output_thread = threading.Thread(target=digest_finished_nerfs, args=(rabbitip, rmq_service, scene_man,))
     sfm_output_thread.start()
     nerf_output_thread.start()
 
