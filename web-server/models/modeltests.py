@@ -6,8 +6,10 @@ from dotenv import load_dotenv
 
 class userManagerTest(unittest.TestCase):
     def setUp(self):                            #fires before the test starts
-        self.user_manager = scene.UserManager()
+        print("START SETUP FOR TESTS")
+        self.user_manager = scene.UserManager(True)
         self.user_manager.collection.drop()
+        print("FINISHED USER TEST SETUP")
 
     def test_set_user(self):
         user = scene.User('me','pass123',"1234")
@@ -79,15 +81,17 @@ class environmentTest(unittest.TestCase):
     def test_environment(self):
         assert("admin" == os.getenv("RABBITMQ_DEFAULT_USER") == os.getenv("MONGO_INITDB_ROOT_USERNAME"))
         assert("password123" == os.getenv("RABBITMQ_DEFAULT_PASS") == os.getenv("MONGO_INITDB_ROOT_PASSWORD"))
-        assert("127.0.0.1" == os.getenv("MONGO_IP") ==  os.getenv("RABBITMQ_IP"))
+        assert("mongodb" == os.getenv("MONGO_IP"))
+        assert("rabbitmq" == os.getenv("RABBITMQ_IP"))
 
 
 class queueListManagerTest(unittest.TestCase):
     def setUp(self):                            #fires before the test starts
-        self.queue_manager = scene.QueueListManager()
+        self.queue_manager = scene.QueueListManager(True)
         self.queue_manager.collection.drop()
 
     def test_queues(self):
+        print("APPENDING QUEUES")
         self.queue_manager.append_queue("sfm_list","uuid1")
         self.queue_manager.append_queue("sfm_list","uuid2")
         self.queue_manager.append_queue("sfm_list","uuid5")
@@ -100,7 +104,7 @@ class queueListManagerTest(unittest.TestCase):
         ret=self.queue_manager.get_queue_position("sfm_list","uuid2")
         print("uuid2 is in sfm_list position {} out of {}.".format(ret[0],ret[1]))
         self.assertTrue(ret[0] == 1 and ret[1] == 4)
-        
+        print("POPPING QUEUES")
         # Popping queue positions
         self.queue_manager.pop_queue("sfm_list")
         self.queue_manager.pop_queue("sfm_list","uuid6")
@@ -110,6 +114,7 @@ class queueListManagerTest(unittest.TestCase):
         print("uuid5 is in sfm_list position {} out of {}.".format(ret[0],ret[1]))
         self.assertTrue(ret[0] == 1 and ret[1] == 2)
         # Item not found in list
+        print("TESTING QUEUE EXCEPTIONS")
         exceptionRaised = False
         try:
             self.queue_manager.get_queue_position("sfm_list","uuid6")
@@ -130,13 +135,13 @@ class queueListManagerTest(unittest.TestCase):
         except:
             exceptionRaised = True
         self.assertTrue(exceptionRaised)
-
+        print("TESTING QUEUE LENGTHS")
         # Testing queue length
         ret=self.queue_manager.get_queue_size("sfm_list")
         self.assertTrue(ret == 2)
         ret=self.queue_manager.get_queue_size("queue_list")
         self.assertTrue(ret == 0)
-        
+        print("CLEARING QUEUES")
         # Clearing queues
         self.queue_manager.pop_queue("sfm_list")
         self.queue_manager.pop_queue("sfm_list")
@@ -147,6 +152,7 @@ class queueListManagerTest(unittest.TestCase):
         self.assertTrue(ret == 0)
         ret=self.queue_manager.get_queue_size("nerf_list")
         self.assertTrue(ret == 0)
+        print("QUEUE TESTS SUCCESSFUL")
 
 if __name__=='__main__':
     unittest.main()

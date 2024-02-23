@@ -62,7 +62,7 @@ class RabbitMQService:
         }
         json_job = json.dumps(job)
         self.channel.basic_publish(exchange='', routing_key='sfm-in', body=json_job)
-        # add to sfm in queue list to monitor queue size and position
+        # add to sfm_list and queue_list (first received, goes into overarching queue) queue manager
         self.queue_manager.append_queue("sfm_list",id)
         self.queue_manager.append_queue("queue_list",id)
            
@@ -87,7 +87,7 @@ class RabbitMQService:
         combined_job = {**job, **sfm_data}
         json_job = json.dumps(combined_job)
         self.channel.basic_publish(exchange='', routing_key='nerf-in', body=json_job)
-        # add to nerf in queue list to monitor queue size and position
+        # add to nerf_list queue manager
         self.queue_manager.append_queue("nerf_list",id)
 
 
@@ -189,7 +189,7 @@ def digest_finished_sfms(rabbitip, scene_manager: SceneManager, queue_manager: Q
         scene_manager.set_sfm(id,sfm)
         scene_manager.set_video(id,vid)
 
-        #create a QueueListManager to remove from queue
+        #remove video from sfm_list queue manager
         queue_manager.pop_queue("sfm_list",id)
 
         print("saved finished sfm job")
@@ -243,7 +243,7 @@ def digest_finished_nerfs(rabbitip,scene_manager: SceneManager, queue_manager: Q
         scene_manager.set_nerf(id, nerf)
         #ch.basic_ack(delivery_tag=method.delivery_tag)
 
-        #create a QueueListManager to remove from queue
+        #remove video from nerf_list and queue_list (end of full process) queue manager
         queue_manager.pop_queue("nerf_list",id)
         queue_manager.pop_queue("queue_list",id)
     

@@ -317,8 +317,10 @@ class QueueList:
 # QueueListManager keeps track of lists (queues) in parallel with RabbitMQ to report queue status
 # VALID QUEUE IDS: sfm_list nerf_list queue_lit (queue_list is the overarching process)
 class QueueListManager:
-    def __init__(self) -> None:
-        client = MongoClient(host=str(os.getenv("MONGO_IP")),port=27017,username=str(os.getenv("MONGO_INITDB_ROOT_USERNAME")),\
+    def __init__(self, unittest=False) -> None:
+        # unittest=True implies this runs on localhost for unit testing
+        mongoip = "localhost" if unittest else str(os.getenv("MONGO_IP"))
+        client = MongoClient(host=mongoip,port=27017,username=str(os.getenv("MONGO_INITDB_ROOT_USERNAME")),\
                              password=str(os.getenv("MONGO_INITDB_ROOT_PASSWORD")))
         self.db = client["nerfdb"]
         self.collection = self.db["queues"]
@@ -461,8 +463,10 @@ class SceneManager:
         
 
 class UserManager:
-    def __init__(self) -> None:
-        client = MongoClient(host=str(os.getenv("MONGO_IP")),port=27017,username=str(os.getenv("MONGO_INITDB_ROOT_USERNAME")),\
+    def __init__(self,unittest=False) -> None:
+        # unittest=True implies this runs on localhost for unit testing
+        mongoip = "localhost" if unittest else str(os.getenv("MONGO_IP"))
+        client = MongoClient(host=mongoip,port=27017,username=str(os.getenv("MONGO_INITDB_ROOT_USERNAME")),\
                              password=str(os.getenv("MONGO_INITDB_ROOT_PASSWORD")))
         self.db = client["nerfdb"]
         self.collection = self.db["users"]

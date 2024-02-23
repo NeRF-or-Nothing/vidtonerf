@@ -48,7 +48,7 @@ class WebServer:
             given a cookie to see if the video is done periodically
             """
             video_file = request.files.get("file")
-            print("VIDEO FILE", video_file)
+            
             # TODO: UUID4 is cryptographically secure on CPython, but this is not guaranteed in the specifications.
             # Might want to change this.
             # TODO: Don't assume videos are in mp4 format
