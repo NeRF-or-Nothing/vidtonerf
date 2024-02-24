@@ -1,6 +1,6 @@
 
 import pika, os, logging
-from models.scene import Video, Sfm, Nerf, SceneManager
+from scene import Video, Sfm, Nerf, SceneManager
 import json
 from urllib.parse import urlparse
 import requests
@@ -11,7 +11,7 @@ from dotenv import load_dotenv
 import numpy as np
 import math
 import random
-import sklearn
+from sklearn.cluster import k_means
 
 # Load environment variables from .env file at the root of the project
 load_dotenv()
@@ -123,7 +123,7 @@ def k_mean_sampling(frames, size=100):
 
         angles.append(s)
 
-    km = sklearn.cluster.k_means(X=angles, n_clusters=CLUSTERS, n_init=10)
+    km = k_means(X=angles, n_clusters=CLUSTERS, n_init=10)
 
     seen_numbers=[]
     for i in km[1]:
@@ -173,7 +173,7 @@ def digest_finished_sfms(rabbitip, scene_manager: SceneManager):
         k_sampled = k_mean_sampling(sfm_data)
 
         # Use those frames to revise list of frames used in sfm generation
-        sfm_data['frames'] = [sfm_data['frames'][i] for i in k_sampled]
+        #sfm_data['frames'] = [sfm_data['frames'][i] for i in k_sampled]
 
         #call SceneManager to store to database
         vid = Video.from_dict(sfm_data)
