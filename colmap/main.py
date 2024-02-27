@@ -14,7 +14,7 @@ from multiprocessing import Process
 import os
 import argparse
 import sys
-
+from dotenv import load_dotenv
 
 app = Flask(__name__)
 # base_url = "http://host.docker.internal:5000/"
@@ -76,12 +76,12 @@ def run_full_sfm_pipeline(id, video_file_path, input_data_dir, output_data_dir):
 
 
 def colmap_worker():
+    load_dotenv()
     input_data_dir = "data/inputs/"
     output_data_dir = "data/outputs/"
     Path(f"{input_data_dir}").mkdir(parents=True, exist_ok=True)
     Path(f"{output_data_dir}").mkdir(parents=True, exist_ok=True)
 
-    
     rabbitmq_domain = "rabbitmq"
     credentials = pika.PlainCredentials(str(os.getenv("RABBITMQ_DEFAULT_USER")), str(os.getenv("RABBITMQ_DEFAULT_PASS")))
     parameters = pika.ConnectionParameters(

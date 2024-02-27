@@ -11,7 +11,7 @@ from dotenv import load_dotenv
 import numpy as np
 import math
 import random
-import sklearn
+import sklearn.cluster
 
 # Load environment variables from .env file at the root of the project
 load_dotenv()
@@ -68,8 +68,8 @@ class RabbitMQService:
         """
         job = {
             "id": id,
-            "vid_width": vid.width,
-            "vid_height": vid.height
+            "vid_width": vid.width if vid.width else 0,
+            "vid_height": vid.height if vid.height else 0,
         }
 
         # replace relative filepaths with URLS
@@ -93,11 +93,11 @@ class RabbitMQService:
         # "frames" = array of urls and extrinsic_matrix[float]
     #   channel.basic.consume(on_message_callback = callback_sfm_job, queue = sfm_out)
 
+
 def k_mean_sampling(frames, size=100):
     #TODO Make this input passed in, with default value 100
     CLUSTERS = size
 
-<<<<<<< Updated upstream
     extrins = []
     angles = []
     for f in frames["frames"]:
@@ -125,9 +125,6 @@ def k_mean_sampling(frames, size=100):
         angles.append(s)
 
     km = sklearn.cluster.k_means(X=angles, n_clusters=CLUSTERS, n_init=10)
-=======
-def digest_finished_sfms(rabbitip, rmqservice: RabbitMQService, scene_manager: SceneManager):
->>>>>>> Stashed changes
 
     seen_numbers=[]
     for i in km[1]:
@@ -150,10 +147,13 @@ def digest_finished_sfms(rabbitip, rmqservice: RabbitMQService, scene_manager: S
 
     return return_array
 
-def digest_finished_sfms(rabbitip, scene_manager: SceneManager):
+
+def digest_finished_sfms(rabbitip, rmqservice: RabbitMQService, scene_manager: SceneManager):
     def process_sfm_job(ch,method,properties,body):
         #load queue object
         sfm_data = json.loads(body.decode())
+        print(f"DEBUG: Running New Job With ID: {sfm_data['id']}",flush=True)
+        print(f"DEBUG: job_data = {sfm_data}",flush=True)
         id = sfm_data['id']
 
         #convert each url to filepath
@@ -174,10 +174,10 @@ def digest_finished_sfms(rabbitip, scene_manager: SceneManager):
             sfm_data['frames'][i]["file_path"] = file_path
         
         # Get indexes of k mean grouped frames
-        k_sampled = k_mean_sampling(sfm_data)
+        #k_sampled = k_mean_sampling(sfm_data)
 
         # Use those frames to revise list of frames used in sfm generation
-        sfm_data['frames'] = [sfm_data['frames'][i] for i in k_sampled]
+        #sfm_data['frames'] = [sfm_data['frames'][i] for i in k_sampled]
 
         #call SceneManager to store to database
         vid = Video.from_dict(sfm_data)
@@ -192,6 +192,7 @@ def digest_finished_sfms(rabbitip, scene_manager: SceneManager):
         # Publish new job to nerf-in
         rmqservice.publish_nerf_job(id, vid, sfm)
 
+    print("DEBUG: digest_finished_sfms", flush=True)
     # create unique connection to rabbitmq since pika is NOT thread safe
     rabbitmq_domain = rabbitip
     credentials = pika.PlainCredentials(str(os.getenv("RABBITMQ_DEFAULT_USER")), str(os.getenv("RABBITMQ_DEFAULT_PASS")))
