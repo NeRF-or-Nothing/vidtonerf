@@ -11,7 +11,9 @@ from dotenv import load_dotenv
 import numpy as np
 import math
 import random
-from sklearn.cluster import k_means
+import sklearn.cluster
+from kneed import KneeLocator
+
 
 # Load environment variables from .env file at the root of the project
 load_dotenv()
@@ -93,6 +95,32 @@ class RabbitMQService:
         # "frames" = array of urls and extrinsic_matrix[float]
     #   channel.basic.consume(on_message_callback = callback_sfm_job, queue = sfm_out)
 
+def find_elbow_point(data, max_k=35):
+    # Within-Cluster Sum of Squares (WCSS)
+    wcss = []
+
+    # Set a maximum limit for computational efficiency
+    max_k = min(len(data), max_k)  
+
+    # Check if max_k is very large
+    print(math.floor(math.sqrt(len(data))))
+    max_k = max(max_k, math.floor(math.sqrt(len(data))))
+
+    # Calculate WCSS for different values of k
+    for k in range(1, max_k + 1):
+        kmeans = sklearn.cluster.KMeans(n_clusters=k, init='k-means++', max_iter=300, n_init=10, random_state=0)
+        kmeans.fit(data)
+        wcss.append(kmeans.inertia_)
+
+    # Fill in x values for elbow function 
+    x = range(1, len(wcss)+1)
+
+    # Determine Elbow point of graph
+    elbow = kneed.KneeLocator(x, wcss, curve = 'convex', direction='decreasing')
+    
+    # Returns elbow point (along with x and y values for graph testing)
+    return elbow.knee, x, wcss
+
 def k_mean_sampling(frames, size=100):
     #TODO Make this input passed in, with default value 100
     CLUSTERS = size
@@ -123,7 +151,9 @@ def k_mean_sampling(frames, size=100):
 
         angles.append(s)
 
-    km = k_means(X=angles, n_clusters=CLUSTERS, n_init=10)
+    elbow_point, _, _ = find_elbow_point(angles)
+
+    km = sklearn.cluster.k_means(X=angles, n_clusters=elbow_point, n_init=10)
 
     seen_numbers=[]
     for i in km[1]:
