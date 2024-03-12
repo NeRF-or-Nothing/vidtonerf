@@ -12,7 +12,7 @@ import numpy as np
 import math
 import random
 import sklearn.cluster
-from kneed import KneeLocator
+import kneed
 
 
 # Load environment variables from .env file at the root of the project
@@ -103,7 +103,6 @@ def find_elbow_point(data, max_k=35):
     max_k = min(len(data), max_k)  
 
     # Check if max_k is very large
-    print(math.floor(math.sqrt(len(data))))
     max_k = max(max_k, math.floor(math.sqrt(len(data))))
 
     # Calculate WCSS for different values of k
@@ -161,10 +160,10 @@ def k_mean_sampling(frames, size=100):
             seen_numbers.append(i)
 
     #TODO account for this
-    if (len(seen_numbers) != CLUSTERS):
+    if (len(seen_numbers) != elbow_point):
         print("TOO FEW CLUSTERS")
 
-    cluster_array = [ [] for _ in range(CLUSTERS) ]
+    cluster_array = [ [] for _ in range(elbow_point) ]
     return_array = []
 
     for i in range(len(angles)):
@@ -203,7 +202,7 @@ def digest_finished_sfms(rabbitip, scene_manager: SceneManager):
         k_sampled = k_mean_sampling(sfm_data)
 
         # Use those frames to revise list of frames used in sfm generation
-        #sfm_data['frames'] = [sfm_data['frames'][i] for i in k_sampled]
+        sfm_data['frames'] = [sfm_data['frames'][i] for i in k_sampled]
 
         #call SceneManager to store to database
         vid = Video.from_dict(sfm_data)
