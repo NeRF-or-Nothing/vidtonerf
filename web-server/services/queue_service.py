@@ -121,7 +121,6 @@ def find_elbow_point(data, max_k=35):
     return elbow.knee, x, wcss
 
 def k_mean_sampling(frames, size=100):
-    #TODO Make this input passed in, with default value 100
     CLUSTERS = size
 
     extrins = []
@@ -152,28 +151,40 @@ def k_mean_sampling(frames, size=100):
 
     elbow_point, _, _ = find_elbow_point(angles)
 
-    km = sklearn.cluster.k_means(X=angles, n_clusters=elbow_point, n_init=10)
+    km = sklearn.cluster.Kmeans(n_clusters=elbow_point, n_init=10)
+    km.fit(angles)
 
-    seen_numbers=[]
-    for i in km[1]:
-        if (i not in seen_numbers):
-            seen_numbers.append(i)
-
-    #TODO account for this
-    if (len(seen_numbers) != elbow_point):
-        print("TOO FEW CLUSTERS")
+    labels = km.labels
+    if (len(set(labels)) != elbow_point):
+        print("Error with clustering")
 
     cluster_array = [ [] for _ in range(elbow_point) ]
-    return_array = []
 
     for i in range(len(angles)):
-        cluster_array[km[1][i]].append(i)
+        cluster_array[labels[i]].append(i)
 
-    #TODO instead of being completely random, take the point closest to the centroid
-    for i in range(len(cluster_array)):
-        return_array.append(cluster_array[i][random.randint(0,len(cluster_array[i])-1)])
+    centroids = km.cluster_centers_
+    closest_frames = []
 
-    return return_array
+    # Find the frame closest to each centroid in each cluster
+    for idx, cluster_indices in enumerate(cluster_array):
+
+        # Extract data points belonging to the current cluster
+        cluster_data = np.array([angles[i] for i in cluster_indices])
+        
+        # Calculate the centroid of the current cluster
+        centroid = centroids[idx]
+
+        # Calculate the distances between each data point and the centroid
+        distances = np.linalg.norm(cluster_data - centroid, axis=1)
+
+        # Find the index of the closest frame within the current cluster
+        closest_frame_index = cluster_indices[np.argmin(distances)]
+        
+        # Append the index of the closest frame to the list
+        closest_frames.append(closest_frame_index)
+
+    return closest_frames
 
 def digest_finished_sfms(rabbitip, scene_manager: SceneManager):
     def process_sfm_job(ch,method,properties,body):
