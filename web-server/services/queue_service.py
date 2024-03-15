@@ -184,8 +184,9 @@ def digest_finished_sfms(rabbitip, rmqservice: RabbitMQService, scene_manager: S
         sfm = Sfm.from_dict(sfm_data)
         scene_manager.set_sfm(id,sfm)
         scene_manager.set_video(id,vid)
+        print(f"DEBUG: saved sfm job with id: {id}",flush=True)
 
-        print("saved finished sfm job")
+        print("saved finished sfm job",flush=True)
         new_data = json.dumps(sfm_data)
         ch.basic_ack(delivery_tag=method.delivery_tag)
         
@@ -226,8 +227,11 @@ def digest_finished_sfms(rabbitip, rmqservice: RabbitMQService, scene_manager: S
 def digest_finished_nerfs(rabbitip, rmqservice: RabbitMQService, scene_manager: SceneManager):
 
     def process_nerf_job(ch,method,properties,body):
+        print("DEBUG: digest_finished_nerfs called", flush=True)
         nerf_data = json.loads(body.decode())
+        print(f"DEBUG: received nerf job with id: {nerf_data['id']}", flush=True)
         video = requests.get(nerf_data['rendered_video_path'])
+        print(f"DEBUG: worker_path = {nerf_data['rendered_video_path']}", flush=True)
         filepath = "data/nerf/" 
         os.mkdir(filepath, exist_ok=True)
         filepath = os.path.join(filepath,+f"{id}.mp4" )
