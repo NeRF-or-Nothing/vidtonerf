@@ -64,6 +64,21 @@ services:
       networks:
         - backend 
       command: python3.10 main.py --config=configs/default.txt
+  
+  nerf-worker:
+
+      image: nerf-worker-img
+      container_name: nerf-worker
+      depends_on:
+        - rabbitmq
+      volumes:
+        - ./TensoRF:/TensoRF
+      
+      ports: 
+        - 5200:5200
+      networks:
+        - backend
+      command: python3.10 main.py
 
 networks:
   backend:
