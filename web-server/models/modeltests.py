@@ -1,6 +1,5 @@
 import unittest
 import scene
-#from services.queue_service import k_mean_sampling
 import os
 from dotenv import load_dotenv
 
@@ -70,15 +69,13 @@ class userManagerTest(unittest.TestCase):
         self.assertTrue(user2==1)
 
 
-
-    def test_k_sampling(self):
-        test1 = {"Frames": [] }
-
 class environmentTest(unittest.TestCase):
     def setUp(self):                            #fires before the test starts
         load_dotenv()
 
     def test_environment(self):
+        print("Username:", os.getenv("RABBITMQ_DEFAULT_USER"))
+        print("Password: ", os.getenv("MONGO_INITDB_ROOT_PASSWORD"))
         assert("admin" == os.getenv("RABBITMQ_DEFAULT_USER") == os.getenv("MONGO_INITDB_ROOT_USERNAME"))
         assert("password123" == os.getenv("RABBITMQ_DEFAULT_PASS") == os.getenv("MONGO_INITDB_ROOT_PASSWORD"))
         assert("mongodb" == os.getenv("MONGO_IP"))
