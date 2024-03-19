@@ -48,7 +48,15 @@ def run_full_sfm_pipeline(id, video_file_path, input_data_dir, output_data_dir):
     imgs_folder = os.path.join(output_path, "imgs")
     print(video_file_path)
 
-    split_video_into_frames(video_file_path, imgs_folder, 100)
+    split_status = split_video_into_frames(video_file_path, imgs_folder, 100)
+    # Catches flag for blurriness
+    if split_status == 4:
+        print("ERROR: Video is too blurry. Please try again.")
+        # motion_data flag option determines the status of the job
+        # flag = 4 means the video was too blurry
+        motion_data = {"flag":4,"id":id}
+        return motion_data, None
+
     # imgs are now in output_data_dir/id
 
     # (2) colmap_runner.py
@@ -67,6 +75,7 @@ def run_full_sfm_pipeline(id, video_file_path, input_data_dir, output_data_dir):
     extract_position_data(initial_motion_path, parsed_motion_path)
     motion_data = get_json_matrices(camera_stats_path, parsed_motion_path)
     motion_data["id"] = id
+    motion_data["flag"] = 0
 
     # Save copy of motion data
     with open(os.path.join(output_path, "transforms_data.json"), "w") as outfile:
@@ -112,7 +121,15 @@ def colmap_worker():
         motion_data, imgs_folder = run_full_sfm_pipeline(
             id, video_file_path, input_data_dir, output_data_dir
         )
-
+        # Catch incomplete videos by flag != 1 and return here
+        if motion_data["flag"] != 0:
+            print("An error was found! Job returning.")
+            channel.basic_publish(
+            exchange="", routing_key="sfm-out", body=json.dumps(motion_data)
+            )
+            ch.basic_ack(delivery_tag=method.delivery_tag)
+            return
+        
         # create links to local data to serve
         for i, frame in enumerate(motion_data["frames"]):
             file_name = frame["file_path"]

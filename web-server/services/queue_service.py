@@ -158,36 +158,41 @@ def digest_finished_sfms(rabbitip, scene_manager: SceneManager, queue_manager: Q
     def process_sfm_job(ch,method,properties,body):
         #load queue object
         sfm_data = json.loads(body.decode())
+        flag = sfm_data['flag']
         id = sfm_data['id']
-
+        # Process frames only if video is valid (!= 1)
+        if(flag == 1):
         #convert each url to filepath
         #store png 
-        for i,fr_ in enumerate(sfm_data['frames']):
-            # TODO: This code trusts the file extensions from the worker
-            # TODO: handle files not found
-            url = fr_['file_path']
-            img = requests.get(url)
-            url_path = urlparse(fr_['file_path']).path
-            filename = url_path.split("/")[-1]
-            file_path =  "data/sfm/" + id 
-            os.makedirs(file_path, exist_ok=True) 
-            file_path += "/" + filename
-            open(file_path,"wb").write(img.content)
+            for i,fr_ in enumerate(sfm_data['frames']):
+                # TODO: This code trusts the file extensions from the worker
+                # TODO: handle files not found
+                url = fr_['file_path']
+                img = requests.get(url)
+                url_path = urlparse(fr_['file_path']).path
+                filename = url_path.split("/")[-1]
+                file_path =  "data/sfm/" + id 
+                os.makedirs(file_path, exist_ok=True) 
+                file_path += "/" + filename
+                open(file_path,"wb").write(img.content)
 
-            path = os.path.join(os.getcwd(), file_path)
-            sfm_data['frames'][i]["file_path"] = file_path
-        
-        # Get indexes of k mean grouped frames
-        k_sampled = k_mean_sampling(sfm_data)
+                path = os.path.join(os.getcwd(), file_path)
+                sfm_data['frames'][i]["file_path"] = file_path
 
-        # Use those frames to revise list of frames used in sfm generation
-        sfm_data['frames'] = [sfm_data['frames'][i] for i in k_sampled]
+            # Get indexes of k mean grouped frames
+            k_sampled = k_mean_sampling(sfm_data)
 
-        #call SceneManager to store to database
-        vid = Video.from_dict(sfm_data)
-        sfm = Sfm.from_dict(sfm_data)
-        scene_manager.set_sfm(id,sfm)
-        scene_manager.set_video(id,vid)
+            # Use those frames to revise list of frames used in sfm generation
+            sfm_data['frames'] = [sfm_data['frames'][i] for i in k_sampled]
+
+            #call SceneManager to store to database
+            vid = Video.from_dict(sfm_data)
+            sfm = Sfm.from_dict(sfm_data)
+            scene_manager.set_sfm(id,sfm)
+            scene_manager.set_video(id,vid)
+
+        # TODO: Do NOT add a task to nerf queue if flag is not 1
+        # TODO: Do NOT save empty video with flag (bad video)
 
         #remove video from sfm_list queue manager
         queue_manager.pop_queue("sfm_list",id)
