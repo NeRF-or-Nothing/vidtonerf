@@ -1,6 +1,7 @@
 import subprocess
 import os
 import sys
+import logging
 from pathlib import Path
 
 #Usage: python colmap_runner.py --flags
@@ -39,12 +40,21 @@ def run_colmap(colmap_path, images_path, output_path):
     use_gpu = "false"
     Path(f"{output_path}").mkdir(parents=True, exist_ok=True)
 
+    # sfm-worker logger
+    logger = logging.getLogger('sfm-worker')
+
+
+    logger.info("run_colmap()-colmap_path: " + colmap_path)
+    logger.info("run_colmap()-images_path: " + images_path)
+    logger.info("run_colmap()-output_path: " + colmap_path)
+
     #Creating a new database for colmap
     try:
         database_path = output_path + "/database.db"
         subprocess.call([colmap_path, "database_creator", "--database_path", database_path])
-        print("Created DB")
+        logger.info("Created DB")
     except:
+        logger.error("DB Creation Failed")
         return 1
 
     #Feature extracting
@@ -52,30 +62,37 @@ def run_colmap(colmap_path, images_path, output_path):
         # --SiftExtraction.use_gpu=false for docker
         # TODO: make gpu use dynamic
         subprocess.call([colmap_path, "feature_extractor","--ImageReader.camera_model","PINHOLE",f"--SiftExtraction.use_gpu={use_gpu}","--ImageReader.single_camera=1", "--database_path", database_path, "--image_path", images_path])
-        print("Features Extracted")
+        logger.info("Features Extracted")
     except:
+        logger.error("Features unable to be extracted")
         return 1
 
     #Feature matching
     try:
-        print("Feature Matching")
         subprocess.call([colmap_path, "exhaustive_matcher",f"--SiftMatching.use_gpu={use_gpu}", "--database_path", database_path])
+        logger.info("Feature Matched")
     except:
+        logger.error("Features unable to be matched")
         return 1
 
     #Generating model
     try:
         subprocess.call([colmap_path, "mapper", "--database_path", database_path, "--image_path", images_path, "--output_path", output_path])
+        logger.info("Model generated")
     except:
+        logger.error("Model unable to be generated")
         return 1
 
     #Getting model as text
     try:
         # TODO: no longer works on windows fix file paths or run in docker
         subprocess.call([colmap_path, "model_converter", "--input_path", output_path + r"/0", "--output_path", output_path, "--output_type", "TXT"])
+        logger.info("Model as text successful")
     except:
+        logger.error("Model as text unsuccessful")
         return 1
 
+    logger.info("run_colmap successfully executed")
     return 0
 
 
