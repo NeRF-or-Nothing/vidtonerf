@@ -58,6 +58,7 @@ class ClientService:
         # return None if not found
         nerf = self.manager.get_nerf(uuid)
         if nerf:
-            return ("Video ready", nerf.rendered_video_path)
+            return nerf.rendered_video_path
+            #return ("Video ready", nerf.rendered_video_path)
         return None
         

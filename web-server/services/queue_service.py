@@ -227,22 +227,30 @@ def digest_finished_sfms(rabbitip, rmqservice: RabbitMQService, scene_manager: S
 def digest_finished_nerfs(rabbitip, rmqservice: RabbitMQService, scene_manager: SceneManager):
 
     def process_nerf_job(ch,method,properties,body):
+        print(f"DEBUG: printing all urls on nerf-worker!")
+        print(f"DEBUG: {requests.get('http://nerf-worker:5200/log').text}", flush=True)
+        
         print("DEBUG: digest_finished_nerfs called", flush=True)
         nerf_data = json.loads(body.decode())
         print(f"DEBUG: received nerf job with id: {nerf_data['id']}", flush=True)
-        video = requests.get(nerf_data['rendered_video_path'])
+        print(f"DEBUG: nerf_data = {nerf_data}", flush=True)
         print(f"DEBUG: worker_path = {nerf_data['rendered_video_path']}", flush=True)
+        
+        video = requests.get(nerf_data['rendered_video_path'])
+        id = nerf_data['id']
         filepath = "data/nerf/" 
-        os.mkdir(filepath, exist_ok=True)
-        filepath = os.path.join(filepath,+f"{id}.mp4" )
+        os.makedirs(filepath, exist_ok=True)
+        filepath = os.path.join(filepath+f"{id}.mp4" )
         open(filepath,"wb").write(video.content)
 
         nerf_data['rendered_video_path'] = filepath
         id = nerf_data['id']
-        nerf = Nerf()
-        nerf.from_dict(nerf_data)
+        
+        # Static method to create Nerf object from dictionary
+        nerf = Nerf().from_dict(nerf_data)
+        print(f"DEBUG: nerf object data: {nerf.model_file_path}\n{nerf.rendered_video_path}", flush=True)
         scene_manager.set_nerf(id, nerf)
-        #ch.basic_ack(delivery_tag=method.delivery_tag)
+        ch.basic_ack(delivery_tag=method.delivery_tag)
     
     # create unique connection to rabbitmq since pika is NOT thread safe
     rabbitmq_domain = rabbitip

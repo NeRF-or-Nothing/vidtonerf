@@ -99,6 +99,7 @@ def colmap_worker():
         job_data = json.loads(body.decode())
         id = job_data["id"]
         print(f"Running New Job With ID: {id}")
+        print(f"DEBUG: job_data = {job_data}", flush=True)
 
         # TODO: Handle exceptions and enable steaming to make safer
         video = requests.get(job_data["file_path"], timeout=10)
@@ -121,6 +122,7 @@ def colmap_worker():
             motion_data["frames"][i]["file_path"] = file_url
 
         json_motion_data = json.dumps(motion_data)
+        print(f"DEBUG: json_motion_data={json_motion_data}", flush=True)
         channel.basic_publish(
             exchange="", routing_key="sfm-out", body=json_motion_data
         )
