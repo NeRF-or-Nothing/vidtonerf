@@ -141,7 +141,7 @@ def colmap_worker():
             # Will block and call process_nerf_job repeatedly
             channel.basic_qos(prefetch_count=1)
             channel.basic_consume(
-                queue='nerf-in', on_message_callback=process_colmap_job, auto_ack=False)
+                queue='sfm-in', on_message_callback=process_colmap_job, auto_ack=False)
             try:
                 channel.start_consuming()
             except KeyboardInterrupt:
