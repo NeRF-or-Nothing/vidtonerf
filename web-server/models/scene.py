@@ -147,8 +147,8 @@ class Video:
     def from_dict(obj: Any) -> 'Video':
         assert isinstance(obj, dict)
         file_path = from_union([from_str, from_none], obj.get("file_path"))
-        width = from_union([from_int, from_none], obj.get("width"))
-        height = from_union([from_int, from_none], obj.get("height"))
+        width = from_union([from_int, from_none], obj.get("vid_width"))
+        height = from_union([from_int, from_none], obj.get("vid_height"))
         fps = from_union([from_float, from_none], obj.get("fps"))
         duration = from_union([from_float, from_none], obj.get("duration"))
         frame_count = from_union([from_int, from_none], obj.get("frame_count"))
@@ -296,8 +296,8 @@ def user_to_dict(x: User) -> Any:
 
 class SceneManager:
     def __init__(self) -> None:
-        client = MongoClient(host=os.getenv("MONGO_IP"),port=27017,username=os.getenv("MONGO_INITDB_ROOT_USERNAME"),\
-                             password=os.getenv("MONGO_INITDB_ROOT_PASSWORD"))
+        client = MongoClient(host=str(os.getenv("MONGO_IP")),port=27017,username=str(os.getenv("MONGO_INITDB_ROOT_USERNAME")),\
+                             password=str(os.getenv("MONGO_INITDB_ROOT_PASSWORD")))
         self.db = client["nerfdb"]
         self.collection = self.db["scenes"]
         self.upsert=True
@@ -362,8 +362,8 @@ class SceneManager:
 
 class UserManager:
     def __init__(self) -> None:
-        client = MongoClient(host=os.getenv("MONGO_IP"),port=27017,username=os.getenv("MONGO_INITDB_ROOT_USERNAME"),\
-                             password=os.getenv("MONGO_INITDB_ROOT_PASSWORD"))
+        client = MongoClient(host=str(os.getenv("MONGO_IP")),port=27017,username=str(os.getenv("MONGO_INITDB_ROOT_USERNAME")),\
+                             password=str(os.getenv("MONGO_INITDB_ROOT_PASSWORD")))
         self.db = client["nerfdb"]
         self.collection = self.db["users"]
         self.upsert=True

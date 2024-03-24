@@ -1,6 +1,7 @@
 import argparse
 import os
 from pickle import TRUE
+import time
 #import magic
 from uuid import uuid4, UUID
 
@@ -80,13 +81,13 @@ class WebServer:
            
             return response
             
-        @self.app.route("/nerfvideo/<vidid>", methods=["GET"])
+        @self.app.route("/data/nerf/<vidid>", methods=["GET"])
         def send_nerf_video(vidid: str):
             ospath = None
             status_str = "Processing"
             if is_valid_uuid(vidid):
                 ospath = self.cservice.get_nerf_video_path(vidid)
-            # Could change this to return both
+            
             if ospath == None or not os.path.exists(ospath):
                 response = make_response(status_str)
             else:
