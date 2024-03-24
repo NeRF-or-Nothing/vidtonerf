@@ -81,25 +81,13 @@ def colmap_worker():
     output_data_dir = "data/outputs/"
     Path(f"{input_data_dir}").mkdir(parents=True, exist_ok=True)
     Path(f"{output_data_dir}").mkdir(parents=True, exist_ok=True)
-
-    rabbitmq_domain = "rabbitmq"
-    credentials = pika.PlainCredentials(str(os.getenv("RABBITMQ_DEFAULT_USER")), str(os.getenv("RABBITMQ_DEFAULT_PASS")))
-    parameters = pika.ConnectionParameters(
-        rabbitmq_domain, 5672, "/", credentials, heartbeat=300
-    )
-
-    connection = pika.BlockingConnection(parameters)
-    channel = connection.channel()
-    channel.queue_declare(queue="sfm-in")
-    channel.queue_declare(queue="sfm-out")
+    
 
     def process_colmap_job(ch, method, properties, body):
         print("Starting New Job")
         print(body.decode())
         job_data = json.loads(body.decode())
         id = job_data["id"]
-        print(f"Running New Job With ID: {id}")
-        print(f"DEBUG: job_data = {job_data}", flush=True)
 
         # TODO: Handle exceptions and enable steaming to make safer
         video = requests.get(job_data["file_path"], timeout=10)
@@ -122,7 +110,6 @@ def colmap_worker():
             motion_data["frames"][i]["file_path"] = file_url
 
         json_motion_data = json.dumps(motion_data)
-        print(f"DEBUG: json_motion_data={json_motion_data}", flush=True)
         channel.basic_publish(
             exchange="", routing_key="sfm-out", body=json_motion_data
         )
@@ -131,10 +118,39 @@ def colmap_worker():
         ch.basic_ack(delivery_tag=method.delivery_tag)
         print("Job complete")
 
-    channel.basic_qos(prefetch_count=1)
-    channel.basic_consume(queue="sfm-in", on_message_callback=process_colmap_job)
-    channel.start_consuming()
-    print("should not get here")
+
+    rabbitmq_domain = "rabbitmq"
+    credentials = pika.PlainCredentials(
+        str(os.getenv("RABBITMQ_DEFAULT_USER")), str(os.getenv("RABBITMQ_DEFAULT_PASS")))
+    parameters = pika.ConnectionParameters(
+        rabbitmq_domain, 5672, '/', credentials, heartbeat=300
+    )
+
+    # retries connection until connects or 2 minutes pass
+    timeout = time.time() + 60 * 2
+    while True:
+        if time.time() > timeout:
+            raise Exception(
+                "nerf_worker took too long to connect to rabbitmq")
+        try:
+            connection = pika.BlockingConnection(parameters)
+            channel = connection.channel()
+            channel.queue_declare(queue='sfm-in')
+            channel.queue_declare(queue='sfm-out')
+
+            # Will block and call process_nerf_job repeatedly
+            channel.basic_qos(prefetch_count=1)
+            channel.basic_consume(
+                queue='nerf-in', on_message_callback=process_colmap_job, auto_ack=False)
+            try:
+                channel.start_consuming()
+            except KeyboardInterrupt:
+                channel.stop_consuming()
+                connection.close()
+                break
+        except pika.exceptions.AMQPConnectionError:
+            continue
+    
 
 if __name__ == "__main__":
     print("~SFM WORKER~")
