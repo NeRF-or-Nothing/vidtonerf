@@ -69,7 +69,7 @@ services:
   nerf-worker:
       build:
         context: .
-        dockerfile: ./TensoRF/Dockerfile
+        dockerfile: ./TensoRF/gpu.Dockerfile
       
       image: nerf-worker-img
       container_name: nerf-worker

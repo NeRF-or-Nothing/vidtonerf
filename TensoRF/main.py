@@ -35,7 +35,6 @@ def nerf_worker():
     def process_nerf_job(ch, method, properties, body):
         args = config_parser("--config configs/localworkerconfig_testsimon.txt")
 
-        # TODO this
         nerf_data = json.loads(body.decode())
         id = nerf_data["id"]  
         width = nerf_data["vid_width"]

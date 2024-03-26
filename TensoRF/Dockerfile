@@ -12,5 +12,6 @@ RUN pip3 install -r requirements.txt
 # Overwritten by compose
 COPY . .
 
+# TODO add config support
 CMD ["python3", "main.py"]
   
