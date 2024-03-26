@@ -1,5 +1,5 @@
 # NVIDIA CUDA Toolkit 10.2 for ubuntu
-FROM nvidia:10.2-devel-ubuntu18.04
+FROM nvidia/cuda:12.3.2-devel-ubuntu22.04
 
 WORKDIR /TensoRF
 
@@ -23,4 +23,4 @@ RUN python3.10 -m pip install --upgrade -r requirements.txt
 COPY . .
 
 # TODO add config support
-CMD ["python3.1-0", "main.py"]]
+CMD ["python3.1-0", "main.py"]
