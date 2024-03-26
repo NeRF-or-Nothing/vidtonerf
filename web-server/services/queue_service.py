@@ -12,7 +12,6 @@ import numpy as np
 import math
 import random
 import sklearn.cluster
-import kneed
 
 
 # Load environment variables from .env file at the root of the project
@@ -122,10 +121,11 @@ def find_elbow_point(data, max_k=35):
     x = range(1, len(wcss)+1)
 
     # Determine Elbow point of graph
-    elbow = kneed.KneeLocator(x, wcss, curve = 'convex', direction='decreasing')
+    #TODO: fix this
+    #elbow = kneed.KneeLocator(x, wcss, curve = 'convex', direction='decreasing')
     
     # Returns elbow point (along with x and y values for graph testing)
-    return elbow.knee, x, wcss
+    #return elbow.knee, x, wcss
 
 def k_mean_sampling(frames, size=100):
     CLUSTERS = size
@@ -156,8 +156,8 @@ def k_mean_sampling(frames, size=100):
 
         angles.append(s)
 
-    elbow_point, _, _ = find_elbow_point(angles)
-
+    #elbow_point, _, _ = find_elbow_point(angles)
+    elbow_point = 10
     km = sklearn.cluster.Kmeans(n_clusters=elbow_point, n_init=10)
     km.fit(angles)
 
