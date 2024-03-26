@@ -234,10 +234,11 @@ def digest_finished_sfms(rabbitip, rmqservice: RabbitMQService, scene_manager: S
 
         print("saved finished sfm job")
         new_data = json.dumps(sfm_data)
-        ch.basic_ack(delivery_tag=method.delivery_tag)
         
         # Publish new job to nerf-in
         rmqservice.publish_nerf_job(id, vid, sfm)
+        ch.basic_ack(delivery_tag=method.delivery_tag)
+        
 
     # create unique connection to rabbitmq since pika is NOT thread safe
     rabbitmq_domain = rabbitip
