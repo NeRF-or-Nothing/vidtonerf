@@ -74,8 +74,8 @@ class RabbitMQService:
         """
         job = {
             "id": id,
-            "vid_width": vid.width,
-            "vid_height": vid.height
+            "vid_width": vid.width if vid.width else 0,
+            "vid_height": vid.height if vid.height else 0,
         }
 
         # replace relative filepaths with URLS
@@ -193,8 +193,8 @@ def k_mean_sampling(frames, size=100):
 
     return closest_frames
 
-def digest_finished_sfms(rabbitip, scene_manager: SceneManager, queue_manager: QueueListManager):
 
+def digest_finished_sfms(rabbitip, rmqservice: RabbitMQService, scene_manager: SceneManager, queue_manager: QueueListManager):
     def process_sfm_job(ch,method,properties,body):
         #load queue object
         sfm_data = json.loads(body.decode())
@@ -218,10 +218,10 @@ def digest_finished_sfms(rabbitip, scene_manager: SceneManager, queue_manager: Q
             sfm_data['frames'][i]["file_path"] = file_path
         
         # Get indexes of k mean grouped frames
-        k_sampled = k_mean_sampling(sfm_data)
+        #k_sampled = k_mean_sampling(sfm_data)
 
         # Use those frames to revise list of frames used in sfm generation
-        sfm_data['frames'] = [sfm_data['frames'][i] for i in k_sampled]
+        #sfm_data['frames'] = [sfm_data['frames'][i] for i in k_sampled]
 
         #call SceneManager to store to database
         vid = Video.from_dict(sfm_data)
@@ -235,6 +235,9 @@ def digest_finished_sfms(rabbitip, scene_manager: SceneManager, queue_manager: Q
         print("saved finished sfm job")
         new_data = json.dumps(sfm_data)
         ch.basic_ack(delivery_tag=method.delivery_tag)
+        
+        # Publish new job to nerf-in
+        rmqservice.publish_nerf_job(id, vid, sfm)
 
     # create unique connection to rabbitmq since pika is NOT thread safe
     rabbitmq_domain = rabbitip
@@ -266,26 +269,31 @@ def digest_finished_sfms(rabbitip, scene_manager: SceneManager, queue_manager: Q
             continue
 
 
-def digest_finished_nerfs(rabbitip,scene_manager: SceneManager, queue_manager: QueueListManager):
+def digest_finished_nerfs(rabbitip, rmqservice: RabbitMQService, scene_manager: SceneManager, queue_manager: QueueListManager):
 
     def process_nerf_job(ch,method,properties,body):
+        
         nerf_data = json.loads(body.decode())
         video = requests.get(nerf_data['rendered_video_path'])
+        id = nerf_data['id']
+        
         filepath = "data/nerf/" 
-        os.mkdir(filepath, exist_ok=True)
-        filepath = os.path.join(filepath,+f"{id}.mp4" )
+        os.makedirs(filepath, exist_ok=True)
+        filepath = os.path.join(filepath+f"{id}.mp4")
+        
         open(filepath,"wb").write(video.content)
 
         nerf_data['rendered_video_path'] = filepath
         id = nerf_data['id']
-        nerf = Nerf()
-        nerf.from_dict(nerf_data)
+        
+        # Static method to create Nerf object from dictionary
+        nerf = Nerf().from_dict(nerf_data)
         scene_manager.set_nerf(id, nerf)
-        #ch.basic_ack(delivery_tag=method.delivery_tag)
 
         #remove video from nerf_list and queue_list (end of full process) queue manager
         queue_manager.pop_queue("nerf_list",id)
         queue_manager.pop_queue("queue_list",id)
+        ch.basic_ack(delivery_tag=method.delivery_tag)
     
     # create unique connection to rabbitmq since pika is NOT thread safe
     rabbitmq_domain = rabbitip

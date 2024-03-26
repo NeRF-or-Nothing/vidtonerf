@@ -147,8 +147,8 @@ class Video:
     def from_dict(obj: Any) -> 'Video':
         assert isinstance(obj, dict)
         file_path = from_union([from_str, from_none], obj.get("file_path"))
-        width = from_union([from_int, from_none], obj.get("width"))
-        height = from_union([from_int, from_none], obj.get("height"))
+        width = from_union([from_int, from_none], obj.get("vid_width"))
+        height = from_union([from_int, from_none], obj.get("vid_height"))
         fps = from_union([from_float, from_none], obj.get("fps"))
         duration = from_union([from_float, from_none], obj.get("duration"))
         frame_count = from_union([from_int, from_none], obj.get("frame_count"))

@@ -1,0 +1,7 @@
+/log
+/output
+data
+log
+Pipfile*
+__pycache__
+.vscode
