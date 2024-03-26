@@ -7,7 +7,7 @@ from uuid import uuid4, UUID
 
 from flask import Flask, request, make_response, send_file, send_from_directory, url_for
 
-from models.scene import UserManager
+from models.scene import UserManager, QueueListManager
 from services.scene_service import ClientService
 
 def is_valid_uuid(value):
@@ -18,12 +18,13 @@ def is_valid_uuid(value):
         return False
 
 class WebServer:
-    def __init__(self, flaskip, args: argparse.Namespace, cserv: ClientService) -> None:
+    def __init__(self, flaskip, args: argparse.Namespace, cserv: ClientService, queue_man: QueueListManager) -> None:
         self.flaskip = flaskip
         self.app = Flask(__name__)
         self.args = args
         self.cservice = cserv
         self.user_manager=UserManager()
+        self.queue_manager=queue_man
 
     def run(self) -> None:
         self.app.logger.setLevel(
@@ -48,7 +49,7 @@ class WebServer:
             given a cookie to see if the video is done periodically
             """
             video_file = request.files.get("file")
-            print("VIDEO FILE", video_file)
+            
             # TODO: UUID4 is cryptographically secure on CPython, but this is not guaranteed in the specifications.
             # Might want to change this.
             # TODO: Don't assume videos are in mp4 format
@@ -153,6 +154,13 @@ class WebServer:
             string=f"SUCCESS|{user.id}"
             response=make_response(string)
             return response
+
+        # Returns the queue position of a task in a queue
+        # queueid: sfm_list, nerf_list, queue_list
+        # id: uuid of task
+        @self.app.route("/queue",methods=["GET"])
+        def send_queue_position(queueid: str, id: str):
+            return make_response(self.queue_manager.get_queue_position(queueid,id))
 
         @self.app.route("/test")
         def test_endpoint():

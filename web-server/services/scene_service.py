@@ -13,8 +13,6 @@ class ClientService:
         self.manager = manager
         self.rmqservice = rmqservice
         
-        #self.queue = queue
-
     def handle_incoming_video(self, video_file):
         # receive video and check for validity
         file_name = secure_filename(video_file.filename)
