@@ -18,6 +18,7 @@ import sys
 import logging
 from log import sfm_worker_logger
 
+from dotenv import load_dotenv
 
 app = Flask(__name__)
 # base_url = "http://host.docker.internal:5000/"
@@ -91,20 +92,14 @@ def run_full_sfm_pipeline(id, video_file_path, input_data_dir, output_data_dir):
 
 
 def colmap_worker():
+    load_dotenv()
     input_data_dir = "data/inputs/"
     output_data_dir = "data/outputs/"
     Path(f"{input_data_dir}").mkdir(parents=True, exist_ok=True)
     Path(f"{output_data_dir}").mkdir(parents=True, exist_ok=True)
 
     logger = sfm_worker_logger('sfm-worker')
-
-    rabbitmq_domain = "rabbitmq"
-    credentials = pika.PlainCredentials(str(os.getenv("RABBITMQ_DEFAULT_USER")), str(os.getenv("RABBITMQ_DEFAULT_PASS")))
-    parameters = pika.ConnectionParameters(
-        rabbitmq_domain, 5672, "/", credentials, heartbeat=300
-    )
-
-    connection = pika.BlockingConnection(parameters)
+    
     channel = connection.channel()
     channel.queue_declare(queue="sfm-in")
     channel.queue_declare(queue="sfm-out")
@@ -155,6 +150,39 @@ def colmap_worker():
         ch.basic_ack(delivery_tag=method.delivery_tag)
         logger.info("Job complete")
 
+
+    rabbitmq_domain = "rabbitmq"
+    credentials = pika.PlainCredentials(
+        str(os.getenv("RABBITMQ_DEFAULT_USER")), str(os.getenv("RABBITMQ_DEFAULT_PASS")))
+    parameters = pika.ConnectionParameters(
+        rabbitmq_domain, 5672, '/', credentials, heartbeat=300
+    )
+
+    # retries connection until connects or 2 minutes pass
+    timeout = time.time() + 60 * 2
+    while True:
+        if time.time() > timeout:
+            raise Exception(
+                "nerf_worker took too long to connect to rabbitmq")
+        try:
+            connection = pika.BlockingConnection(parameters)
+            channel = connection.channel()
+            channel.queue_declare(queue='sfm-in')
+            channel.queue_declare(queue='sfm-out')
+
+            # Will block and call process_nerf_job repeatedly
+            channel.basic_qos(prefetch_count=1)
+            channel.basic_consume(
+                queue='sfm-in', on_message_callback=process_colmap_job, auto_ack=False)
+            try:
+                channel.start_consuming()
+            except KeyboardInterrupt:
+                channel.stop_consuming()
+                connection.close()
+                break
+        except pika.exceptions.AMQPConnectionError:
+            continue
+    
     channel.basic_qos(prefetch_count=1)
     channel.basic_consume(queue="sfm-in", on_message_callback=process_colmap_job)
     channel.start_consuming()

@@ -56,6 +56,7 @@ services:
       container_name: sfm-worker
       depends_on:
         - rabbitmq
+        - web-server
       volumes: 
         - ./colmap:/colmap
 
@@ -64,6 +65,25 @@ services:
       networks:
         - backend 
       command: python3.10 main.py --config=configs/default.txt
+  
+  nerf-worker:
+      build:
+        context: .
+        dockerfile: ./TensoRF/Dockerfile
+      
+      image: nerf-worker-img
+      container_name: nerf-worker
+      depends_on:
+        - rabbitmq
+        - web-server
+      volumes:
+        - ./TensoRF:/TensoRF
+      
+      ports: 
+        - 5200:5200
+      networks:
+        - backend
+      command: python3.10 main.py
 
 networks:
   backend:

@@ -126,7 +126,7 @@ def split_video_into_frames(video_path, output_path, max_frames=200):
   #print (f"img_height: {img_height}")
   ## adjust as necessaryx 
   MAX_WIDTH = 200 
-  MAX_HEIGHT = 200
+  MAX_HEIGHT = 208
 
   ## for resizing images
   if (img_height > MAX_HEIGHT):

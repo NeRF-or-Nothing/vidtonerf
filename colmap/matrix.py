@@ -287,11 +287,10 @@ def get_json_matrices(camera_file, motion_data ):
     return intrinsic
 
 def main():
+    logger = logging.getLogger('sfm-worker')
     # check for input argument
     if len(sys.argv) != 3:
-        print("bad arguments: ")
-        # python3 matrix.py images.txt camera.txt
-        print("Usage: python3 %s images.txt camera.txt" % sys.argv[0])
+        logger.error("ERROR: Bad arguments. Usage: python3 %s images.txt camera.txt" % sys.argv[0])
         sys.exit(1)
 
     center_point = get_extrinsics_center()
