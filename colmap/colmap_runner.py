@@ -1,6 +1,7 @@
 import subprocess
 import os
 import sys
+import logging
 from pathlib import Path
 
 #Usage: python colmap_runner.py --flags
@@ -39,12 +40,21 @@ def run_colmap(colmap_path, images_path, output_path):
     use_gpu = "false"
     Path(f"{output_path}").mkdir(parents=True, exist_ok=True)
 
+    # sfm-worker logger
+    logger = logging.getLogger('sfm-worker')
+
+
+    logger.info("run_colmap()-colmap_path: " + colmap_path)
+    logger.info("run_colmap()-images_path: " + images_path)
+    logger.info("run_colmap()-output_path: " + colmap_path)
+
     #Creating a new database for colmap
     try:
         database_path = output_path + "/database.db"
         subprocess.call([colmap_path, "database_creator", "--database_path", database_path])
-        print("Created DB")
+        logger.info("Created DB")
     except:
+        logger.error("DB Creation Failed")
         return 1
 
     #Feature extracting
@@ -52,30 +62,37 @@ def run_colmap(colmap_path, images_path, output_path):
         # --SiftExtraction.use_gpu=false for docker
         # TODO: make gpu use dynamic
         subprocess.call([colmap_path, "feature_extractor","--ImageReader.camera_model","PINHOLE",f"--SiftExtraction.use_gpu={use_gpu}","--ImageReader.single_camera=1", "--database_path", database_path, "--image_path", images_path])
-        print("Features Extracted")
+        logger.info("Features Extracted")
     except:
+        logger.error("Features unable to be extracted")
         return 1
 
     #Feature matching
     try:
-        print("Feature Matching")
         subprocess.call([colmap_path, "exhaustive_matcher",f"--SiftMatching.use_gpu={use_gpu}", "--database_path", database_path])
+        logger.info("Feature Matched")
     except:
+        logger.error("Features unable to be matched")
         return 1
 
     #Generating model
     try:
         subprocess.call([colmap_path, "mapper", "--database_path", database_path, "--image_path", images_path, "--output_path", output_path])
+        logger.info("Model generated")
     except:
+        logger.error("Model unable to be generated")
         return 1
 
     #Getting model as text
     try:
         # TODO: no longer works on windows fix file paths or run in docker
         subprocess.call([colmap_path, "model_converter", "--input_path", output_path + r"/0", "--output_path", output_path, "--output_type", "TXT"])
+        logger.info("Model as text successful")
     except:
+        logger.error("Model as text unsuccessful")
         return 1
 
+    logger.info("run_colmap successfully executed")
     return 0
 
 
@@ -85,6 +102,8 @@ if __name__ == '__main__':
     output_path = "./"
     colmap_path = r".\COLMAP\COLMAP.bat"
     images_path = r".\Images"
+
+    logger = logging.getLogger('sfm-worker')
 
     #Parse flags
     #Flag format up top
@@ -102,16 +121,16 @@ if __name__ == '__main__':
                 case "--image_path":
                     images_path = sys.argv[i+1]
                 case _:
-                    print("ERROR: Unrecognized flag", sys.argv[i])
+                    logger.error("ERROR: Unrecognized flag {}".format(sys.argv[i]))
                     quit()
 
     #Run COLMAP :)
     status = run_colmap(instance_name, output_path, colmap_path, images_path)
     if status == 0:
-        print("COLMAP ran successfully.")
+        logger.info("COLMAP ran successfully.")
     elif status == 1:
-        print("ERROR: There was an unknown error running COLMAP")
+        logger.error("ERROR: There was an unknown error running COLMAP")
     elif status == 2:
-        print(f"ERROR: COLMAP - file {output_path}/{instance_name} already exists.")
+        logger.error("ERROR: COLMAP - file {}/{} already exists.".format(output_path,instance_name))
     elif status == 3:
-        print(f"ERROR: COLMAP - file {output_path} could not be found.")
+        logger.error("ERROR: COLMAP - file {} could not be found.".format(output_path))

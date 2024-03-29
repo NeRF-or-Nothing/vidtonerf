@@ -1,0 +1,2 @@
+#set local run status / run colmap worker with or without webserver
+local_run = False

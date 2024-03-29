@@ -13,6 +13,7 @@ import math
 import random
 import sklearn
 
+import logging
 # Load environment variables from .env file at the root of the project
 load_dotenv()
 
@@ -21,6 +22,8 @@ load_dotenv()
 class RabbitMQService:
     # TODO: Communicate with rabbitmq server on port defined in web-server arguments
     def __init__(self, rabbitip, manager):
+        self.logger = logging.getLogger('web-server')
+
         rabbitmq_domain = rabbitip
         credentials = pika.PlainCredentials(str(os.getenv("RABBITMQ_DEFAULT_USER")), str(os.getenv("RABBITMQ_DEFAULT_PASS")))
         parameters = pika.ConnectionParameters(rabbitmq_domain, 5672, '/', credentials, heartbeat=300)
@@ -32,6 +35,7 @@ class RabbitMQService:
         #retries connection until conencts or 2 minutes pass
         while True:
             if time.time() > timeout:
+                self.logger.critical("RabbitMQService, _init_, took too long to connect to rabbitmq")
                 raise Exception("RabbitMQService, _init_, took too long to connect to rabbitmq")
             try:
                 self.connection = pika.BlockingConnection(parameters)  
@@ -65,6 +69,8 @@ class RabbitMQService:
         # add to sfm_list and queue_list (first received, goes into overarching queue) queue manager
         self.queue_manager.append_queue("sfm_list",id)
         self.queue_manager.append_queue("queue_list",id)
+        
+        self.logger.info("SFM Job Published with ID {}".format(id))
            
     def publish_nerf_job(self, id: str, vid: Video, sfm: Sfm):
         """
@@ -90,6 +96,7 @@ class RabbitMQService:
         # add to nerf_list queue manager
         self.queue_manager.append_queue("nerf_list",id)
 
+        self.logger.info("NERF Job Published with ID {}".format(id))
 
     #call
     #each sfm_out object would be in the form
@@ -101,6 +108,8 @@ class RabbitMQService:
     #   channel.basic.consume(on_message_callback = callback_sfm_job, queue = sfm_out)
 
 def k_mean_sampling(frames, size=100):
+    logger = logging.getLogger('web-server')
+
     #TODO Make this input passed in, with default value 100
     CLUSTERS = size
 
@@ -139,7 +148,7 @@ def k_mean_sampling(frames, size=100):
 
     #TODO account for this
     if (len(seen_numbers) != CLUSTERS):
-        print("TOO FEW CLUSTERS")
+        logger.error("Too few clusters in k means sampling.")
 
     cluster_array = [ [] for _ in range(CLUSTERS) ]
     return_array = []
@@ -151,9 +160,11 @@ def k_mean_sampling(frames, size=100):
     for i in range(len(cluster_array)):
         return_array.append(cluster_array[i][random.randint(0,len(cluster_array[i])-1)])
 
+    logger.info("Finished k means sampling.")
     return return_array
 
 def digest_finished_sfms(rabbitip, scene_manager: SceneManager, queue_manager: QueueListManager):
+    logger = logging.getLogger('web-server')
 
     def process_sfm_job(ch,method,properties,body):
         #load queue object
@@ -197,7 +208,7 @@ def digest_finished_sfms(rabbitip, scene_manager: SceneManager, queue_manager: Q
         #remove video from sfm_list queue manager
         queue_manager.pop_queue("sfm_list",id)
 
-        print("saved finished sfm job")
+        logger.info("Saved finished SFM job")
         new_data = json.dumps(sfm_data)
         ch.basic_ack(delivery_tag=method.delivery_tag)
 
@@ -212,6 +223,7 @@ def digest_finished_sfms(rabbitip, scene_manager: SceneManager, queue_manager: Q
     #retries connection until connects or 2 minutes pass
     while True:
         if time.time() > timeout:
+            logger.critical("digest_finished_sfms took too long to connect to rabbitmq")
             raise Exception("digest_finished_sfms took too long to connect to rabbitmq")
         try:
             connection = pika.BlockingConnection(parameters)
@@ -232,6 +244,7 @@ def digest_finished_sfms(rabbitip, scene_manager: SceneManager, queue_manager: Q
 
 
 def digest_finished_nerfs(rabbitip,scene_manager: SceneManager, queue_manager: QueueListManager):
+    logger = logging.getLogger('web-server')
 
     def process_nerf_job(ch,method,properties,body):
         nerf_data = json.loads(body.decode())
@@ -263,6 +276,7 @@ def digest_finished_nerfs(rabbitip,scene_manager: SceneManager, queue_manager: Q
     #retries connection until connects or 2 minutes pass
     while True:
         if time.time() > timeout:
+            logger.critical("digest_finished_nerfs took too long to connect to rabbitmq")
             raise Exception("digest_finished_nerfs took too long to connect to rabbitmq")
         try:
             connection = pika.BlockingConnection(parameters)
