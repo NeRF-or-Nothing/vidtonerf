@@ -70,5 +70,5 @@ class ClientService:
         nerf = self.manager.get_nerf(uuid)
         if nerf:
             return nerf.flag
-        return None
+        return 0
         

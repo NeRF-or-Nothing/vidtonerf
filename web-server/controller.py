@@ -85,6 +85,7 @@ class WebServer:
         @self.app.route("/data/nerf/<vidid>", methods=["GET"])
         def send_nerf_video(vidid: str):
             ospath = None
+            flag = 0
             status_str = "Processing"
             if is_valid_uuid(vidid):
                 flag = self.cservice.get_nerf_flag(vidid)
@@ -92,11 +93,17 @@ class WebServer:
                 if flag == 0:
                     ospath = self.cservice.get_nerf_video_path(vidid)
                 else:
-                    response = make_response(flag)
-                    response.headers['Access-Control-Allow-Origin'] = '*'
-                    return response
+                    flag = self.cservice.get_nerf_flag(vidid)
             
-            if ospath == None or not os.path.exists(ospath):
+            if flag != 0:
+                # ERROR CODE BREAKDOWN:
+                # 1 = Unknown
+                # 2 = File already exists
+                # 3 = File not found
+                # 4 = Video too blurry
+                # SEE MORE IN video_to_images.py for error codes
+                response = make_response("Returned with error code {}".format(flag))
+            elif ospath == None or not os.path.exists(ospath):
                 response = make_response(status_str)
             else:
                 status_str = "Video ready"
@@ -167,7 +174,7 @@ class WebServer:
         # id: uuid of task
         @self.app.route("/queue",methods=["GET"])
         def send_queue_position(queueid: str, id: str):
-            return make_response(self.queue_manager.get_queue_position(queueid,id))
+            return make_response("{} / {}".format(self.queue_manager.get_queue_position(queueid,id),self.queue_manager.get_queue_size(queueid)))
 
         @self.app.route("/test")
         def test_endpoint():
