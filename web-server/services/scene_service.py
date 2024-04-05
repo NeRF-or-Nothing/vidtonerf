@@ -62,4 +62,13 @@ class ClientService:
             return nerf.rendered_video_path
             #return ("Video ready", nerf.rendered_video_path)
         return None
+    
+    # Returns an integer describing the status of the video in the database.
+    # Normal videos will have a value of 0 and this is unncessary, but other values
+    # encode information on the COLMAP error that went wrong(e.g. 4 is a blurry video)
+    def get_nerf_flag(self, uuid):
+        nerf = self.manager.get_nerf(uuid)
+        if nerf:
+            return nerf.flag
+        return None
         

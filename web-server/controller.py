@@ -87,7 +87,14 @@ class WebServer:
             ospath = None
             status_str = "Processing"
             if is_valid_uuid(vidid):
-                ospath = self.cservice.get_nerf_video_path(vidid)
+                flag = self.cservice.get_nerf_flag(vidid)
+                # If the video had no errors return the video path, otherwise return the error flag
+                if flag == 0:
+                    ospath = self.cservice.get_nerf_video_path(vidid)
+                else:
+                    response = make_response(flag)
+                    response.headers['Access-Control-Allow-Origin'] = '*'
+                    return response
             
             if ospath == None or not os.path.exists(ospath):
                 response = make_response(status_str)
