@@ -1,8 +1,11 @@
 import unittest
 import numpy as np
 from matrix import euler_from_quaternion, quaternion_rotation_matrix, rotation_matrix_from_vectors
+from colmap_runner import run_colmap
+import os
+from pymongo import MongoClient
 
-class TestMatrixFunctions(unittest.TestCase):
+class Testcolmap(unittest.TestCase):
 
     def test_euler_from_quaternion(self):
         # Test case 1
@@ -50,6 +53,26 @@ class TestMatrixFunctions(unittest.TestCase):
                                     [0.0, 1.0, 0.0],
                                     [1.0, 0.0, 0.0]])
         np.testing.assert_array_almost_equal(rotation_matrix, expected_matrix)
+
+    def test_colmap_runner(self):
+        # Test case 1
+        instance_name = "colmap_output"
+        output_path = "."
+        colmap_path = r".\colmap.exe"
+        images_path = r".\data\inputs\transforms_bear"
+
+        # Run COLMAP and ensure that there are no errors
+        status = run_colmap(colmap_path, images_path, output_path)
+        self.assertEqual(status, 0)
+
+        # Test case 2
+        instance_name = "colmap_output"
+        output_path = "."
+        colmap_path = r".\colmap.exe"
+        images_path = r".\data\inputs\transforms_otter"
+
+        status = run_colmap(colmap_path, images_path, output_path)
+        self.assertEqual(status, 0)
 
 if __name__ == '__main__':
     unittest.main()

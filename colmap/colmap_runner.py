@@ -44,7 +44,8 @@ def run_colmap(colmap_path, images_path, output_path):
         database_path = output_path + "/database.db"
         subprocess.call([colmap_path, "database_creator", "--database_path", database_path])
         print("Created DB")
-    except:
+    except Exception as e:
+        print(f"Error: {e}")
         return 1
 
     #Feature extracting
@@ -53,27 +54,31 @@ def run_colmap(colmap_path, images_path, output_path):
         # TODO: make gpu use dynamic
         subprocess.call([colmap_path, "feature_extractor","--ImageReader.camera_model","PINHOLE",f"--SiftExtraction.use_gpu={use_gpu}","--ImageReader.single_camera=1", "--database_path", database_path, "--image_path", images_path])
         print("Features Extracted")
-    except:
+    except Exception as e:
+        print(f"Error: {e}")
         return 1
 
     #Feature matching
     try:
         print("Feature Matching")
         subprocess.call([colmap_path, "exhaustive_matcher",f"--SiftMatching.use_gpu={use_gpu}", "--database_path", database_path])
-    except:
+    except Exception as e:
+        print(f"Error: {e}")
         return 1
 
     #Generating model
     try:
         subprocess.call([colmap_path, "mapper", "--database_path", database_path, "--image_path", images_path, "--output_path", output_path])
-    except:
+    except Exception as e:
+        print(f"Error: {e}")
         return 1
 
     #Getting model as text
     try:
         # TODO: no longer works on windows fix file paths or run in docker
         subprocess.call([colmap_path, "model_converter", "--input_path", output_path + r"/0", "--output_path", output_path, "--output_type", "TXT"])
-    except:
+    except Exception as e:
+        print(f"Error: {e}")
         return 1
 
     return 0
@@ -106,7 +111,7 @@ if __name__ == '__main__':
                     quit()
 
     #Run COLMAP :)
-    status = run_colmap(instance_name, output_path, colmap_path, images_path)
+    status = run_colmap(colmap_path, images_path, output_path)
     if status == 0:
         print("COLMAP ran successfully.")
     elif status == 1:
