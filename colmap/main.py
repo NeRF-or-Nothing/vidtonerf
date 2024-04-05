@@ -98,11 +98,7 @@ def colmap_worker():
     Path(f"{input_data_dir}").mkdir(parents=True, exist_ok=True)
     Path(f"{output_data_dir}").mkdir(parents=True, exist_ok=True)
 
-    logger = sfm_worker_logger('sfm-worker')
-    
-    channel = connection.channel()
-    channel.queue_declare(queue="sfm-in")
-    channel.queue_declare(queue="sfm-out")
+    logger = logging.getLogger('sfm-worker')
 
     def process_colmap_job(ch, method, properties, body):
         logger.info("Starting New Job")
@@ -208,7 +204,7 @@ if __name__ == "__main__":
         motion_data, imgs_folder = run_full_sfm_pipeline(
             "Local_Test", args.input_data_path, input_data_dir, output_data_dir
         )
-        logger.info(motion_data)
+        logger.info("MOTION DATA: {}".format(motion_data))
         json_motion_data = json.dumps(motion_data)
 
     # Standard webserver run behavior

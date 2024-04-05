@@ -134,3 +134,5 @@ if __name__ == '__main__':
         logger.error("ERROR: COLMAP - file {}/{} already exists.".format(output_path,instance_name))
     elif status == 3:
         logger.error("ERROR: COLMAP - file {} could not be found.".format(output_path))
+    elif status == 4:
+        logger.error("ERROR: COLMAP - Video was too blurry for computation.")

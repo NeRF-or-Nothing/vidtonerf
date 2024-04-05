@@ -11,6 +11,8 @@ from utils import *
 from torch.utils.tensorboard import SummaryWriter
 from dataLoader import dataset_dict
 
+import logging
+
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 renderer = OctreeRender_trilinear_fast
@@ -45,6 +47,8 @@ def export_mesh(args):
 
 @torch.no_grad()
 def render_novel_view(args, logfolder, tensorf_model):
+    logger = logging.getLogger('nerf-worker')
+
     # init dataset under a "test" annotation
     dataset = dataset_dict[args.dataset_name]
     test_dataset = dataset(args.datadir, split='render', downsample=args.downsample_train, is_stack=True)
@@ -54,7 +58,7 @@ def render_novel_view(args, logfolder, tensorf_model):
     tensorf_model.aabb = test_dataset.scene_bbox.to(device)
 
 
-    print("Rendering scene to be saved at: ",logfolder)
+    logger.info("Rendering scene to be saved at: {}".format(logfolder))
     # render path and save images to imgs_path_all
     if args.render_path:
         c2ws = test_dataset.render_path
@@ -71,7 +75,8 @@ def render_novel_view(args, logfolder, tensorf_model):
 
 # Build radiance Field
 def train_tensorf(args):
-
+    logger = logging.getLogger('nerf-worker')
+    logger.info("Training TensoRF")
     # init dataset
     dataset = dataset_dict[args.dataset_name]
     train_dataset = dataset(args.datadir, split='train', downsample=args.downsample_train, is_stack=False)
@@ -129,7 +134,7 @@ def train_tensorf(args):
         args.lr_decay_iters = args.n_iters
         lr_factor = args.lr_decay_target_ratio**(1/args.n_iters)
 
-    print("lr decay", args.lr_decay_target_ratio, args.lr_decay_iters)
+    logger.info("lr decay {} {}".format(args.lr_decay_target_ratio, args.lr_decay_iters))
     
     # modifying the optimizer is a potential avenue for further performance gains
     optimizer = torch.optim.Adam(grad_vars, betas=(0.9,0.99))
@@ -149,13 +154,13 @@ def train_tensorf(args):
     trainingSampler = SimpleSampler(allrays.shape[0], args.batch_size)
 
     Ortho_reg_weight = args.Ortho_weight
-    print("initial Ortho_reg_weight", Ortho_reg_weight)
+    logger.info("initial Ortho_reg_weight {}".format(Ortho_reg_weight))
 
     L1_reg_weight = args.L1_weight_inital
-    print("initial L1_reg_weight", L1_reg_weight)
+    logger.info("initial L1_reg_weight {}".format(L1_reg_weight))
     TV_weight_density, TV_weight_app = args.TV_weight_density, args.TV_weight_app
     tvreg = TVLoss()
-    print(f"initial TV_weight density: {TV_weight_density} appearance: {TV_weight_app}")
+    logger.info("initial TV_weight density: {} appearance: {}".format(TV_weight_density,TV_weight_app))
 
 
     pbar = tqdm(range(args.n_iters), miniters=args.progress_refresh_rate, file=sys.stdout)
@@ -233,7 +238,7 @@ def train_tensorf(args):
                 tensorf.shrink(new_aabb)
                 # tensorVM.alphaMask = None
                 L1_reg_weight = args.L1_weight_rest
-                print("continuing L1_reg_weight", L1_reg_weight)
+                logger.info("continuing L1_reg_weight {}".format(L1_reg_weight))
 
 
             if not args.ndc_ray and iteration == update_AlphaMask_list[1]:
@@ -250,7 +255,7 @@ def train_tensorf(args):
             tensorf.upsample_volume_grid(reso_cur)
 
             if args.lr_upsample_reset:
-                print("reset lr to initial")
+                logger.info("reset lr to initial")
                 lr_scale = 1 #0.1 ** (iteration / args.n_iters)
             else:
                 lr_scale = args.lr_decay_target_ratio ** (iteration / args.n_iters)
@@ -269,6 +274,8 @@ import threading
 import time
 # Operates in two modes, trains a new model or loads from a file
 def main():
+
+    logger = logging.getLogger('nerf-worker')
     #flaskProcess = threading.Thread(target=start_flask, args= ())
     #flaskProcess.start()
     #time.sleep(5)
@@ -281,12 +288,12 @@ def main():
 
     # load worker config
     args = config_parser()
-    print(args)
+    logger.info(args)
 
 
     if args.render_only:
         if not os.path.exists(args.ckpt):
-            print('the ckpt path does not exists!!')
+            logger.error("the ckpt path does not exist!")
             return
 
         ckpt = torch.load(args.ckpt, map_location=device)
@@ -305,7 +312,7 @@ def main():
     # Currently evaluation_path takes in a dataset object that has desired rays to render
     video_filepath = render_novel_view(args, logfolder, tensorf_model)
 
-    print(f"Video rendered at :{video_filepath}")
+    logger.info("Video rendered at :{}".format(video_filepath))
     # add results to que and clean up local files
 
     #flaskProcess.join()

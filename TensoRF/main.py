@@ -13,6 +13,8 @@ from opt import config_parser
 from worker import train_tensorf, render_novel_view
 from dotenv import load_dotenv
 
+import logging
+from log import nerf_worker_logger
 
 app = Flask(__name__)
 base_url = "http://nerf-worker:5200/"
@@ -30,9 +32,11 @@ def start_flask():
 
 
 def nerf_worker():
-    print("Starting nerf_worker!")
+    logger = logging.getLogger('nerf-worker')
+    logger.info("Starting nerf-worker!")
 
     def process_nerf_job(ch, method, properties, body):
+        logger.info("Starting New Job")
         args = config_parser("--config configs/localworkerconfig_testsimon.txt")
 
         nerf_data = json.loads(body.decode())
@@ -41,6 +45,8 @@ def nerf_worker():
         height = nerf_data["vid_height"]
         intrinsic_matrix = nerf_data["intrinsic_matrix"]
         frames = nerf_data["frames"]
+
+        logger.info(f"Running New Job With ID: {id}")
         
         input_dir = Path(f"data/sfm_data/{id}")
         os.makedirs(input_dir, exist_ok=True)
@@ -58,6 +64,8 @@ def nerf_worker():
         input_render = input_dir / f"transforms_render.json"
         input_train.write_text(json.dumps(nerf_data, indent=4))
         input_render.write_text(json.dumps(nerf_data, indent=4))
+
+        logger.info("Saved motion and transform data.")
         
         # Run TensoRF algorithm, creates sfm2nerf datatype for training
         args.datadir += f"/{id}"
@@ -84,7 +92,7 @@ def nerf_worker():
         
         channel.basic_publish(exchange='', routing_key='nerf-out', body= combined_output)
         ch.basic_ack(delivery_tag=method.delivery_tag)
-        print(f"Nerf job {id} completed!")
+        logger.info("Nerf job {} completed!".format(id))
     
     
     # TODO: Communicate with rabbitmq server on port defined in web-server arguments
@@ -100,6 +108,7 @@ def nerf_worker():
     timeout = time.time() + 60 * 2
     while True:
         if time.time() > timeout:
+            logger.critical("nerf_worker took too long to connect to rabbitmq")
             raise Exception(
                 "nerf_worker took too long to connect to rabbitmq")
         try:
@@ -122,7 +131,10 @@ def nerf_worker():
     
 
 if __name__ == "__main__":
-    print("~NERF WORKER~")
+    # DEFINE LOGGER
+    logger = nerf_worker_logger('nerf-worker')
+    logger.info("~NERF WORKER~")
+
     nerfProcess = Process(target=nerf_worker, args=())
     flaskProcess = Process(target=start_flask, args=())
     flaskProcess.start()

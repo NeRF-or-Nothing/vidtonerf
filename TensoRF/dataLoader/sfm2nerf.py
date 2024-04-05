@@ -7,6 +7,8 @@ from PIL import Image
 from torchvision import transforms as T
 import numpy as np
 
+import logging
+
 from .ray_utils import *
 
 trans_t = lambda t : torch.Tensor([
@@ -37,12 +39,14 @@ def pose_spherical(theta, phi, radius):
 
 class Sfm2Nerf(Dataset):
     def __init__(self, datadir, split='train', downsample=1.0, is_stack=False, N_vis=-1):
+        self.logger = logging.getLogger("nerf-worker")
+        self.logger.info("LOADING DATASET OF TYPE Sfm2Nerf:")
 
         self.N_vis = N_vis
         self.root_dir = datadir
         self.split = split
         self.is_stack = is_stack
-        print("DOWNSAMPLE ",downsample)
+        self.logger.info("DOWNSAMPLE: {}".format(downsample))
         self.downsample = downsample
         self.define_transforms()
 
@@ -73,7 +77,7 @@ class Sfm2Nerf(Dataset):
         return depth
     
     def read_meta(self):
-
+        self.logger.info("LOADING META DATA")
         with open(os.path.join(self.root_dir, f"transforms_{self.split}.json"), 'r') as f:
             self.meta = json.load(f)
 

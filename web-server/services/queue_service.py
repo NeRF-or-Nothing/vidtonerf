@@ -212,8 +212,9 @@ def digest_finished_sfms(rabbitip, rmqservice: RabbitMQService, scene_manager: S
         sfm_data = json.loads(body.decode())
         flag = sfm_data['flag']
         id = sfm_data['id']
+        logger.info("SFM TASK RETURNED WITH FLAG {}".format(flag))
         # Process frames only if video is valid (!= 1)
-        if(flag == 1):
+        if(flag == 0):
         #convert each url to filepath
         #store png 
             for i,fr_ in enumerate(sfm_data['frames']):
@@ -243,17 +244,16 @@ def digest_finished_sfms(rabbitip, rmqservice: RabbitMQService, scene_manager: S
             scene_manager.set_sfm(id,sfm)
             scene_manager.set_video(id,vid)
 
-        # TODO: Do NOT add a task to nerf queue if flag is not 1
-        # TODO: Do NOT save empty video with flag (bad video)
-
         #remove video from sfm_list queue manager
         queue_manager.pop_queue("sfm_list",id)
 
         logger.info("Saved finished SFM job")
         new_data = json.dumps(sfm_data)
         
-        # Publish new job to nerf-in
-        rmqservice.publish_nerf_job(id, vid, sfm)
+        # Publish new job to nerf-in only if good status (flag of 1)
+        if(flag == 0):
+            rmqservice.publish_nerf_job(id, vid, sfm)
+
         ch.basic_ack(delivery_tag=method.delivery_tag)
         
 
