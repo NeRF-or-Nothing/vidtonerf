@@ -4,7 +4,7 @@ datadir = ./data/sfm_data
 expname =  tensorf_sfm_data_VM
 basedir = ./log
 
-n_iters = 1
+n_iters = 50
 batch_size = 4096
 
 N_voxel_init = 2097156 # 128**3
