@@ -140,8 +140,8 @@ def nerf_worker():
                 connection.close()
                 break
             
-            for thread in threads:
-                thread.join()
+                for thread in threads:
+                    thread.join()
                 
         except pika.exceptions.AMQPConnectionError:
             continue
