@@ -4,6 +4,7 @@ from matrix import euler_from_quaternion, quaternion_rotation_matrix, rotation_m
 from colmap_runner import run_colmap
 import os
 from pymongo import MongoClient
+from video_to_images import split_video_into_frames
 
 class Testcolmap(unittest.TestCase):
 
@@ -73,6 +74,25 @@ class Testcolmap(unittest.TestCase):
 
         status = run_colmap(colmap_path, images_path, output_path)
         self.assertEqual(status, 0)
+
+    def test_video_to_images(self):
+        # Test case 1
+        output_path = "./data/output"
+        video_path = "./data/input/input.mp4"
+        wanted_frames = 200
+
+        # Split video into frames and ensure that there are no errors
+        status = split_video_into_frames(video_path, output_path, wanted_frames)
+        self.assertEqual(status, 0)
+
+        # Test case 2
+        output_path = "./data/output"
+        video_path = "./data/input/input2.mp4"
+        
+        status = split_video_into_frames(video_path, output_path)
+        self.assertEqual(status, 0)
+
+
 
 if __name__ == '__main__':
     unittest.main()
