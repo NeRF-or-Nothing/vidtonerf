@@ -5,6 +5,8 @@ import torchvision.transforms as T
 import torch.nn.functional as F
 import scipy.signal
 
+import logging
+
 mse2psnr = lambda x : -10. * torch.log(x) / torch.log(torch.Tensor([10.]))
 
 
@@ -66,9 +68,10 @@ def cal_n_samples(reso, step_ratio=0.5):
 
 __LPIPS__ = {}
 def init_lpips(net_name, device):
+    logger = logging.getLogger('nerf-worker')
     assert net_name in ['alex', 'vgg']
     import lpips
-    print(f'init_lpips: lpips_{net_name}')
+    logger.info("init_lpips: lpips_{}".format(net_name))
     return lpips.LPIPS(net=net_name, version='0.1').eval().to(device)
 
 def rgb_lpips(np_gt, np_im, net_name, device):
@@ -180,6 +183,8 @@ def convert_sdf_samples_to_ply(
     This function adapted from: https://github.com/RobotLocomotion/spartan
     """
 
+    logger = logging.getLogger('nerf-worker')
+
     numpy_3d_sdf_tensor = pytorch_3d_sdf_tensor.numpy()
     voxel_size = list((bbox[1]-bbox[0]) / np.array(pytorch_3d_sdf_tensor.shape))
 
@@ -220,5 +225,5 @@ def convert_sdf_samples_to_ply(
     el_faces = plyfile.PlyElement.describe(faces_tuple, "face")
 
     ply_data = plyfile.PlyData([el_verts, el_faces])
-    print("saving mesh to %s" % (ply_filename_out))
+    logger.info("saving mesh to {}".format(ply_filename_out))
     ply_data.write(ply_filename_out)

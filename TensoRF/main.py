@@ -15,6 +15,8 @@ from dotenv import load_dotenv
 import functools
 import threading
 
+import logging
+from log import nerf_worker_logger
 
 app = Flask(__name__)
 base_url = "http://nerf-worker:5200/"
@@ -31,6 +33,8 @@ def start_flask():
     app.run(host="0.0.0.0", port=5200, debug=True)
 
 def on_message(channel, method, header, body, args):
+    logger = logging.getLogger('nerf-worker')
+    logger.info("Received message")
     thrds = args
     delivery_tag = method.delivery_tag
     
@@ -40,11 +44,16 @@ def on_message(channel, method, header, body, args):
     thrds.append(t)
 
 def ack_publish_message(channel, delivery_tag, body):
+    logger = logging.getLogger('nerf-worker')
+    logger.info("Publishing message")
+    
     if body:
         channel.basic_publish(exchange='', routing_key='nerf-out', body=body)
     channel.basic_ack(delivery_tag=delivery_tag)
     
 def run_nerf_job(channel, method, properties, body):
+    logger = logging.getLogger('nerf-worker')
+    logger.info("Running nerf job")
     
     args = config_parser(
         "--config configs/localworkerconfig_testsimon.txt")
@@ -55,6 +64,8 @@ def run_nerf_job(channel, method, properties, body):
     height = nerf_data["vid_height"]
     intrinsic_matrix = nerf_data["intrinsic_matrix"]
     frames = nerf_data["frames"]
+    
+    logger.info(f"Running nerf job for {id}")
 
     input_dir = Path(f"data/sfm_data/{id}")
     os.makedirs(input_dir, exist_ok=True)
@@ -73,6 +84,8 @@ def run_nerf_job(channel, method, properties, body):
     input_train.write_text(json.dumps(nerf_data, indent=4))
     input_render.write_text(json.dumps(nerf_data, indent=4))
 
+    logger.info("Saved motion and transorm data")
+    
     # Run TensoRF algorithm, creates sfm2nerf datatype for training
     args.datadir += f"/{id}"
     args.expname = id
@@ -106,7 +119,9 @@ def run_nerf_job(channel, method, properties, body):
 
 
 def nerf_worker():
-    print("Starting nerf_worker!")
+    logger = logging.getLogger('nerf-worker')
+    logger.info("Starting nerf_worker")
+    
     # TODO: Communicate with rabbitmq server on port defined in web-server arguments
     load_dotenv()
     rabbitmq_domain = "rabbitmq"
@@ -120,6 +135,7 @@ def nerf_worker():
     timeout = time.time() + 60 * 2
     while True:
         if time.time() > timeout:
+            logger.critical("nerf_worker took too long to connect to rabbitmq")
             raise Exception(
                 "nerf_worker took too long to connect to rabbitmq")
         try:
@@ -148,7 +164,10 @@ def nerf_worker():
     
 
 if __name__ == "__main__":
-    print("~NERF WORKER~")
+    # DEFINE LOGGER
+    logger = nerf_worker_logger('nerf-worker')
+    logger.info("~NERF WORKER~")
+
     nerfProcess = Process(target=nerf_worker, args=())
     flaskProcess = Process(target=start_flask, args=())
     flaskProcess.start()

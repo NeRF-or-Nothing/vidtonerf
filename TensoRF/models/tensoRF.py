@@ -133,7 +133,7 @@ class TensorVM(TensorBase):
         line_coef  = F.interpolate(self.line_coef.detach().data, size=(res_target[0],1), mode='bilinear',align_corners=True)
         self.plane_coef, self.line_coef = torch.nn.Parameter(plane_coef), torch.nn.Parameter(line_coef)
         self.compute_stepSize(res_target)
-        print(f'upsamping to {res_target}')
+        self.logger.info("upsampling to {}".format(res_target))
 
 
 class TensorVMSplit(TensorBase):
@@ -261,11 +261,11 @@ class TensorVMSplit(TensorBase):
         self.density_plane, self.density_line = self.up_sampling_VM(self.density_plane, self.density_line, res_target)
 
         self.update_stepSize(res_target)
-        print(f'upsamping to {res_target}')
+        self.logger.info("upsampling to {}".format(res_target))
 
     @torch.no_grad()
     def shrink(self, new_aabb):
-        print("====> shrinking ...")
+        self.logger.info("====> shrinking ...")
         xyz_min, xyz_max = new_aabb
         t_l, b_r = (xyz_min - self.aabb[0]) / self.units, (xyz_max - self.aabb[0]) / self.units
         # print(new_aabb, self.aabb)
@@ -295,7 +295,7 @@ class TensorVMSplit(TensorBase):
             correct_aabb = torch.zeros_like(new_aabb)
             correct_aabb[0] = (1-t_l_r)*self.aabb[0] + t_l_r*self.aabb[1]
             correct_aabb[1] = (1-b_r_r)*self.aabb[0] + b_r_r*self.aabb[1]
-            print("aabb", new_aabb, "\ncorrect aabb", correct_aabb)
+            self.logger.info("aabb {} \ncorrect aabb".format(new_aabb,correct_aabb))
             new_aabb = correct_aabb
 
         newSize = b_r - t_l
@@ -382,11 +382,11 @@ class TensorCP(TensorBase):
         self.density_line, self.app_line = self.up_sampling_Vector(self.density_line, self.app_line, res_target)
 
         self.update_stepSize(res_target)
-        print(f'upsamping to {res_target}')
+        self.logger.info("upsampling to {}".format(res_target))
 
     @torch.no_grad()
     def shrink(self, new_aabb):
-        print("====> shrinking ...")
+        self.logger.info("====> shrinking ...")
         xyz_min, xyz_max = new_aabb
         t_l, b_r = (xyz_min - self.aabb[0]) / self.units, (xyz_max - self.aabb[0]) / self.units
 
@@ -408,7 +408,7 @@ class TensorCP(TensorBase):
             correct_aabb = torch.zeros_like(new_aabb)
             correct_aabb[0] = (1-t_l_r)*self.aabb[0] + t_l_r*self.aabb[1]
             correct_aabb[1] = (1-b_r_r)*self.aabb[0] + b_r_r*self.aabb[1]
-            print("aabb", new_aabb, "\ncorrect aabb", correct_aabb)
+            self.logger.info("aabb {} \ncorrect aabb {}".format(new_aabb,correct_aabb))
             new_aabb = correct_aabb
 
         newSize = b_r - t_l

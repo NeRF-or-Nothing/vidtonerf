@@ -5,3 +5,4 @@ log
 Pipfile*
 __pycache__
 .vscode
+*.log
