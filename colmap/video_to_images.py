@@ -2,6 +2,7 @@ from genericpath import exists
 import subprocess
 import os
 import sys
+import logging
 from pathlib import Path
 
 # new imports
@@ -44,6 +45,10 @@ def split_video_into_frames(video_path, output_path, max_frames=200):
   ## determines whether image is blurry or not.
   # uses the variance of a laplacian transform to check for edges and returns true
   # if the variance is less than the threshold and the video is determined to be blurry
+
+  # Get Logger:
+  logger = logging.getLogger('sfm-worker')
+
   def is_blurry(image, THRESHOLD):
     ## Convert image to grayscale
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
@@ -71,9 +76,7 @@ def split_video_into_frames(video_path, output_path, max_frames=200):
 
   ## sample up to max frame count
   sample_count = min(frame_count,max_frames)
-  print("SAMPLE COUNT:", sample_count)
-
-  #print(f"frames = {frame_count}")
+  logger.info("SAMPLE COUNTER {}".format(sample_count))
 
   success, image = vidcap.read()
   img_height = image.shape[0]
@@ -157,7 +160,7 @@ def split_video_into_frames(video_path, output_path, max_frames=200):
       if (needs_adjust == True):
         image = cv2.resize(image, dimensions, interpolation=cv2.INTER_LANCZOS4)
       cv2.imwrite(f"{output_path}/img_{count}.png", image)  
-      print('Saved image ', count)
+      logger.info("Saved image {}".format(count))
     success, image = vidcap.read()
     
     count += 1
@@ -182,6 +185,8 @@ if __name__ == '__main__':
     ffmpeg_path = r".\ffmpeg.exe"
     video_path = r".\video.mp4"
     wanted_frames = 24
+
+    logger = logging.getLogger('sfm-worker')
 
     #Parse flags
     #Flag format up top
@@ -208,12 +213,12 @@ if __name__ == '__main__':
     #Calling split_video_into_frames
     status = split_video_into_frames(instance_name, output_path, ffmpeg_path, video_path, wanted_frames=200)
     if status == 0:
-        print("ffmpeg ran successfully.")
+        logger.info("ffmpeg ran successfully.")
     elif status == 1:
-        print("ERROR: There was an unknown error running ffmpeg")
+        logger.error("ERROR: There was an unknown error running ffmpeg")
     elif status == 2:
-        print(f"ERROR: ffmpeg - file {output_path}/{instance_name} already exists.")
+        logger.error("ERROR: ffmpeg - file {}/{} already exists.".format(output_path,instance_name))
     elif status == 3:
-        print(f"ERROR: ffmpeg - file {output_path} could not be found.")
+        logger.error("ERROR: ffmpeg - file {} could not be found.".format(output_path))
     elif status == 4:
-        print("ERROR: Video is too blurry. Please try again.")
+        logger.error("ERROR: Video is too blurry.")

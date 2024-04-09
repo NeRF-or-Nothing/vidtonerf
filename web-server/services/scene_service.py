@@ -8,8 +8,11 @@ from werkzeug.utils import secure_filename
 
 from pymongo import MongoClient
 
+import logging
+
 class ClientService:
     def __init__(self, manager: SceneManager, rmqservice: RabbitMQService):
+        self.logger = logging.getLogger('web-server')
         self.manager = manager
         self.rmqservice = rmqservice
         
@@ -17,12 +20,12 @@ class ClientService:
         # receive video and check for validity
         file_name = secure_filename(video_file.filename)
         if file_name == '':
-            print("ERROR: file not received")
+            self.logger.error("ERROR: file not received")
             return None
 
         file_ext = os.path.splitext(file_name)[1]
         if file_ext != ".mp4":
-            print("ERROR: improper file extension uploaded")
+            self.logger.error("ERROR: improper file extension uploaded")
             return None
 
         # generate new id and save to file with db record
@@ -59,4 +62,13 @@ class ClientService:
             return nerf.rendered_video_path
             #return ("Video ready", nerf.rendered_video_path)
         return None
+    
+    # Returns an integer describing the status of the video in the database.
+    # Normal videos will have a value of 0 and this is unncessary, but other values
+    # encode information on the COLMAP error that went wrong(e.g. 4 is a blurry video)
+    def get_nerf_flag(self, uuid):
+        nerf = self.manager.get_nerf(uuid)
+        if nerf:
+            return nerf.flag
+        return 0
         

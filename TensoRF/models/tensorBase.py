@@ -5,6 +5,8 @@ from .sh import eval_sh_bases
 import numpy as np
 import time
 
+import logging
+
 
 def positional_encoding(positions, freqs):
     
@@ -172,6 +174,8 @@ class TensorBase(torch.nn.Module):
         self.shadingMode, self.pos_pe, self.view_pe, self.fea_pe, self.featureC = shadingMode, pos_pe, view_pe, fea_pe, featureC
         self.init_render_func(shadingMode, pos_pe, view_pe, fea_pe, featureC, device)
 
+        self.logger = logging.getLogger('nerf-worker')
+
     def init_render_func(self, shadingMode, pos_pe, view_pe, fea_pe, featureC, device):
         if shadingMode == 'MLP_PE':
             self.renderModule = MLPRender_PE(self.app_dim, view_pe, pos_pe, featureC).to(device)
@@ -185,14 +189,14 @@ class TensorBase(torch.nn.Module):
             assert self.app_dim == 3
             self.renderModule = RGBRender
         else:
-            print("Unrecognized shading module")
+            self.logger.critical("Unrecognized shading module")
             exit()
-        print("pos_pe", pos_pe, "view_pe", view_pe, "fea_pe", fea_pe)
-        print(self.renderModule)
+        self.logger.info("pos_pe {} view_pe {} fea_pe {}".format(pos_pe,view_pe,fea_pe))
+        self.logger.info(self.renderModule)
 
     def update_stepSize(self, gridSize):
-        print("aabb", self.aabb.view(-1))
-        print("grid size", gridSize)
+        self.logger.info("aabb {}".format(self.aabb.view(-1)))
+        self.logger.info("grid size {}".format(gridSize))
         self.aabbSize = self.aabb[1] - self.aabb[0]
         self.invaabbSize = 2.0/self.aabbSize
         self.gridSize= torch.LongTensor(gridSize).to(self.device)
@@ -200,8 +204,8 @@ class TensorBase(torch.nn.Module):
         self.stepSize=torch.mean(self.units)*self.step_ratio
         self.aabbDiag = torch.sqrt(torch.sum(torch.square(self.aabbSize)))
         self.nSamples=int((self.aabbDiag / self.stepSize).item()) + 1
-        print("sampling step size: ", self.stepSize)
-        print("sampling number: ", self.nSamples)
+        self.logger.info("sampling step size: {}".format(self.stepSize))
+        self.logger.info("sampling number: ".format(self.nSamples))
 
     def init_svd_volume(self, res, device):
         pass
@@ -343,12 +347,12 @@ class TensorBase(torch.nn.Module):
         new_aabb = torch.stack((xyz_min, xyz_max))
 
         total = torch.sum(alpha)
-        print(f"bbox: {xyz_min, xyz_max} alpha rest %%%f"%(total/total_voxels*100))
+        self.logger.info(f"bbox: {xyz_min, xyz_max} alpha rest %%%f"%(total/total_voxels*100))
         return new_aabb
 
     @torch.no_grad()
     def filtering_rays(self, all_rays, all_rgbs, N_samples=256, chunk=10240*5, bbox_only=False):
-        print('========> filtering rays ...')
+        self.logger.info("========> filtering rays ...")
         tt = time.time()
 
         N = torch.tensor(all_rays.shape[:-1]).prod()
@@ -375,7 +379,7 @@ class TensorBase(torch.nn.Module):
 
         mask_filtered = torch.cat(mask_filtered).view(all_rgbs.shape[:-1])
 
-        print(f'Ray filtering done! takes {time.time()-tt} s. ray mask ratio: {torch.sum(mask_filtered) / N}')
+        self.logger.info(f'Ray filtering done! takes {time.time()-tt} s. ray mask ratio: {torch.sum(mask_filtered) / N}')
         return all_rays[mask_filtered], all_rgbs[mask_filtered]
 
 

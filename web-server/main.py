@@ -15,9 +15,18 @@ import json
 import os
 from dotenv import load_dotenv
 
+import logging
+from log import web_server_logger
+
 
 def main():
-    print("Starting web-app...")
+    """
+     STARTING LOGGER
+    """
+    logger = web_server_logger('web-server')
+    logger.info("~WEB SERVER~")
+
+    logger.info("Starting web-app...")
     
     parser = create_arguments()
     args = parser.parse_args()

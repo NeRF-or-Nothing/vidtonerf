@@ -9,7 +9,7 @@ def config_parser(cmd=None):
     parser.add_argument('--local_run', type = bool, default = False,
                         help = 'run colmap worker locally')
 
-    parser.add_argument('--input_data_path', default = 'data/inputs/video/input.mp4',
+    parser.add_argument('--input_data_path', default = 'data/inputs/input.mp4',
                         help = 'input data path for local runs')
 
     if cmd is not None:
