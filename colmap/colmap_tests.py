@@ -55,6 +55,9 @@ class Testcolmap(unittest.TestCase):
                                     [1.0, 0.0, 0.0]])
         np.testing.assert_array_almost_equal(rotation_matrix, expected_matrix)
 
+
+    # In order for these tests to work, you need to have the colmap executable in the same directory as the test file
+    # and the images in the data/inputs folder 
     def test_colmap_runner(self):
         # Test case 1
         instance_name = "colmap_output"
@@ -75,6 +78,7 @@ class Testcolmap(unittest.TestCase):
         status = run_colmap(colmap_path, images_path, output_path)
         self.assertEqual(status, 0)
 
+    # In order for these tests to work, you need to have the video in the data/input folder
     def test_video_to_images(self):
         # Test case 1
         output_path = "./data/output"

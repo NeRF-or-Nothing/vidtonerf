@@ -128,33 +128,50 @@ class WebServer:
 
 
 
-        @self.app.route("/register", methods=["POST"])
+        @self.app.route("/register", methods=["POST", "OPTIONS"])
         def register_user():
             #get username and password from register
             #use set_user
             #if it doesnt fail, youre all good
 
+            try:
+                req_data = request#.get_json()
 
-            username=request.form["username"]
-            password=request.form["password"]
-
-            user=self.user_manager.generate_user(username,password)
-
-            if user==1:
-                string=f"USERNAME CONFLICT|{user.id}"
+                username=req_data["username"]
+                #DEBUGGING
+                string = f"USERNAME: {username}"
                 response=make_response(string)
+                response.headers['Access-Control-Allow-Origin'] = '*'  # Allow CORS
+                response.headers['Access-Control-Allow-Methods'] = 'POST, OPTIONS'  # Allow CORS
+                response.headers['Access-Control-Allow-Headers'] = 'Content-Type'
                 return response
-            if user==None:
-                raise Exception('Unknown error when generating user')
 
+                password=req_data["password"]
 
+                user=self.user_manager.generate_user(username,password)
 
-            string=f"SUCCESS|{user.id}"
-            response=make_response(string)
-            return response
+                if user==1:
+                    string=f"USERNAME CONFLICT|{user.id}"
+                    response=make_response(string)
+                    response.headers['Access-Control-Allow-Origin'] = '*'  # Allow CORS
+                    response.headers['Access-Control-Allow-Methods'] = 'POST, OPTIONS'  # Allow CORS
+                    response.headers['Access-Control-Allow-Headers'] = 'Content-Type'
+                    return response
+                if user==None:
+                    raise Exception('Unknown error when generating user')
+            except Exception as e:
+                error_msg = f"Error: {str(e)}"
+                response = make_response(error_msg)
+                response.headers['Access-Control-Allow-Origin'] = '*'  # Allow CORS
+                response.headers['Access-Control-Allow-Methods'] = 'POST, OPTIONS'  # Allow CORS
+                response.headers['Access-Control-Allow-Headers'] = 'Content-Type'
+                response.status_code = 400  # Bad Request
+                return response
 
         @self.app.route("/test")
         def test_endpoint():
-            
-            return "Success!"
+            status_str = "Success!"
+            response = make_response(status_str)
+            response.headers['Access-Control-Allow-Origin'] = '*'  # Allow CORS
+            return response
 
