@@ -2,6 +2,7 @@ from genericpath import exists
 import subprocess
 import os
 import sys
+import logging
 from pathlib import Path
 
 # new imports
@@ -44,6 +45,10 @@ def split_video_into_frames(video_path, output_path, max_frames=200):
   ## determines whether image is blurry or not.
   # uses the variance of a laplacian transform to check for edges and returns true
   # if the variance is less than the threshold and the video is determined to be blurry
+
+  # Get Logger:
+  logger = logging.getLogger('sfm-worker')
+
   def is_blurry(image, THRESHOLD):
     ## Convert image to grayscale
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
@@ -71,9 +76,8 @@ def split_video_into_frames(video_path, output_path, max_frames=200):
 
   ## sample up to max frame count
   sample_count = min(frame_count,max_frames)
-  print("SAMPLE COUNT:", sample_count)
+  logger.info("SAMPLE COUNT {}".format(sample_count))
 
-  #print(f"frames = {frame_count}")
 
   success, image = vidcap.read()
   img_height = image.shape[0]
@@ -118,9 +122,6 @@ def split_video_into_frames(video_path, output_path, max_frames=200):
 
   needs_adjust = False ## determines if we need to adjust
   aspect_ratio = img_height / img_width
-  #print (f"aspect ratio: {aspect_ratio}")
-  #print (f"img_width: {img_width}")
-  #print (f"img_height: {img_height}")
   ## adjust as necessaryx 
   MAX_WIDTH = 200 
   MAX_HEIGHT = 200
@@ -142,8 +143,6 @@ def split_video_into_frames(video_path, output_path, max_frames=200):
   else:
     img_height = (int) (img_height * aspect_ratio)
 
-  #print(f"new img height: {img_height}")
-  #print(f"new img width: {img_width}")
   dimensions = (img_width, img_height)
 
 
@@ -157,7 +156,7 @@ def split_video_into_frames(video_path, output_path, max_frames=200):
       if (needs_adjust == True):
         image = cv2.resize(image, dimensions, interpolation=cv2.INTER_LANCZOS4)
       cv2.imwrite(f"{output_path}/img_{count}.png", image)  
-      print('Saved image ', count)
+      logger.info("Saved image {}".format(count))
     success, image = vidcap.read()
     
     count += 1
@@ -205,8 +204,10 @@ if __name__ == '__main__':
                     print("ERROR: Unrecognized flag", sys.argv[i])
                     quit()"""
     
+
     #Calling split_video_into_frames
     status = split_video_into_frames(instance_name, output_path, ffmpeg_path, video_path, wanted_frames=200)
+
     if status == 0:
         print("ffmpeg ran successfully.")
     elif status == 1:
