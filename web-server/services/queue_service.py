@@ -221,6 +221,7 @@ def digest_finished_sfms(rabbitip, rmqservice: RabbitMQService, scene_manager: S
                 # TODO: This code trusts the file extensions from the worker
                 # TODO: handle files not found
                 url = fr_['file_path']
+                logger.log(logging.INFO, f"Downloading image from {url}")
                 img = requests.get(url)
                 url_path = urlparse(fr_['file_path']).path
                 filename = url_path.split("/")[-1]
@@ -229,8 +230,8 @@ def digest_finished_sfms(rabbitip, rmqservice: RabbitMQService, scene_manager: S
                 file_path += "/" + filename
                 open(file_path,"wb").write(img.content)
 
-            path = os.path.join(os.getcwd(), file_path)
-            sfm_data['frames'][i]["file_path"] = file_path
+                path = os.path.join(os.getcwd(), file_path)
+                sfm_data['frames'][i]["file_path"] = file_path
         
         # Get indexes of k mean grouped frames
         #k_sampled = k_mean_sampling(sfm_data)
@@ -238,6 +239,7 @@ def digest_finished_sfms(rabbitip, rmqservice: RabbitMQService, scene_manager: S
         # Use those frames to revise list of frames used in sfm generation
         #sfm_data['frames'] = [sfm_data['frames'][i] for i in k_sampled]
 
+            del sfm_data['flag']
             #call SceneManager to store to database
             vid = Video.from_dict(sfm_data)
             sfm = Sfm.from_dict(sfm_data)
@@ -310,6 +312,7 @@ def digest_finished_nerfs(rabbitip, rmqservice: RabbitMQService, scene_manager: 
         
         open(filepath,"wb").write(video.content)
 
+        nerf_data["flag"] = 0
         nerf_data['rendered_video_path'] = filepath
         id = nerf_data['id']
         

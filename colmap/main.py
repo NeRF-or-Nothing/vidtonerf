@@ -27,6 +27,7 @@ base_url = "http://sfm-worker:5100/"
 
 @app.route("/data/outputs/<path:path>")
 def send_video(path):
+    logger.info(f"Sending video: {path}")
     return send_from_directory("data/outputs/", path)
 
 

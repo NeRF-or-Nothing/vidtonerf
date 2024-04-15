@@ -1,4 +1,4 @@
-# NVIDIA CUDA Toolkit 10.2 for ubuntu
+# NVIDIA CUDA Toolkit 12.3 for ubuntu
 FROM nvidia/cuda:12.3.2-devel-ubuntu22.04
 
 WORKDIR /TensoRF

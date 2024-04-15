@@ -4,7 +4,8 @@ datadir = ./data/sfm_data
 expname =  tensorf_sfm_data_VM
 basedir = ./log
 
-n_iters = 50
+n_iters = 1000
+progress_refresh_rate = 100
 batch_size = 4096
 
 N_voxel_init = 2097156 # 128**3
@@ -15,12 +16,13 @@ update_AlphaMask_list = [2000,4000]
 N_vis = 5
 vis_every = 10000
 
-render_test = 1
+#render_test = 1
+render_path = 0
+
 
 n_lamb_sigma = [16,16,16]
 n_lamb_sh = [48,48,48]
 model_name = TensorVMSplit
-
 
 shadingMode = MLP_Fea
 fea2denseAct = softplus

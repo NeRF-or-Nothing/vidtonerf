@@ -65,7 +65,7 @@ services:
       networks:
         - backend 
       command: python3.10 main.py --config=configs/default.txt
-  
+
   nerf-worker:
       build:
         context: .
@@ -85,6 +85,14 @@ services:
         - backend
       command: python3.10 main.py
 
+      deploy:
+        resources:
+          reservations:
+            devices:
+              - driver: nvidia
+                count: all
+                capabilities: [gpu]
+
 networks:
   backend:
     name: backend-network
@@ -92,3 +100,4 @@ networks:
 
 volumes:
   mongodb_data_container:
+

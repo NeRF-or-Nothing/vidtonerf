@@ -2,9 +2,9 @@ import logging
 
 def nerf_worker_logger(name='root'):
     """
-        Initializer for a global sfm-worker logger.
+        Initializer for a global nerf-worker logger.
             -> 
-        To initialize use: 'logger = log.sfm_worker_logger(name)'
+        To initialize use: 'logger = log.nerf_worker_logger(name)'
         To retrieve in different context: 'logger = logging.getLogger(name)'
     """
     formatter = logging.Formatter(fmt='%(asctime)s - %(levelname)s - %(module)s - %(message)s')

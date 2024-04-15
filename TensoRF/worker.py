@@ -61,11 +61,13 @@ def render_novel_view(args, logfolder, tensorf_model):
     logger.info("Rendering scene to be saved at: {}".format(logfolder))
     # render path and save images to imgs_path_all
     if args.render_path:
+        logger.info("Rendering path")
         c2ws = test_dataset.render_path
         os.makedirs(f'{logfolder}/{args.expname}/imgs_path_all', exist_ok=True)
         evaluation_path(test_dataset,tensorf_model, c2ws, renderer, f'{logfolder}/{args.expname}/imgs_path_all/',
                                 N_vis=-1, N_samples=-1, white_bg = white_bg, ndc_ray=ndc_ray,device=device, save_imgs = args.png_mode)
     else:
+        logger.info("Rendering all")
         os.makedirs(f'{logfolder}/imgs_render_all', exist_ok=True)
         evaluation(test_dataset,tensorf_model, args, renderer, f'{logfolder}/imgs_render_all/',
                                 N_vis=-1, N_samples=-1, white_bg = white_bg, ndc_ray=ndc_ray,device=device, save_imgs = args.png_mode)
@@ -124,7 +126,7 @@ def train_tensorf(args):
                     density_n_comp=n_lamb_sigma, appearance_n_comp=n_lamb_sh, app_dim=args.data_dim_color, near_far=near_far,
                     shadingMode=args.shadingMode, alphaMask_thres=args.alpha_mask_thre, density_shift=args.density_shift, distance_scale=args.distance_scale,
                     pos_pe=args.pos_pe, view_pe=args.view_pe, fea_pe=args.fea_pe, featureC=args.featureC, step_ratio=args.step_ratio, fea2denseAct=args.fea2denseAct)
-
+    logger.info(f"type of tensorf: {type(tensorf)}")
 
     # learning rate for Adam optimizer
     grad_vars = tensorf.get_optparam_groups(args.lr_init, args.lr_basis)
@@ -226,6 +228,12 @@ def train_tensorf(args):
                 + f' mse = {loss:.6f}'
             )
             PSNRs = []
+            logger.info(
+                f'Iteration {iteration:05d}:' 
+                + f' train_psnr = {float(np.mean(PSNRs)):.2f}' 
+                + f' test_psnr = {float(np.mean(PSNRs_test)):.2f}' 
+                + f' mse = {loss:.6f}'
+            )
 
 
         # Every few thousand iterations mask voxel representation to lower memory consumption

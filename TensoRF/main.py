@@ -1,36 +1,31 @@
-from flask import Flask
-from flask import send_from_directory
+from flask import Flask, send_from_directory
 from pathlib import Path
+from log import nerf_worker_logger
+from opt import config_parser
+from worker import train_tensorf, render_novel_view
+from dotenv import load_dotenv
 import requests
 import pika
 import json
 import time
 import shutil
-from multiprocessing import Process, connection
 import os
-from dataLoader import sfm2nerf
-from opt import config_parser
-from worker import train_tensorf, render_novel_view
-from dotenv import load_dotenv
 import functools
 import threading
-
 import logging
-from log import nerf_worker_logger
+import torch
+import multiprocessing as mp
 
 app = Flask(__name__)
 base_url = "http://nerf-worker:5200/"
-#base_url = "0.0.0.0:5200/"
-
 
 @app.route("/data/nerf_data/<path:path>")
 def send_video(path):
     return send_from_directory("data/nerf_data/", path)
 
-
 def start_flask():
     global app
-    app.run(host="0.0.0.0", port=5200, debug=True)
+    app.run(host="0.0.0.0", port=5200, debug=False)
 
 def on_message(channel, method, header, body, args):
     logger = logging.getLogger('nerf-worker')
@@ -38,7 +33,6 @@ def on_message(channel, method, header, body, args):
     thrds = args
     delivery_tag = method.delivery_tag
     
-    #t = Thread(target = run_nerf_job, args=(channel, method, header, body))
     t = threading.Thread(target = run_nerf_job, args=(channel, method, delivery_tag, body))
     t.start()
     thrds.append(t)
@@ -53,7 +47,6 @@ def ack_publish_message(channel, delivery_tag, body):
     
 def run_nerf_job(channel, method, properties, body):
     logger = logging.getLogger('nerf-worker')
-    logger.info("Running nerf job")
     
     args = config_parser(
         "--config configs/localworkerconfig_testsimon.txt")
@@ -91,6 +84,10 @@ def run_nerf_job(channel, method, properties, body):
     args.expname = id
     logfolder, tensorf_model = train_tensorf(args)
     local_video_path = render_novel_view(args, logfolder, tensorf_model)
+    
+    # Clear from RAM/VRAM to prevent detached thread leak (can be >20GB)
+    torch.cuda.empty_cache()
+    del tensorf_model
 
     # Save model and video to nerf_data for retrieval
     out_model_path = Path(f"data/nerf_data/{id}/model.th")
@@ -108,7 +105,7 @@ def run_nerf_job(channel, method, properties, body):
         "rendered_video_path": out_video_path
     }
 
-    # Use thread safe callback to ack message and publish nerf_output_object 
+    # Use threadsafe callback to ack message and publish nerf_output_object 
     callback = functools.partial(
         ack_publish_message, 
         channel, 
@@ -118,10 +115,16 @@ def run_nerf_job(channel, method, properties, body):
     channel.connection.add_callback_threadsafe(callback)
 
 
-def nerf_worker():
-    logger = logging.getLogger('nerf-worker')
-    logger.info("Starting nerf_worker")
+def nerf_worker(i, *args):
+    logger = nerf_worker_logger('nerf-worker')
+    logger.info("~NERF WORKER~")
+    logger.info(f"CUDA Available: {torch.cuda.is_available()}")
+    if torch.cuda.is_available():
+        logger.info(f"Available CUDA devices: {torch.cuda.device_count()}")
+        for i in range(torch.cuda.device_count()):
+            logger.info(f"CUDA Device {i}: {torch.cuda.get_device_name(i)}")
     
+        
     # TODO: Communicate with rabbitmq server on port defined in web-server arguments
     load_dotenv()
     rabbitmq_domain = "rabbitmq"
@@ -145,7 +148,8 @@ def nerf_worker():
             channel.queue_declare(queue='nerf-in')
             channel.queue_declare(queue='nerf-out')
 
-            # Will block and create a thread to process nerf_job
+            # Will block until it creates a separate thread for each message
+            # This is to prevent the main thread from blocking
             channel.basic_qos(prefetch_count=1)
             on_message_callback = functools.partial(on_message, args = (threads))
             channel.basic_consume(queue='nerf-in', on_message_callback=on_message_callback, auto_ack=False)
@@ -154,8 +158,6 @@ def nerf_worker():
             except KeyboardInterrupt:
                 channel.stop_consuming()
                 connection.close()
-                break
-            
                 for thread in threads:
                     thread.join()
                 
@@ -164,13 +166,22 @@ def nerf_worker():
     
 
 if __name__ == "__main__":
-    # DEFINE LOGGER
-    logger = nerf_worker_logger('nerf-worker')
-    logger.info("~NERF WORKER~")
+    # IMPORTANT: FOR CUDA DEVICE USAGE
+    # flask must run in a normally FORKED python.multiprocessing process
+    # training and pika must run in a SPAWNED torch.multiprocessing process
+    # else you will have issues with redeclaring cuda devices
+    # if flask is not in forked process, web-server cannot send get requests,
+    # but nerf-worker will be able to send get requests to web-server
 
-    nerfProcess = Process(target=nerf_worker, args=())
-    flaskProcess = Process(target=start_flask, args=())
-    flaskProcess.start()
+    # additional note: spawn does not inherent memory, so need to reinitialize
+    # the logger in the spawned process. This creates issues with both file descriptors
+    # pointing to the same file, so the __main__ logger will not be able to write to the file
+    # for now I have moved the logger to the nerf_worker process as the flask process never used
+    # the logger
+
+    flaskProcess = mp.Process(target=start_flask, args=())
+    flaskProcess.start()    
+    nerfProcess = torch.multiprocessing.spawn(fn=nerf_worker, args=())
     nerfProcess.start()
     flaskProcess.join()
     nerfProcess.join()

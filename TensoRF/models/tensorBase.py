@@ -161,6 +161,7 @@ class TensorBase(torch.nn.Module):
         self.near_far = near_far
         self.step_ratio = step_ratio
 
+        self.logger = logging.getLogger('nerf-worker')
 
         self.update_stepSize(gridSize)
 
@@ -174,7 +175,6 @@ class TensorBase(torch.nn.Module):
         self.shadingMode, self.pos_pe, self.view_pe, self.fea_pe, self.featureC = shadingMode, pos_pe, view_pe, fea_pe, featureC
         self.init_render_func(shadingMode, pos_pe, view_pe, fea_pe, featureC, device)
 
-        self.logger = logging.getLogger('nerf-worker')
 
     def init_render_func(self, shadingMode, pos_pe, view_pe, fea_pe, featureC, device):
         if shadingMode == 'MLP_PE':

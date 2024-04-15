@@ -9,6 +9,7 @@ from flask import Flask, request, make_response, send_file, send_from_directory,
 
 from models.scene import UserManager, QueueListManager
 from services.scene_service import ClientService
+import logging
 
 def is_valid_uuid(value):
     try:
@@ -84,11 +85,11 @@ class WebServer:
             
         @self.app.route("/data/nerf/<vidid>", methods=["GET"])
         def send_nerf_video(vidid: str):
+            logger = logging.getLogger('web-server')
             ospath = None
             flag = 0
             status_str = "Processing"
             if is_valid_uuid(vidid):
-                flag = self.cservice.get_nerf_flag(vidid)
                 # If the video had no errors return the video path, otherwise return the error flag
                 if flag == 0:
                     ospath = self.cservice.get_nerf_video_path(vidid)
