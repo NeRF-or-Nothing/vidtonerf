@@ -18,6 +18,7 @@ from dotenv import load_dotenv
 
 from dataclasses import dataclass
 from typing import Optional, Any, List, TypeVar, Callable, Type, cast
+import logging
 
 
 T = TypeVar("T")
@@ -72,21 +73,24 @@ def to_class(c: Type[T], x: Any) -> dict:
 class Nerf:
     model_file_path: Optional[str] = None
     rendered_video_path: Optional[str] = None
+    flag: Optional[int] = 0
 
     @staticmethod
     def from_dict(obj: Any) -> 'Nerf':
         assert isinstance(obj, dict)
         model_file_path = from_union([from_str, from_none], obj.get("model_file_path"))
         rendered_video_path = from_union([from_str, from_none], obj.get("rendered_video_path"))
-        return Nerf(model_file_path, rendered_video_path)
+        flag = from_union([from_int, from_none], obj.get("flag"))
+        return Nerf(model_file_path, rendered_video_path, flag)
 
     def to_dict(self) -> dict:
         result: dict = {}
         result["model_file_path"] = from_union([from_str, from_none], self.model_file_path)
         result["rendered_video_path"] = from_union([from_str, from_none], self.rendered_video_path)
+        result["flag"] = from_union([from_int, from_none], self.flag)
 
         #ingnore null
-        result = {k:v for k,v in result.items() if v}
+        result = {k:v for k,v in result.items() if v !=None }
         return result
 
 
@@ -147,8 +151,8 @@ class Video:
     def from_dict(obj: Any) -> 'Video':
         assert isinstance(obj, dict)
         file_path = from_union([from_str, from_none], obj.get("file_path"))
-        width = from_union([from_int, from_none], obj.get("width"))
-        height = from_union([from_int, from_none], obj.get("height"))
+        width = from_union([from_int, from_none], obj.get("vid_width"))
+        height = from_union([from_int, from_none], obj.get("vid_height"))
         fps = from_union([from_float, from_none], obj.get("fps"))
         duration = from_union([from_float, from_none], obj.get("duration"))
         frame_count = from_union([from_int, from_none], obj.get("frame_count"))

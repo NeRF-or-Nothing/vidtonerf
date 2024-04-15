@@ -15,9 +15,18 @@ import json
 import os
 from dotenv import load_dotenv
 
+import logging
+from log import web_server_logger
+
 
 def main():
-    print("Starting web-app...")
+    """
+     STARTING LOGGER
+    """
+    logger = web_server_logger('web-server')
+    logger.info("~WEB SERVER~")
+
+    logger.info("Starting web-app...")
     
     parser = create_arguments()
     args = parser.parse_args()
@@ -44,8 +53,9 @@ def main():
     rmq_service = RabbitMQService(rabbitip, queue_man)
 
     # Starting async operations to pull finished jobs from rabbitmq <from services>
-    sfm_output_thread = threading.Thread(target=digest_finished_sfms, args=(rabbitip,scene_man,queue_man))
-    nerf_output_thread = threading.Thread(target=digest_finished_nerfs, args=(rabbitip,scene_man,queue_man))
+    # Pass rmq service to the threads to allow them to publish new jobs (thread safe)
+    sfm_output_thread = threading.Thread(target=digest_finished_sfms, args=(rabbitip, rmq_service, scene_man, queue_man))
+    nerf_output_thread = threading.Thread(target=digest_finished_nerfs, args=(rabbitip, rmq_service, scene_man,queue_man))
     sfm_output_thread.start()
     nerf_output_thread.start()
 

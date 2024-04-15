@@ -14,6 +14,7 @@ import random
 import sklearn.cluster
 
 
+import logging
 # Load environment variables from .env file at the root of the project
 load_dotenv()
 
@@ -22,6 +23,8 @@ load_dotenv()
 class RabbitMQService:
     # TODO: Communicate with rabbitmq server on port defined in web-server arguments
     def __init__(self, rabbitip, manager):
+        self.logger = logging.getLogger('web-server')
+
         rabbitmq_domain = rabbitip
         credentials = pika.PlainCredentials(str(os.getenv("RABBITMQ_DEFAULT_USER")), str(os.getenv("RABBITMQ_DEFAULT_PASS")))
         parameters = pika.ConnectionParameters(rabbitmq_domain, 5672, '/', credentials, heartbeat=300)
@@ -33,6 +36,7 @@ class RabbitMQService:
         #retries connection until conencts or 2 minutes pass
         while True:
             if time.time() > timeout:
+                self.logger.critical("RabbitMQService, _init_, took too long to connect to rabbitmq")
                 raise Exception("RabbitMQService, _init_, took too long to connect to rabbitmq")
             try:
                 self.connection = pika.BlockingConnection(parameters)  
@@ -66,6 +70,8 @@ class RabbitMQService:
         # add to sfm_list and queue_list (first received, goes into overarching queue) queue manager
         self.queue_manager.append_queue("sfm_list",id)
         self.queue_manager.append_queue("queue_list",id)
+        
+        self.logger.info("SFM Job Published with ID {}".format(id))
            
     def publish_nerf_job(self, id: str, vid: Video, sfm: Sfm):
         """
@@ -74,8 +80,8 @@ class RabbitMQService:
         """
         job = {
             "id": id,
-            "vid_width": vid.width,
-            "vid_height": vid.height
+            "vid_width": vid.width if vid.width else 0,
+            "vid_height": vid.height if vid.height else 0,
         }
 
         # replace relative filepaths with URLS
@@ -91,6 +97,7 @@ class RabbitMQService:
         # add to nerf_list queue manager
         self.queue_manager.append_queue("nerf_list",id)
 
+        self.logger.info("NERF Job Published with ID {}".format(id))
 
     #call
     #each sfm_out object would be in the form
@@ -128,6 +135,9 @@ def find_elbow_point(data, max_k=35):
     #return elbow.knee, x, wcss
 
 def k_mean_sampling(frames, size=100):
+    logger = logging.getLogger('web-server')
+
+    #TODO Make this input passed in, with default value 100
     CLUSTERS = size
 
     extrins = []
@@ -163,7 +173,7 @@ def k_mean_sampling(frames, size=100):
 
     labels = km.labels
     if (len(set(labels)) != elbow_point):
-        print("Error with clustering")
+        logger.error("Error with clustering.")
 
     cluster_array = [ [] for _ in range(elbow_point) ]
 
@@ -193,48 +203,68 @@ def k_mean_sampling(frames, size=100):
 
     return closest_frames
 
-def digest_finished_sfms(rabbitip, scene_manager: SceneManager, queue_manager: QueueListManager):
+
+def digest_finished_sfms(rabbitip, rmqservice: RabbitMQService, scene_manager: SceneManager, queue_manager: QueueListManager):
+    logger = logging.getLogger('web-server')
 
     def process_sfm_job(ch,method,properties,body):
         #load queue object
         sfm_data = json.loads(body.decode())
+        flag = sfm_data['flag']
         id = sfm_data['id']
-
+        logger.info("SFM TASK RETURNED WITH FLAG {}".format(flag))
+        # Process frames only if video is valid (== 0)
+        if(flag == 0):
         #convert each url to filepath
         #store png 
-        for i,fr_ in enumerate(sfm_data['frames']):
-            # TODO: This code trusts the file extensions from the worker
-            # TODO: handle files not found
-            url = fr_['file_path']
-            img = requests.get(url)
-            url_path = urlparse(fr_['file_path']).path
-            filename = url_path.split("/")[-1]
-            file_path =  "data/sfm/" + id 
-            os.makedirs(file_path, exist_ok=True) 
-            file_path += "/" + filename
-            open(file_path,"wb").write(img.content)
+            for i,fr_ in enumerate(sfm_data['frames']):
+                # TODO: This code trusts the file extensions from the worker
+                # TODO: handle files not found
+                url = fr_['file_path']
+                logger.log(logging.INFO, f"Downloading image from {url}")
+                img = requests.get(url)
+                url_path = urlparse(fr_['file_path']).path
+                filename = url_path.split("/")[-1]
+                file_path =  "data/sfm/" + id 
+                os.makedirs(file_path, exist_ok=True) 
+                file_path += "/" + filename
+                open(file_path,"wb").write(img.content)
 
-            path = os.path.join(os.getcwd(), file_path)
-            sfm_data['frames'][i]["file_path"] = file_path
+                path = os.path.join(os.getcwd(), file_path)
+                sfm_data['frames'][i]["file_path"] = file_path
         
         # Get indexes of k mean grouped frames
-        k_sampled = k_mean_sampling(sfm_data)
+        #k_sampled = k_mean_sampling(sfm_data)
 
         # Use those frames to revise list of frames used in sfm generation
-        sfm_data['frames'] = [sfm_data['frames'][i] for i in k_sampled]
+        #sfm_data['frames'] = [sfm_data['frames'][i] for i in k_sampled]
 
-        #call SceneManager to store to database
-        vid = Video.from_dict(sfm_data)
-        sfm = Sfm.from_dict(sfm_data)
-        scene_manager.set_sfm(id,sfm)
-        scene_manager.set_video(id,vid)
+            del sfm_data['flag']
+            #call SceneManager to store to database
+            vid = Video.from_dict(sfm_data)
+            sfm = Sfm.from_dict(sfm_data)
+            scene_manager.set_sfm(id,sfm)
+            scene_manager.set_video(id,vid)
 
         #remove video from sfm_list queue manager
         queue_manager.pop_queue("sfm_list",id)
 
-        print("saved finished sfm job")
+        logger.info("Saved finished SFM job")
         new_data = json.dumps(sfm_data)
+        
+        # Publish new job to nerf-in only if good status (flag of 0)
+        if(flag == 0):
+            rmqservice.publish_nerf_job(id, vid, sfm)
+        else:
+            queue_manager.pop_queue("queue_list",id)
+            # Set a specific flag to the failed flag (normal is 0)
+            nerf = Nerf().from_dict({"flag":flag})
+            # Set this to the final output
+            scene_manager.set_nerf(id, nerf)
+
+
         ch.basic_ack(delivery_tag=method.delivery_tag)
+        
 
     # create unique connection to rabbitmq since pika is NOT thread safe
     rabbitmq_domain = rabbitip
@@ -247,6 +277,7 @@ def digest_finished_sfms(rabbitip, scene_manager: SceneManager, queue_manager: Q
     #retries connection until connects or 2 minutes pass
     while True:
         if time.time() > timeout:
+            logger.critical("digest_finished_sfms took too long to connect to rabbitmq")
             raise Exception("digest_finished_sfms took too long to connect to rabbitmq")
         try:
             connection = pika.BlockingConnection(parameters)
@@ -266,26 +297,33 @@ def digest_finished_sfms(rabbitip, scene_manager: SceneManager, queue_manager: Q
             continue
 
 
-def digest_finished_nerfs(rabbitip,scene_manager: SceneManager, queue_manager: QueueListManager):
+def digest_finished_nerfs(rabbitip, rmqservice: RabbitMQService, scene_manager: SceneManager, queue_manager: QueueListManager):
+    logger = logging.getLogger('web-server')
 
     def process_nerf_job(ch,method,properties,body):
+        
         nerf_data = json.loads(body.decode())
         video = requests.get(nerf_data['rendered_video_path'])
+        id = nerf_data['id']
+        
         filepath = "data/nerf/" 
-        os.mkdir(filepath, exist_ok=True)
-        filepath = os.path.join(filepath,+f"{id}.mp4" )
+        os.makedirs(filepath, exist_ok=True)
+        filepath = os.path.join(filepath+f"{id}.mp4")
+        
         open(filepath,"wb").write(video.content)
 
+        nerf_data["flag"] = 0
         nerf_data['rendered_video_path'] = filepath
         id = nerf_data['id']
-        nerf = Nerf()
-        nerf.from_dict(nerf_data)
+        
+        # Static method to create Nerf object from dictionary
+        nerf = Nerf().from_dict(nerf_data)
         scene_manager.set_nerf(id, nerf)
-        #ch.basic_ack(delivery_tag=method.delivery_tag)
 
         #remove video from nerf_list and queue_list (end of full process) queue manager
         queue_manager.pop_queue("nerf_list",id)
         queue_manager.pop_queue("queue_list",id)
+        ch.basic_ack(delivery_tag=method.delivery_tag)
     
     # create unique connection to rabbitmq since pika is NOT thread safe
     rabbitmq_domain = rabbitip
@@ -298,6 +336,7 @@ def digest_finished_nerfs(rabbitip,scene_manager: SceneManager, queue_manager: Q
     #retries connection until connects or 2 minutes pass
     while True:
         if time.time() > timeout:
+            logger.critical("digest_finished_nerfs took too long to connect to rabbitmq")
             raise Exception("digest_finished_nerfs took too long to connect to rabbitmq")
         try:
             connection = pika.BlockingConnection(parameters)
