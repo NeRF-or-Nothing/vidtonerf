@@ -102,7 +102,7 @@ class WebServer:
             # TODO make this access secure
             return send_from_directory('data',path[5:])
             
-        @self.app.route("/login", methods=["GET"])
+        @self.app.route("/login", methods=["GET", "OPTIONS"])
         def login_user():
             #get username and password from login 
             #use get_user_by_username and compare the password retrieved from that to the password given by the login
@@ -133,40 +133,38 @@ class WebServer:
             #get username and password from register
             #use set_user
             #if it doesnt fail, youre all good
+            
+            #DEBUGGING
+            if request.method == "OPTIONS":
+                response = make_response()
+                response.headers['Access-Control-Allow-Origin'] = '*'
+                response.headers['Access-Control-Allow-Methods'] = 'POST, OPTIONS'
+                response.headers['Access-Control-Allow-Headers'] = 'Content-Type'
+                return response
 
             try:
-                req_data = request#.get_json()
-
+                req_data = request.get_json()
+        
                 username=req_data["username"]
-                #DEBUGGING
-                string = f"USERNAME: {username}"
-                response=make_response(string)
-                response.headers['Access-Control-Allow-Origin'] = '*'  # Allow CORS
-                response.headers['Access-Control-Allow-Methods'] = 'POST, OPTIONS'  # Allow CORS
-                response.headers['Access-Control-Allow-Headers'] = 'Content-Type'
-                return response
-
                 password=req_data["password"]
-
+                
                 user=self.user_manager.generate_user(username,password)
-
+                
                 if user==1:
-                    string=f"USERNAME CONFLICT|{user.id}"
-                    response=make_response(string)
-                    response.headers['Access-Control-Allow-Origin'] = '*'  # Allow CORS
-                    response.headers['Access-Control-Allow-Methods'] = 'POST, OPTIONS'  # Allow CORS
-                    response.headers['Access-Control-Allow-Headers'] = 'Content-Type'
-                    return response
+                    raise Exception(f"USERNAME CONFLICT")
                 if user==None:
                     raise Exception('Unknown error when generating user')
+                string=f"SUCCESS"
+                code = 200
             except Exception as e:
-                error_msg = f"Error: {str(e)}"
-                response = make_response(error_msg)
-                response.headers['Access-Control-Allow-Origin'] = '*'  # Allow CORS
-                response.headers['Access-Control-Allow-Methods'] = 'POST, OPTIONS'  # Allow CORS
-                response.headers['Access-Control-Allow-Headers'] = 'Content-Type'
-                response.status_code = 400  # Bad Request
-                return response
+                string = f"Error: {str(e)}"
+                code = 400
+            response = make_response(string)
+            response.headers['Access-Control-Allow-Origin'] = '*'  # Allow CORS
+            response.headers['Access-Control-Allow-Methods'] = 'POST, OPTIONS'  # Allow CORS
+            response.headers['Access-Control-Allow-Headers'] = 'Content-Type'
+            response.status_code = code  # Bad Request
+            return response
 
         @self.app.route("/test")
         def test_endpoint():
