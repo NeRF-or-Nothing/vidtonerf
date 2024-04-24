@@ -352,3 +352,25 @@ class UserManager:
             return User.from_dict(doc)
         else:
             return None
+        
+    def check_user_exists(self, username: str) -> bool:
+        key = {"username": username}
+        doc = self.collection.find_one(key)
+        return doc is not None
+    
+
+    def get_id_by_username(self, username: str) -> str:
+        key = {"username": username}
+        doc = self.collection.find_one(key)
+        if doc:
+            return doc["_id"]
+        else:
+            return None
+        
+    def get_id_by_user(self, user: User) -> str:
+        key = {"username": user.username}
+        doc = self.collection.find_one(key)
+        if doc:
+            return doc["_id"]
+        else:
+            return None
