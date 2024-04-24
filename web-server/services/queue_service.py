@@ -102,6 +102,19 @@ class RabbitMQService:
     #   channel.basic.consume(on_message_callback = callback_sfm_job, queue = sfm_out)
 
 def find_elbow_point(data, max_k=35):
+    """
+    Finds the elbow point in a graph of Within-Cluster Sum of Squares (WCSS) values.
+
+    Args:
+        data (array-like): The input data for clustering.
+        max_k (int, optional): The maximum number of clusters to consider. Defaults to 35.
+
+    Returns:
+        int: The optimal number of clusters (elbow point).
+        list: The x values for the graph.
+        list: The WCSS values for the graph.
+    """
+
     # Within-Cluster Sum of Squares (WCSS)
     wcss = []
 
@@ -128,6 +141,16 @@ def find_elbow_point(data, max_k=35):
     #return elbow.knee, x, wcss
 
 def k_mean_sampling(frames, size=100):
+    """
+    Perform k-means clustering on the given frames to sample a subset of frames.
+
+    Args:
+        frames (dict): A dictionary containing the frames data.
+        size (int, optional): The desired size of the sampled subset. Defaults to 100.
+
+    Returns:
+        list: A list of indices representing the closest frames to the centroids of each cluster.
+    """
     CLUSTERS = size
 
     extrins = []
@@ -196,6 +219,18 @@ def k_mean_sampling(frames, size=100):
 def digest_finished_sfms(rabbitip, scene_manager: SceneManager, queue_manager: QueueListManager):
 
     def process_sfm_job(ch,method,properties,body):
+        """
+        Process the SFM (Structure from Motion) job.
+
+        Args:
+            ch: The channel object for communication with RabbitMQ.
+            method: The method object containing the delivery tag.
+            properties: The properties object containing message properties.
+            body: The message body containing the SFM data.
+
+        Returns:
+            None
+        """
         #load queue object
         sfm_data = json.loads(body.decode())
         id = sfm_data['id']
@@ -269,6 +304,18 @@ def digest_finished_sfms(rabbitip, scene_manager: SceneManager, queue_manager: Q
 def digest_finished_nerfs(rabbitip,scene_manager: SceneManager, queue_manager: QueueListManager):
 
     def process_nerf_job(ch,method,properties,body):
+        """
+        Process the Nerf job.
+
+        Args:
+            ch: The channel object for communication with RabbitMQ.
+            method: The method object containing the delivery tag.
+            properties: The properties object containing message properties.
+            body: The message body containing the Nerf data.
+
+        Returns:
+            None
+        """
         nerf_data = json.loads(body.decode())
         video = requests.get(nerf_data['rendered_video_path'])
         filepath = "data/nerf/" 
