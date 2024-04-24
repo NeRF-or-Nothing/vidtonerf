@@ -301,37 +301,54 @@ class SceneManager:
         
 
 class UserManager:
-    def __init__(self) -> None:
-        client = MongoClient(host="mongodb",port=27017,username="admin",password="password123")
+    def __init__(self,unittest=False) -> None:
+        # unittest=True implies this runs on localhost for unit testing
+        mongoip = "localhost" if unittest else str(os.getenv("MONGO_IP"))
+        client = MongoClient(host=mongoip,port=27017,username=str(os.getenv("MONGO_INITDB_ROOT_USERNAME")),\
+                             password=str(os.getenv("MONGO_INITDB_ROOT_PASSWORD")))
         self.db = client["nerfdb"]
         self.collection = self.db["users"]
         self.upsert=True
 
 
-    def set_user(self, _id: str, user:User):
-        key={"_id":_id}
+    def set_user(self, user:User):  #usernames and ids are forced to be unique, passwords are not
+        key={"username":user.username}
+        doc = self.collection.find_one(key)
+        if doc!=None:
+            #Two users assigned with same username
+            return 1
+        key={"_id":user._id}
+        doc = self.collection.find_one(key)
+        if doc!=None:
+            raise Exception('Two users assigned with same ID!')
+        user.password=str(hash(user.password))
+
         value = {"$set": user.to_dict()}
         self.collection.update_one(key,value,upsert=self.upsert)
+        return 0
 
+    def generate_user(self, username:str, password:str):
+        _id = str(uuid4())
+        user=User(username,password,_id)
+        errorcode=self.set_user(user)
+        if(errorcode!=0):
+            return errorcode
+            
+        return user
+            
 
-    #already outdated(?)
     def get_user_by_id(self, _id: str) -> User:
         key = {"_id":_id}
         doc = self.collection.find_one(key)
-        if doc and "user" in doc:
-            return User.from_dict(doc["user"])
+        if doc:
+            return User.from_dict(doc)
         else:
             return None
 
     def get_user_by_username(self, username: str) -> User:
         key = {"username":username}
         doc = self.collection.find_one(key)
-        if doc and "user" in doc:
-            return User.from_dict(doc["user"])
+        if doc:
+            return User.from_dict(doc)
         else:
             return None
-    #TODO: Write an overloaded function for finding users by username
-         
-
-    #def user_exists(self):
-    #TODO: Write an overloaded function for finding if a user exists by username
