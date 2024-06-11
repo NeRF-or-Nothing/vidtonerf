@@ -4,8 +4,8 @@ datadir = ./data/sfm_data
 expname =  tensorf_sfm_data_VM
 basedir = ./log
 
-n_iters = 1000
-progress_refresh_rate = 100
+n_iters = 5500
+progress_refresh_rate = 1000
 batch_size = 4096
 
 N_voxel_init = 2097156 # 128**3
@@ -14,7 +14,7 @@ upsamp_list = [2000,3000,4000,5500,7000]
 update_AlphaMask_list = [2000,4000]
 
 N_vis = 5
-vis_every = 10000
+vis_every = 500
 
 #render_test = 1
 render_path = 0
