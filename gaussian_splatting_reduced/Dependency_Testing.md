@@ -48,3 +48,4 @@ scene:
 # Not Needed:
 SIBR_viewers
 
+# Testing to NVCC compile before docker build stage

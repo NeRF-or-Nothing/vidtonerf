@@ -69,7 +69,7 @@ services:
   nerf-worker-gaussian:
       build:
         context: ./gaussian_splatting_reduced
-        dockerfile: Dockerfile
+        dockerfile: Dockerfile_singlestage
       
       image: nerf-worker-gaussian-img
       container_name: nerf-worker-gaussian
