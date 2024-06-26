@@ -69,7 +69,7 @@ services:
   nerf-worker-gaussian:
       build:
         context: ./gaussian_splatting_reduced
-        dockerfile: Dockerfile_singlestage
+        dockerfile: Dockerfile_noconda
       
       image: nerf-worker-gaussian-img
       container_name: nerf-worker-gaussian
@@ -83,7 +83,7 @@ services:
         - 5201:5201
       networks:
         - backend
-      command: echo "Running Gaussian Splatting NERF Worker..."
+      command: bash -c "while true; do sleep 1; done"
 
       deploy:
         resources:

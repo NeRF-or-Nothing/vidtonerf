@@ -6,3 +6,4 @@ Pipfile*
 __pycache__
 .vscode
 *.log
+/submodules/*/
