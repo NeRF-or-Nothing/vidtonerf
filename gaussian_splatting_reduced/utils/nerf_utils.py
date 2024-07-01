@@ -27,10 +27,7 @@ def convert_transforms_to_gaussian(transforms ):
         "frames": [
             {
                 "file_path": "path/to/image",
-                "transform_matrix": [[r11, r12, r13, t1], 
-                                    [r21, r22, r23, t2], 
-                                    [r31, r32, r33, t3], 
-                                    [0, 0, 0, 1]]
+                "transform_matrix": [[r11, r12, r13, t1], [r21, r22, r23, t2], [r31, r32, r33, t3], [0, 0, 0, 1]]
             },
             ...
         ]

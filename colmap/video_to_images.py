@@ -102,6 +102,7 @@ def split_video_into_frames(video_path, output_path, max_frames=200):
   for i in blur_list:
     if i >= THRESHOLD:
       count_good_img += 1
+  logger.info("Number of good images: {}".format(count_good_img))
 
   ## account for not enough images in threshold so that we return the exact number of images
   if count_good_img > sample_count:
@@ -114,7 +115,8 @@ def split_video_into_frames(video_path, output_path, max_frames=200):
 
   ## If this threshold is too low, completely reject video 
   avg_threshold = (sorted_list[-1] + THRESHOLD)/2
-  if avg_threshold < 100:
+  logger.info("Average threshold: {}".format(avg_threshold))
+  if avg_threshold < 50:
     # ERROR: Video is too blurry. Please try again.
     return 4
   

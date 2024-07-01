@@ -35,3 +35,6 @@ RUN update-alternatives --install /usr/bin/python python /usr/bin/python3.8 1 \
 
 # Install Python dependencies (including prebuilt wheels)
 RUN pip install -r requirements.txt
+
+# Allow entry_point.sh to be executable
+RUN ["chmod", "+x", "./entry_point.sh"]

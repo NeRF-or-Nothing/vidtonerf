@@ -2,7 +2,6 @@ from flask import Flask, send_from_directory
 from pathlib import Path
 from log import nerf_worker_logger
 from opt import config_parser
-from worker import train_tensorf, render_novel_view
 from dotenv import load_dotenv
 import requests
 import pika
@@ -16,6 +15,7 @@ import logging
 import torch
 import multiprocessing as mp
 from utils import nerf_utils
+import train
 
 app = Flask(__name__)
 base_url = "http://nerf-worker:5200/"
@@ -40,22 +40,44 @@ def on_message(channel, method, header, body, args):
 
 def run_nerf_job(channel, method, properties, body):
     logger = logging.getLogger('nerf-worker')
-    
-    args = config_parser(
-        "--config configs/localworkerconfig_testsimon.txt")
 
     # Read the nerf data from the message and convert it to gaussian format
-    nerf_data = json.loads(body.decode())
-    nerf_data_converted = nerf_utils.convert_transforms_to_gaussian(nerf_data)
-    id = nerf_data_converted["id"]
-
-    logger.info(f"Running nerf job for {id}")
-
-    input_dir = Path("data/nerf_data") / id
+    job_data = json.loads(body.decode())
+    job_data_converted = nerf_utils.convert_transforms_to_gaussian(job_data)
+    
+    # Create input directory for the nerf data
+    id = job_data_converted["id"]
+    input_dir = Path("data/sfm_data") / id
     os.makedirs(input_dir, exist_ok=True)
 
+    # Receive images from web-server
+    for i, fr in enumerate(job_data_converted["frames"]):
+        url = fr["file_path"]
+        img = requests.get(url)
+        fr["file_path"] = f"{i}.png" 
+        img_file_path = input_dir / fr["file_path"]
+        img_file_path.write_bytes(img.content)
 
-def nerf_worker(i, *args):
+    # Save the sfm data to a file
+    input_train = input_dir / "transforms_train.json"
+    input_train.write_text(json.dumps(job_data_converted, indent=4))
+
+    logger.info(f"Running nerf job for {id}")
+    logger.info(f"Input directory: {input_dir}")
+
+    # Run the nerf job
+    # TODO: Allow user defined snapshot frequency (default 7000, 30000 iters)
+    # TODO: Allow user to request available snapshots mid training for frontend render
+    args = f"-s {input_dir}".split()
+    logger.info(f'Running nerf training with args: {args}')
+
+    train.main(args)
+    logger.info(f"Finished training for {id}")
+
+
+
+
+def init_nerf_worker(i, *args):
     load_dotenv()
     logger = nerf_worker_logger('nerf-worker')
     logger.info("~NERF WORKER GAUSSIAN~")
@@ -121,7 +143,7 @@ if __name__ == "__main__":
 
     flaskProcess = mp.Process(target=start_flask, args=())
     flaskProcess.start()
-    nerfProcess = torch.multiprocessing.spawn(fn=nerf_worker, args=())
+    nerfProcess = torch.multiprocessing.spawn(fn=init_nerf_worker, args=())
     nerfProcess.start()
     flaskProcess.join()
     nerfProcess.join()

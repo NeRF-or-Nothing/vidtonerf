@@ -83,7 +83,7 @@ services:
         - 5201:5201
       networks:
         - backend
-      command: bash -c "while true; do sleep 1; done"
+      command: ./entry_point.sh
 
       deploy:
         resources:
