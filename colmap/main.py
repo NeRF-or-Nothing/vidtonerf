@@ -113,7 +113,7 @@ def colmap_worker():
         video = requests.get(job_data["file_path"], timeout=10)
         logger.info("Web server pinged")
         video_file_path = f"{input_data_dir}{id}.mp4"
-        logger.info("Saving video to: {video_file_path}")
+        logger.info(f"Saving video to: {video_file_path}")
         open(video_file_path, "wb").write(video.content)
        
         logger.info("Video downloaded")

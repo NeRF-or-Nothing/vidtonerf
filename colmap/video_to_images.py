@@ -97,6 +97,10 @@ def split_video_into_frames(video_path, output_path, max_frames=200):
   threshold_img = len(blur_list) - sample_count
   THRESHOLD = sorted_list[threshold_img]
 
+  # Lower threshold severely for testing
+  # TODO: Fix / Remove
+  MIN_AVG_THRESHOLD = 15
+
   ## checks number of images within the threshold
   count_good_img = 0
   for i in blur_list:
@@ -113,14 +117,17 @@ def split_video_into_frames(video_path, output_path, max_frames=200):
           break
        
 
-  ## If this threshold is too low, completely reject video 
+  ## If this threshold is too low, we need to adjust 
   avg_threshold = (sorted_list[-1] + THRESHOLD)/2
   logger.info("Average threshold: {}".format(avg_threshold))
-  if avg_threshold < 50:
+  if avg_threshold < MIN_AVG_THRESHOLD:
+    # IMPORTANT: Laplacian Variance is terrible with solid backgrounds and edge detection, i.e any dataset from papers
+    # Dont reject until we have tried another method
+    # TODO: Implement another method
     # ERROR: Video is too blurry. Please try again.
-    return 4
+    logger.warning("Video is highly blurry, check for solid backgrounds.")
+    THRESHOLD = min(sorted_list)  # This will select all frames
   
-
   needs_adjust = False ## determines if we need to adjust
   aspect_ratio = img_height / img_width
   #print (f"aspect ratio: {aspect_ratio}")
@@ -155,18 +162,22 @@ def split_video_into_frames(video_path, output_path, max_frames=200):
   count = 0
 
   ## write to the folder the images we want
+   # Select frames
+  selected_frames = []
   vidcap = cv2.VideoCapture(video_path)
-  success, image = vidcap.read()
-  while success:
-    if (blur_list[count] >= THRESHOLD):
-      if (needs_adjust == True):
-        image = cv2.resize(image, dimensions, interpolation=cv2.INTER_LANCZOS4)
-      cv2.imwrite(f"{output_path}/img_{count}.png", image)  
-      logger.info("Saved image {}".format(count))
-    success, image = vidcap.read()
-    
-    count += 1
-  vidcap.release()
+  count = 0
+  success = True
+  while len(selected_frames) < sample_count and success:
+      success, image = vidcap.read()
+      if success:
+          if blur_list[count] >= THRESHOLD:
+              if needs_adjust:
+                  image = cv2.resize(image, dimensions, interpolation=cv2.INTER_LANCZOS4)
+              cv2.imwrite(f"{output_path}/img_{count}.png", image)
+              selected_frames.append(count)
+          count += 1
+  
+  vidcap.release() 
 
   #Sucess, return 0
   ## can return img_width, img_height, and wanted_frames
