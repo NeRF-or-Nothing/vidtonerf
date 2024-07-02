@@ -74,6 +74,7 @@ class Nerf:
     model_file_path: Optional[str] = None
     rendered_video_path: Optional[str] = None
     flag: Optional[int] = 0
+    training_mode: Optional[str] = None
 
     @staticmethod
     def from_dict(obj: Any) -> 'Nerf':
@@ -81,6 +82,7 @@ class Nerf:
         model_file_path = from_union([from_str, from_none], obj.get("model_file_path"))
         rendered_video_path = from_union([from_str, from_none], obj.get("rendered_video_path"))
         flag = from_union([from_int, from_none], obj.get("flag"))
+        training_mode = from_union([from_str, from_none], obj.get("training_mode"))
         return Nerf(model_file_path, rendered_video_path, flag)
 
     def to_dict(self) -> dict:
@@ -88,7 +90,7 @@ class Nerf:
         result["model_file_path"] = from_union([from_str, from_none], self.model_file_path)
         result["rendered_video_path"] = from_union([from_str, from_none], self.rendered_video_path)
         result["flag"] = from_union([from_int, from_none], self.flag)
-
+        result["training_mode"] = from_union([from_str, from_none], self.training_mode)
         #ingnore null
         result = {k:v for k,v in result.items() if v !=None }
         return result

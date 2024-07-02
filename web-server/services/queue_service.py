@@ -1,20 +1,22 @@
 
-import pika, os, logging
+from pathlib import Path
 from models.scene import Video, Sfm, Nerf, SceneManager, QueueListManager
-import json
 from urllib.parse import urlparse
-import requests
 from flask import url_for
+from dotenv import load_dotenv
+
+import numpy as np
+
+import json
+import pika, os, logging
+import requests
 import time
 import os
-from dotenv import load_dotenv
-import numpy as np
 import math
 import random
 import sklearn.cluster
-
-
 import logging
+
 # Load environment variables from .env file at the root of the project
 load_dotenv()
 
@@ -300,21 +302,22 @@ def digest_finished_sfms(rabbitip, rmqservice: RabbitMQService, scene_manager: S
 def digest_finished_nerfs(rabbitip, rmqservice: RabbitMQService, scene_manager: SceneManager, queue_manager: QueueListManager):
     logger = logging.getLogger('web-server')
 
-    def process_nerf_job(ch,method,properties,body):
-        
-        nerf_data = json.loads(body.decode())
+    def process_tensorf_job(ch, method, properties, json_data):
+        """
+        Helper function to digest traditional nerf training. Will use
+        rendered_video_path as an interim solution without modifying Scene implementation
+        """
+        nerf_data = json_data
         video = requests.get(nerf_data['rendered_video_path'])
         id = nerf_data['id']
         
-        filepath = "data/nerf/" 
+        filepath = Path("data/nerf/") 
         os.makedirs(filepath, exist_ok=True)
-        filepath = os.path.join(filepath+f"{id}.mp4")
-        
+        filepath = filepath / f"{id}.mp4"
         open(filepath,"wb").write(video.content)
 
         nerf_data["flag"] = 0
         nerf_data['rendered_video_path'] = filepath
-        id = nerf_data['id']
         
         # Static method to create Nerf object from dictionary
         nerf = Nerf().from_dict(nerf_data)
@@ -324,6 +327,48 @@ def digest_finished_nerfs(rabbitip, rmqservice: RabbitMQService, scene_manager: 
         queue_manager.pop_queue("nerf_list",id)
         queue_manager.pop_queue("queue_list",id)
         ch.basic_ack(delivery_tag=method.delivery_tag)
+        
+    def process_gaussian_job(ch, method, properties, json_data):
+        """
+        Helper function to digest gaussian splatting training.  Will use 
+        model_file_path as an interim solution without modifying Scene implementation
+        """
+        
+        nerf_data = json_data 
+        splat_file = requests.get(nerf_data["splat_path"])
+        id = nerf_data['id']
+        
+        filepath = Path("data/nerf/")
+        os.makedirs(filepath, exist_ok=True)
+        filepath = filepath / f"{id}.splat"
+        open(filepath,"wb").write(splat_file.content)
+        
+        nerf_data["flag"] = 0
+        nerf_data["model_file_path"] = filepath
+        
+        # Static method to create Nerf object from dictionary
+        nerf = Nerf().from_dict(nerf_data)        
+        scene_manager.set_nerf(id, nerf)
+        
+        #remove video from nerf_list and queue_list (end of full process) queue manager
+        queue_manager.pop_queue("nerf_list",id)
+        queue_manager.pop_queue("queue_list",id)
+        ch.basic_ack(delivery_tag=method.delivery_tag)
+
+    def process_nerf_job(ch,method,properties,body):
+        nerf_data = json.loads(body.decode())
+        id = nerf_data["id"]
+        
+        if not nerf_data.contains("training_mode"):
+            logger.exception(f"Nerf Job {id} Training mode not specified in nerf_data")
+            return
+        
+        if nerf_data["training_mode"] == "gaussian":
+            process_gaussian_job(ch, method, properties, nerf_data)
+        elif nerf_data["training_mode"] == "tensorf":
+            process_tensorf_job(ch, method, properties, nerf_data)
+        else:
+            logger.exception(f"Nerf Job {id} Training mode not recognized in nerf_data")
     
     # create unique connection to rabbitmq since pika is NOT thread safe
     rabbitmq_domain = rabbitip

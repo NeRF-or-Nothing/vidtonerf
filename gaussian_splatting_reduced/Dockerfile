@@ -1,4 +1,5 @@
 FROM nvidia/cuda:11.7.1-devel-ubuntu20.04
+
 # Set the environment variable to prevent apt from prompting for user input
 ENV DEBIAN_FRONTEND=noninteractive
 
@@ -8,15 +9,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libc6 \  
     && rm -rf /var/lib/apt/lists/*
 # software-properties-common is needed for add-apt-repository
-# libc6 updates glibc for to 2.31 (newest compatible version with 20.04)
-
-
+# libc6 updates glibc to 2.31 (newest compatible version with 20.04)
 
 # Copy source code
 COPY requirements.txt .
 COPY . /gaussian_splatting_reduced
 WORKDIR /gaussian_splatting_reduced
-
 
 # Install dependencies (must get older python from non-default repo)
 RUN add-apt-repository ppa:deadsnakes/ppa \
@@ -38,3 +36,4 @@ RUN pip install -r requirements.txt
 
 # Allow entry_point.sh to be executable
 RUN ["chmod", "+x", "./entry_point.sh"]
+RUN ["chmod", "+x", "./entry_point2.sh"]
